@@ -157,8 +157,6 @@ stretch_mode = 5
 navigation_polygon = SubResource("NavigationPolygon_qmy6f")
 
 [node name="Rosali" parent="." groups=["party_member", "player_controlled"] instance=ExtResource("12_mwfav")]
-dmg_number_scene = null
 
 [node name="TestP1" parent="." groups=["party_member"] instance=ExtResource("13_3p2gp")]
 position = Vector2(-65, 6)
-dmg_number_scene = null

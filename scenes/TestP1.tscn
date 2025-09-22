@@ -1,7 +1,6 @@
-[gd_scene load_steps=47 format=3 uid="uid://bv1umfw753ett"]
+[gd_scene load_steps=46 format=3 uid="uid://bv1umfw753ett"]
 
 [ext_resource type="Script" uid="uid://68itdmamqmni" path="res://scenes/player.gd" id="1_2o6an"]
-[ext_resource type="PackedScene" uid="uid://eov3bna0cev1" path="res://ui/DamageNumber.tscn" id="2_fnt11"]
 [ext_resource type="Texture2D" uid="uid://y3r8jjrvlkp2" path="res://assets/sprites/characters/TestP1attack.png" id="3_fnt11"]
 [ext_resource type="AudioStream" uid="uid://dtgs8hm2cwwxh" path="res://assets/audio/sfx/grass/grassy-footstep3.wav" id="4_63ih6"]
 [ext_resource type="Texture2D" uid="uid://bmi5wongnexqj" path="res://assets/sprites/characters/TestP1walk.png" id="4_pfmu7"]
@@ -303,7 +302,6 @@ metadata/_custom_type_script = "uid://bu1fg0bjwbliq"
 
 [node name="Player" type="CharacterBody2D"]
 script = ExtResource("1_2o6an")
-dmg_number_scene = ExtResource("2_fnt11")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 position = Vector2(0, -8)
@@ -324,7 +322,7 @@ stats = SubResource("Resource_khinc")
 auto_tick_modifiers = true
 metadata/_custom_type_script = "uid://scndil1j0hdu"
 
-[node name="CompanionFollow" type="Node" parent="."]
+[node name="CompanionFollow" type="Node2D" parent="."]
 script = ExtResource("9_63ih6")
 
 [connection signal="frame_changed" from="AnimatedSprite2D" to="." method="_on_animated_sprite_2d_frame_changed"]
