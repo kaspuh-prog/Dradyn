@@ -60,6 +60,8 @@ func _physics_process(delta: float) -> void:
 	# Followers do NOT run player movement (prevents double-driving)
 	if has_node("/root/Party") and not _is_controlled():
 		return
+		
+
 
 	var input_vec: Vector2 = Vector2(
 		Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left"),
