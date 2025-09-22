@@ -33,8 +33,8 @@ func _on_controlled_changed(current: Node) -> void:
     _active = (_controlled != owner)
 
 func _physics_process(delta: float) -> void:
-    if not _active or _controlled == null or _owner_body == null:
-        return
+   if not following or follow_target == null:
+    return
 
     var to_target: Vector2 = _controlled.global_position - _owner_body.global_position
     var dist: float = to_target.length()

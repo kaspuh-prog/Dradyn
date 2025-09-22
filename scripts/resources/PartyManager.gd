@@ -8,8 +8,13 @@ signal party_changed(members: Array)
 var _members: Array[Node] = []
 var _controlled_idx: int = -1
 
+const ACTION_PARTY_NEXT := "party_next"
 
-
+func _ready() -> void:
+    # If you already set an initial _controlled_idx elsewhere, keep that.
+    # This just ensures followers have a target on first frame.
+    _refresh_followers()
+    
 # --- Public API ----------------------------------------------------
 
 func add_member(member: Node, make_controlled: bool = false) -> void:
@@ -65,8 +70,7 @@ func set_controlled(idx: int) -> void:
 func next_controlled() -> void:
     if _members.is_empty():
         return
-    var next_idx := (_controlled_idx + 1) % _members.size()
-    set_controlled(next_idx)
+    set_controlled((_controlled_idx + 1) % _members.size())
 
 func _refresh_followers() -> void:
     var leader := get_controlled()
@@ -82,9 +86,9 @@ func _refresh_followers() -> void:
         elif m.has_node("CompanionFollow"):
             m.get_node("CompanionFollow").call("set_follow_target", leader)
 func get_controlled() -> Node:
-    if _controlled_idx < 0 or _controlled_idx >= _members.size():
-        return null
-    return _members[_controlled_idx]
+    if _controlled_idx >= 0 and _controlled_idx < _members.size():
+        return _members[_controlled_idx]
+    return null
 
 func next() -> void:
     if _members.size() <= 1:
@@ -108,6 +112,5 @@ func _set_controlled_by_index(new_idx: int) -> void:
     emit_signal("party_changed", _members.duplicate())
     
 func _unhandled_input(event: InputEvent) -> void:
-    if event.is_action_pressed("party_next"):
-        print("[PartyManager] party_next pressed")
+    if event.is_action_pressed(ACTION_PARTY_NEXT):
         next_controlled()
