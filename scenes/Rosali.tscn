@@ -1,11 +1,12 @@
-[gd_scene load_steps=32 format=3 uid="uid://c3peqdshs5m18"]
+[gd_scene load_steps=33 format=3 uid="uid://c3peqdshs5m18"]
 
-[ext_resource type="Script" uid="uid://68itdmamqmni" path="res://scenes/player.gd" id="1_utrl0"]
+[ext_resource type="Script" uid="uid://dny6lg25m75y7" path="res://scripts/player.gd" id="1_88p8o"]
 [ext_resource type="Texture2D" uid="uid://cjf3c7pcs123l" path="res://assets/sprites/characters/Rosali.png" id="3_ha4ta"]
 [ext_resource type="AudioStream" uid="uid://dtgs8hm2cwwxh" path="res://assets/audio/sfx/grass/grassy-footstep3.wav" id="4_kydu7"]
 [ext_resource type="AudioStream" uid="uid://dnxdxonett0a1" path="res://assets/audio/sfx/grass/grassy-footstep4.wav" id="5_610j4"]
 [ext_resource type="Script" uid="uid://scndil1j0hdu" path="res://scripts/stats/StatsComponent.gd" id="6_4prkl"]
-[ext_resource type="Script" uid="uid://bu1fg0bjwbliq" path="res://scripts/StatsResource.gd" id="7_wa40i"]
+[ext_resource type="Script" uid="uid://bqtthbimi2o3t" path="res://scripts/resources/CompanionFollow.gd" id="7_utrl0"]
+[ext_resource type="Script" uid="uid://bu1fg0bjwbliq" path="res://scripts/resources/StatsResource.gd" id="7_wa40i"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_khinc"]
 atlas = ExtResource("3_ha4ta")
@@ -182,7 +183,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_1jpwa")
 }],
-"loop": false,
+"loop": true,
 "name": &"walk_up",
 "speed": 10.0
 }]
@@ -200,7 +201,7 @@ script = ExtResource("7_wa40i")
 metadata/_custom_type_script = "uid://bu1fg0bjwbliq"
 
 [node name="Rosali" type="CharacterBody2D"]
-script = ExtResource("1_utrl0")
+script = ExtResource("1_88p8o")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 position = Vector2(0, -8)
@@ -223,5 +224,6 @@ auto_tick_modifiers = true
 metadata/_custom_type_script = "uid://scndil1j0hdu"
 
 [node name="CompanionFollow" type="Node2D" parent="."]
+script = ExtResource("7_utrl0")
 
 [connection signal="frame_changed" from="AnimatedSprite2D" to="." method="_on_animated_sprite_2d_frame_changed"]

@@ -1,13 +1,13 @@
 [gd_scene load_steps=46 format=3 uid="uid://bv1umfw753ett"]
 
-[ext_resource type="Script" uid="uid://68itdmamqmni" path="res://scenes/player.gd" id="1_2o6an"]
+[ext_resource type="Script" uid="uid://dny6lg25m75y7" path="res://scripts/player.gd" id="1_fnt11"]
 [ext_resource type="Texture2D" uid="uid://y3r8jjrvlkp2" path="res://assets/sprites/characters/TestP1attack.png" id="3_fnt11"]
 [ext_resource type="AudioStream" uid="uid://dtgs8hm2cwwxh" path="res://assets/audio/sfx/grass/grassy-footstep3.wav" id="4_63ih6"]
 [ext_resource type="Texture2D" uid="uid://bmi5wongnexqj" path="res://assets/sprites/characters/TestP1walk.png" id="4_pfmu7"]
 [ext_resource type="AudioStream" uid="uid://dnxdxonett0a1" path="res://assets/audio/sfx/grass/grassy-footstep4.wav" id="5_isw50"]
 [ext_resource type="Script" uid="uid://scndil1j0hdu" path="res://scripts/stats/StatsComponent.gd" id="6_83j1v"]
-[ext_resource type="Script" uid="uid://bu1fg0bjwbliq" path="res://scripts/StatsResource.gd" id="7_sgrov"]
-[ext_resource type="Script" uid="uid://bqtthbimi2o3t" path="res://scripts/stats/CompanionFollow.gd" id="9_63ih6"]
+[ext_resource type="Script" uid="uid://bu1fg0bjwbliq" path="res://scripts/resources/StatsResource.gd" id="7_sgrov"]
+[ext_resource type="Script" uid="uid://bqtthbimi2o3t" path="res://scripts/resources/CompanionFollow.gd" id="9_63ih6"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_hh3hb"]
 atlas = ExtResource("3_fnt11")
@@ -239,7 +239,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"walk_down",
-"speed": 10.0
+"speed": 9.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -262,7 +262,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"walk_side",
-"speed": 10.0
+"speed": 9.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -283,9 +283,9 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_gy1vj")
 }],
-"loop": false,
+"loop": true,
 "name": &"walk_up",
-"speed": 10.0
+"speed": 9.0
 }]
 
 [sub_resource type="RectangleShape2D" id="1"]
@@ -301,12 +301,12 @@ script = ExtResource("7_sgrov")
 metadata/_custom_type_script = "uid://bu1fg0bjwbliq"
 
 [node name="Player" type="CharacterBody2D"]
-script = ExtResource("1_2o6an")
+script = ExtResource("1_fnt11")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 position = Vector2(0, -8)
 sprite_frames = SubResource("SpriteFrames_cw2d6")
-animation = &"attack1_down"
+animation = &"walk_down"
 offset = Vector2(0, -8)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
@@ -324,5 +324,8 @@ metadata/_custom_type_script = "uid://scndil1j0hdu"
 
 [node name="CompanionFollow" type="Node2D" parent="."]
 script = ExtResource("9_63ih6")
+follow_speed = null
+stop_distance = null
+resume_distance = null
 
 [connection signal="frame_changed" from="AnimatedSprite2D" to="." method="_on_animated_sprite_2d_frame_changed"]

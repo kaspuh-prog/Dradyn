@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ddpxx8220pcqm"
-path="res://.godot/imported/fantasy_panel_overlay.png-a82bd898b7ec60f93b121c24a7a8d07b.ctex"
+path="res://.godot/imported/fantasy_panel_overlay.png-22be1301beb9345b039313be74b99ef2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://ui/fantasy_panel_overlay.png"
-dest_files=["res://.godot/imported/fantasy_panel_overlay.png-a82bd898b7ec60f93b121c24a7a8d07b.ctex"]
+source_file="res://ui/styles/fantasy_panel_overlay.png"
+dest_files=["res://.godot/imported/fantasy_panel_overlay.png-22be1301beb9345b039313be74b99ef2.ctex"]
 
 [params]
 

@@ -1,96 +1,94 @@
-[gd_scene load_steps=34 format=3 uid="uid://i0pg5f7pc445"]
+[gd_scene load_steps=32 format=3 uid="uid://c3peqdshs5m18"]
 
-[ext_resource type="Script" path="res://scenes/player.gd" id="1_v6fml"]
-[ext_resource type="PackedScene" uid="uid://eov3bna0cev1" path="res://scenes/DamageNumber.tscn" id="2_cw2d6"]
-[ext_resource type="Texture2D" uid="uid://cjf3c7pcs123l" path="res://assets/sprites/characters/Rosali.png" id="3_cw2d6"]
-[ext_resource type="Script" uid="uid://scndil1j0hdu" path="res://scripts/stats/StatsComponent.gd" id="5_70d11"]
-[ext_resource type="AudioStream" uid="uid://dtgs8hm2cwwxh" path="res://assets/audio/sfx/grass/grassy-footstep3.wav" id="5_khinc"]
-[ext_resource type="AudioStream" uid="uid://dnxdxonett0a1" path="res://assets/audio/sfx/grass/grassy-footstep4.wav" id="6_bruh7"]
-[ext_resource type="Script" uid="uid://bu1fg0bjwbliq" path="res://scripts/resources/StatsResource.gd" id="6_cw2d6"]
-[ext_resource type="Script" uid="uid://bqtthbimi2o3t" path="res://scripts/resources/CompanionFollow.gd" id="8_bruh7"]
+[ext_resource type="Script" uid="uid://dny6lg25m75y7" path="res://scripts/player.gd" id="1_88p8o"]
+[ext_resource type="Texture2D" uid="uid://cjf3c7pcs123l" path="res://assets/sprites/characters/Rosali.png" id="3_ha4ta"]
+[ext_resource type="AudioStream" uid="uid://dtgs8hm2cwwxh" path="res://assets/audio/sfx/grass/grassy-footstep3.wav" id="4_kydu7"]
+[ext_resource type="AudioStream" uid="uid://dnxdxonett0a1" path="res://assets/audio/sfx/grass/grassy-footstep4.wav" id="5_610j4"]
+[ext_resource type="Script" uid="uid://scndil1j0hdu" path="res://scripts/stats/StatsComponent.gd" id="6_4prkl"]
+[ext_resource type="Script" uid="uid://bu1fg0bjwbliq" path="res://scripts/StatsResource.gd" id="7_wa40i"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_khinc"]
-atlas = ExtResource("3_cw2d6")
+atlas = ExtResource("3_ha4ta")
 region = Rect2(0, 0, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_bruh7"]
-atlas = ExtResource("3_cw2d6")
+atlas = ExtResource("3_ha4ta")
 region = Rect2(0, 128, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_6eyey"]
-atlas = ExtResource("3_cw2d6")
+atlas = ExtResource("3_ha4ta")
 region = Rect2(0, 64, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_d3wef"]
-atlas = ExtResource("3_cw2d6")
+atlas = ExtResource("3_ha4ta")
 region = Rect2(0, 256, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_o4126"]
-atlas = ExtResource("3_cw2d6")
+atlas = ExtResource("3_ha4ta")
 region = Rect2(64, 256, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_lkdrv"]
-atlas = ExtResource("3_cw2d6")
+atlas = ExtResource("3_ha4ta")
 region = Rect2(128, 256, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_p7iby"]
-atlas = ExtResource("3_cw2d6")
+atlas = ExtResource("3_ha4ta")
 region = Rect2(192, 256, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_0rnld"]
-atlas = ExtResource("3_cw2d6")
+atlas = ExtResource("3_ha4ta")
 region = Rect2(256, 256, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_srp4u"]
-atlas = ExtResource("3_cw2d6")
+atlas = ExtResource("3_ha4ta")
 region = Rect2(320, 256, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_jfpux"]
-atlas = ExtResource("3_cw2d6")
+atlas = ExtResource("3_ha4ta")
 region = Rect2(0, 384, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_61ith"]
-atlas = ExtResource("3_cw2d6")
+atlas = ExtResource("3_ha4ta")
 region = Rect2(64, 384, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_ebwui"]
-atlas = ExtResource("3_cw2d6")
+atlas = ExtResource("3_ha4ta")
 region = Rect2(128, 384, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_sfy4j"]
-atlas = ExtResource("3_cw2d6")
+atlas = ExtResource("3_ha4ta")
 region = Rect2(192, 384, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_gv3ic"]
-atlas = ExtResource("3_cw2d6")
+atlas = ExtResource("3_ha4ta")
 region = Rect2(256, 384, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_b8lor"]
-atlas = ExtResource("3_cw2d6")
+atlas = ExtResource("3_ha4ta")
 region = Rect2(320, 384, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_6e537"]
-atlas = ExtResource("3_cw2d6")
+atlas = ExtResource("3_ha4ta")
 region = Rect2(0, 320, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_p07f3"]
-atlas = ExtResource("3_cw2d6")
+atlas = ExtResource("3_ha4ta")
 region = Rect2(64, 320, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_viqgg"]
-atlas = ExtResource("3_cw2d6")
+atlas = ExtResource("3_ha4ta")
 region = Rect2(128, 320, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_fgkxt"]
-atlas = ExtResource("3_cw2d6")
+atlas = ExtResource("3_ha4ta")
 region = Rect2(192, 320, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_xsi7p"]
-atlas = ExtResource("3_cw2d6")
+atlas = ExtResource("3_ha4ta")
 region = Rect2(256, 320, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_1jpwa"]
-atlas = ExtResource("3_cw2d6")
+atlas = ExtResource("3_ha4ta")
 region = Rect2(320, 320, 64, 64)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_cw2d6"]
@@ -194,16 +192,15 @@ size = Vector2(11, 14)
 
 [sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_6eyey"]
 streams_count = 2
-stream_0/stream = ExtResource("5_khinc")
-stream_1/stream = ExtResource("6_bruh7")
+stream_0/stream = ExtResource("4_kydu7")
+stream_1/stream = ExtResource("5_610j4")
 
 [sub_resource type="Resource" id="Resource_khinc"]
-script = ExtResource("6_cw2d6")
+script = ExtResource("7_wa40i")
 metadata/_custom_type_script = "uid://bu1fg0bjwbliq"
 
-[node name="Player" type="CharacterBody2D"]
-script = ExtResource("1_v6fml")
-dmg_number_scene = ExtResource("2_cw2d6")
+[node name="Rosali" type="CharacterBody2D"]
+script = ExtResource("1_88p8o")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 position = Vector2(0, -8)
@@ -219,12 +216,12 @@ shape = SubResource("1")
 stream = SubResource("AudioStreamRandomizer_6eyey")
 
 [node name="StatsComponent" type="Node" parent="."]
-script = ExtResource("5_70d11")
+script = ExtResource("6_4prkl")
 stats = SubResource("Resource_khinc")
+derive_end_from_sta = false
 auto_tick_modifiers = true
 metadata/_custom_type_script = "uid://scndil1j0hdu"
 
-[node name="CompanionFollow" type="Node" parent="."]
-script = ExtResource("8_bruh7")
+[node name="CompanionFollow" type="Node2D" parent="."]
 
 [connection signal="frame_changed" from="AnimatedSprite2D" to="." method="_on_animated_sprite_2d_frame_changed"]

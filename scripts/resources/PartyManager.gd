@@ -10,107 +10,121 @@ var _controlled_idx: int = -1
 
 const ACTION_PARTY_NEXT := "party_next"
 
+# -------------------------------------------------------------------
+# Lifecycle
+# -------------------------------------------------------------------
 func _ready() -> void:
-    # If you already set an initial _controlled_idx elsewhere, keep that.
-    # This just ensures followers have a target on first frame.
-    _refresh_followers()
-    
-# --- Public API ----------------------------------------------------
+	# It's OK if members are added later; add_member() will set the first leader.
+    if _members.is_empty():
+        print("[Party] _ready: no members yet (actors will register themselves)")
+        return
 
+    if _controlled_idx < 0 or _controlled_idx >= _members.size():
+        _controlled_idx = 0
+    _set_controlled_by_index(_controlled_idx)
+
+# -------------------------------------------------------------------
+# Public API
+# -------------------------------------------------------------------
 func add_member(member: Node, make_controlled: bool = false) -> void:
     if member in _members:
         return
     _members.append(member)
     emit_signal("party_changed", _members.duplicate())
+    print("[Party] add_member: ", member.name, " leader=", make_controlled, " size=", _members.size()+1)
+
     if make_controlled or _controlled_idx == -1:
         _set_controlled_by_index(_members.size() - 1)
+    else:
+        _refresh_followers()
 
 func remove_member(member: Node) -> void:
     var idx := _members.find(member)
     if idx == -1:
         return
     _members.remove_at(idx)
+
     if _members.is_empty():
         _controlled_idx = -1
         emit_signal("party_changed", _members.duplicate())
         emit_signal("controlled_changed", null)
         return
-    # If we removed the controlled character, clamp to a valid one.
+
     if idx == _controlled_idx:
         _set_controlled_by_index(min(idx, _members.size() - 1))
     else:
-        # Adjust index if we removed one before the controlled index.
-        if idx < _controlled_idx:
-            _controlled_idx -= 1
         emit_signal("party_changed", _members.duplicate())
+        _refresh_followers()
 
-func get_members() -> Array[Node]:
-    return _members
+func get_members() -> Array:
+    return _members.duplicate()
 
-func set_controlled(idx: int) -> void:
-    if _members.is_empty(): 
-        return
-    idx = clamp(idx, 0, _members.size() - 1)
-    if idx == _controlled_idx:
-        return
-
-    var prev := get_controlled()
-    _controlled_idx = idx
-    var cur := get_controlled()
-
-    # Optional: toggle a 'controlled' flag if your actors expose it
-    if is_instance_valid(prev) and prev.has_method("set_controlled"):
-        prev.set_controlled(false)
-    if is_instance_valid(cur) and cur.has_method("set_controlled"):
-        cur.set_controlled(true)
-
-    emit_signal("controlled_changed", cur)
-    _refresh_followers()  # <-- make everyone else follow the new leader
-
-func next_controlled() -> void:
-    if _members.is_empty():
-        return
-    set_controlled((_controlled_idx + 1) % _members.size())
-
-func _refresh_followers() -> void:
-    var leader := get_controlled()
-    if leader == null:
-        return
-    for m in _members:
-        if m == leader:
-            continue
-        # Preferred: actor exposes set_follow_target(leader)
-        if m.has_method("set_follow_target"):
-            m.set_follow_target(leader)
-        # Fallback: there is a CompanionFollow node on the actor
-        elif m.has_node("CompanionFollow"):
-            m.get_node("CompanionFollow").call("set_follow_target", leader)
 func get_controlled() -> Node:
     if _controlled_idx >= 0 and _controlled_idx < _members.size():
         return _members[_controlled_idx]
     return null
 
+# -------------------------------------------------------------------
+# Control logic
+# -------------------------------------------------------------------
+func _set_controlled_by_index(idx: int) -> void:
+    if _members.is_empty():
+        return
+    idx = clamp(idx, 0, _members.size() - 1)
+
+    var prev := get_controlled()
+    _controlled_idx = idx
+    var cur := get_controlled()
+
+    if prev != null and prev.has_method("set_controlled"):
+        prev.set_controlled(false)
+    if cur != null and cur.has_method("set_controlled"):
+        cur.set_controlled(true)
+
+    if cur != null:
+        print("[Party] leader -> ", cur.name)
+    else:
+        print("[Party] leader -> null")
+
+    emit_signal("controlled_changed", cur)
+    _refresh_followers()
+
+func next_controlled() -> void:
+    if _members.is_empty():
+        return
+    _set_controlled_by_index((_controlled_idx + 1) % _members.size())
+
+# Alias for any older code that might call Party.next()
 func next() -> void:
-    if _members.size() <= 1:
-        return
-    var nxt := (_controlled_idx + 1) % _members.size()
-    _set_controlled_by_index(nxt)
+    next_controlled()
 
-func prev() -> void:
-    if _members.size() <= 1:
+func _refresh_followers() -> void:
+    var leader := get_controlled()
+    if leader == null:
         return
-    var prv := (_controlled_idx - 1 + _members.size()) % _members.size()
-    _set_controlled_by_index(prv)
 
-# --- Internal ------------------------------------------------------
+    for m in _members:
+        if m == leader:
+            continue
 
-func _set_controlled_by_index(new_idx: int) -> void:
-    if new_idx == _controlled_idx:
-        return
-    _controlled_idx = clampi(new_idx, 0, max(0, _members.size() - 1))
-    emit_signal("controlled_changed", get_controlled())
-    emit_signal("party_changed", _members.duplicate())
-    
+        # Preferred API on actor:
+        if m.has_method("set_follow_target"):
+            m.set_follow_target(leader)
+            continue
+
+        # Fallback: find a CompanionFollow child anywhere under the actor
+        var cf := m.find_child("CompanionFollow", true, false)
+        if cf != null and cf.has_method("set_follow_target"):
+            cf.set_follow_target(leader)
+
+# -------------------------------------------------------------------
+# Input
+# -------------------------------------------------------------------
 func _unhandled_input(event: InputEvent) -> void:
     if event.is_action_pressed(ACTION_PARTY_NEXT):
         next_controlled()
+
+func set_controlled(member: Node) -> void:
+    var idx := _members.find(member)
+    if idx != -1:
+        _set_controlled_by_index(idx)

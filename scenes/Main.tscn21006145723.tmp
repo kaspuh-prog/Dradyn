@@ -3,14 +3,14 @@
 [ext_resource type="Script" uid="uid://dk7asc2lrlrvg" path="res://scripts/Main.gd" id="2"]
 [ext_resource type="TileSet" uid="uid://ce704ljctriud" path="res://assets/tilesets/Main.tres" id="3_0bbpv"]
 [ext_resource type="Script" uid="uid://da6g0adw067f6" path="res://sandbox/HurtZone.gd" id="4_rarhs"]
-[ext_resource type="PackedScene" uid="uid://eov3bna0cev1" path="res://scenes/DamageNumber.tscn" id="5_c01mt"]
+[ext_resource type="PackedScene" uid="uid://eov3bna0cev1" path="res://ui/DamageNumber.tscn" id="5_c01mt"]
 [ext_resource type="Script" uid="uid://dckcqvllrio61" path="res://ui/damage_number.gd" id="6_nxtc6"]
-[ext_resource type="Script" uid="uid://gw6on7c5qvr6" path="res://ui/hud_root.gd" id="7_nxtc6"]
+[ext_resource type="Script" uid="uid://gw6on7c5qvr6" path="res://scenes/hud_root.gd" id="7_nxtc6"]
 [ext_resource type="PackedScene" uid="uid://cxjdkuse2lvra" path="res://ui/PartyPanel.tscn" id="7_q8u5g"]
 [ext_resource type="StyleBox" uid="uid://1232tbywe6ji" path="res://ui/styles/bar_fill_red_flat.tres" id="8_lhr70"]
 [ext_resource type="Script" uid="uid://cawyojqqdou3f" path="res://ui/PartyPanel.gd" id="9_bjd11"]
 [ext_resource type="StyleBox" uid="uid://blkwljfk0qvak" path="res://ui/styles/bar_bg_flat.tres" id="9_lhr70"]
-[ext_resource type="Texture2D" uid="uid://ddpxx8220pcqm" path="res://ui/styles/fantasy_panel_overlay.png" id="9_wp0k4"]
+[ext_resource type="Texture2D" uid="uid://ddpxx8220pcqm" path="res://ui/fantasy_panel_overlay.png" id="9_wp0k4"]
 [ext_resource type="PackedScene" uid="uid://c3peqdshs5m18" path="res://scenes/Rosali.tscn" id="12_mwfav"]
 [ext_resource type="PackedScene" uid="uid://bv1umfw753ett" path="res://scenes/TestP1.tscn" id="13_3p2gp"]
 
@@ -94,10 +94,8 @@ grow_vertical = 0
 
 [node name="PartyPanel" parent="HUDLayer/HUDRoot/Panel1Holder" instance=ExtResource("7_q8u5g")]
 layout_mode = 1
-offset_left = 8.0
-offset_top = 15.0
-offset_right = 5.0
-offset_bottom = 12.0
+offset_left = 3.0
+offset_top = 3.0
 script = ExtResource("9_bjd11")
 stats_path = NodePath("../../../../Rosali/StatsComponent")
 hp_bar_path = NodePath("HPbar")
@@ -111,10 +109,10 @@ anchor_left = 0.16
 anchor_top = 0.145
 anchor_right = 0.62
 anchor_bottom = 0.33
-offset_left = 3.3200083
-offset_top = -2.000002
-offset_right = -3.2600098
-offset_bottom = -2.2100067
+offset_left = -135.68
+offset_top = -39.0
+offset_right = -142.26001
+offset_bottom = -39.210007
 theme_override_styles/background = ExtResource("9_lhr70")
 theme_override_styles/fill = SubResource("StyleBoxFlat_bjd11")
 min_value = 5.0
@@ -129,10 +127,10 @@ anchor_left = 0.18100001
 anchor_top = 0.40500003
 anchor_right = 0.62
 anchor_bottom = 0.578
-offset_left = 1.7869997
-offset_top = -2.9850044
-offset_right = -3.2600098
-offset_bottom = -2.3860016
+offset_left = -137.213
+offset_top = -39.985004
+offset_right = -142.26001
+offset_bottom = -39.386
 theme_override_styles/background = ExtResource("9_lhr70")
 theme_override_styles/fill = SubResource("StyleBoxFlat_qmy6f")
 fill_mode = 1
@@ -145,10 +143,10 @@ anchor_left = 0.16
 anchor_top = 0.62
 anchor_right = 0.62
 anchor_bottom = 0.805
-offset_left = 3.3200083
-offset_top = -2.0
-offset_right = -2.2600098
-offset_bottom = -2.0
+offset_left = -135.68
+offset_top = -39.0
+offset_right = -141.26001
+offset_bottom = -39.0
 theme_override_styles/background = ExtResource("9_lhr70")
 theme_override_styles/fill = ExtResource("8_lhr70")
 fill_mode = 1
@@ -159,9 +157,10 @@ layout_mode = 1
 anchors_preset = -1
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -3.0
-offset_right = 2.0
-offset_bottom = -2.0
+offset_left = -139.0
+offset_top = -40.0
+offset_right = -137.0
+offset_bottom = -39.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("9_wp0k4")
@@ -169,13 +168,22 @@ expand_mode = 2
 stretch_mode = 5
 
 [node name="NavigationRegion2D" type="NavigationRegion2D" parent="."]
-position = Vector2(-12, 10)
 navigation_polygon = SubResource("NavigationPolygon_qmy6f")
 
 [node name="Rosali" parent="." groups=["party_member", "player_controlled"] instance=ExtResource("12_mwfav")]
+is_leader = null
+sprint_mul = null
+stamina_cost_per_second = null
+sprint_step_cost = null
+accel_lerp = null
 
 [node name="TestP1" parent="." groups=["party_member"] instance=ExtResource("13_3p2gp")]
 position = Vector2(-65, 6)
+is_leader = null
+sprint_mul = null
+stamina_cost_per_second = null
+sprint_step_cost = null
+accel_lerp = null
 
 [node name="CompanionFollow" parent="TestP1" index="4"]
 follow_speed = 140.0
