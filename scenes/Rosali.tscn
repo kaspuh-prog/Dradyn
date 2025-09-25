@@ -221,6 +221,7 @@ script = ExtResource("6_4prkl")
 stats = SubResource("Resource_khinc")
 derive_end_from_sta = false
 auto_tick_modifiers = true
+end_regen_per_sec = 1.0
 metadata/_custom_type_script = "uid://scndil1j0hdu"
 
 [node name="CompanionFollow" type="Node2D" parent="."]

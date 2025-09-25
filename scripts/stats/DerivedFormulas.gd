@@ -25,8 +25,8 @@ const MS_PER_END: float       = 0.20     # small MoveSpeed from END
 
 # ----- Regeneration (per second) -----
 const HP_REGEN_BASE: float    = 0.00
-const HP_REGEN_PER_STA: float = 0.03
-const HP_REGEN_PER_WIS: float = 0.02
+const HP_REGEN_PER_STA: float = 0.00
+const HP_REGEN_PER_WIS: float = 0.00
 
 const MP_REGEN_BASE: float    = 0.50
 const MP_REGEN_PER_WIS: float = 0.06
@@ -43,8 +43,11 @@ const REGEN_MAX: float = 50.0
 # Derived helpers
 # =========================
 static func end_from_sta(stats) -> float:
+	# END is a runtime pool derived from Stamina + a base value from the stats resource.
+	var base_end: float = stats.get_base_stat("END") as float
 	var sta: float = stats.get_final_stat("STA") as float
-	return max(0.0, sta * END_PER_STA)
+	return max(0.0, base_end + END_PER_STA * sta)
+
 
 static func hp_max(stats) -> float:
 	# Base HP + growth from STA. Do NOT call get_final_stat("HP") here.
@@ -90,7 +93,7 @@ static func stamina_max(stats) -> float:
 	var base_st: float = stats.get_base_stat("Stamina") as float
 	var sta: float = stats.get_final_stat("STA") as float
 	var endu: float = end_from_sta(stats)
-	return base_st + STAM_PER_STA * sta + STAM_PER_END * endu
+	return base_st + STAM_PER_STA * sta
 
 static func move_speed(stats) -> float:
 	var base: float = stats.get_base_stat("MoveSpeed") as float
@@ -147,10 +150,4 @@ static func mp_regen_per_sec(stats) -> float:
 	var wis: float = stats.get_final_stat("WIS") as float
 	var intel: float = stats.get_final_stat("INT") as float
 	var r: float = MP_REGEN_BASE + MP_REGEN_PER_WIS * wis + MP_REGEN_PER_INT * intel
-	return clamp(r, 0.0, REGEN_MAX)
-
-static func stamina_regen_per_sec(stats) -> float:
-	var endu: float = end_from_sta(stats)
-	var sta: float = stats.get_final_stat("STA") as float
-	var r: float = STAM_REGEN_BASE + STAM_REGEN_PER_END * endu + STAM_REGEN_PER_STA * sta
 	return clamp(r, 0.0, REGEN_MAX)

@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://eov3bna0cev1"]
 
-[ext_resource type="Script" uid="uid://gs1i2fkis1j4" path="res://ui/DamageNumber.gd" id="1_5a0e4"]
+[ext_resource type="Script" uid="uid://gs1i2fkis1j4" path="res://ui/DamageNumberLayer.gd" id="1_5a0e4"]
 
 [node name="DamageNumber" type="Label"]
 anchors_preset = 15

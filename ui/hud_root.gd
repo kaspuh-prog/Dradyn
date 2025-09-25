@@ -158,9 +158,6 @@ func _rebuild_party_panels() -> void:
     await get_tree().process_frame
     _place_holder()
 
-    if debug_logs:
-        _debug_dump(panels, stats_list)
-
 # ------------------------ party resolution ------------------------
 func _get_party() -> Node:
     return get_node_or_null("/root/Party")
@@ -249,15 +246,3 @@ func _any_panel_visible() -> bool:
         if cc != null and cc.visible:
             return true
     return false
-
-func _debug_dump(panels: Array[Control], stats_list: Array[Node]) -> void:
-    print("[HUD] --- HUD dump ---")
-    if template_panel != null:
-        print("[HUD] template size=", template_panel.size, " pos=", template_panel.position, " vis=", template_panel.visible)
-    if holder != null:
-        print("[HUD] holder pos=", holder.position, " size=", holder.size, " type=", holder.get_class())
-    print("[HUD] panels built=", panels.size(), ", stats=", stats_list.size())
-    for i in range(panels.size()):
-        var p: Control = panels[i]
-        print("[HUD]   #", i, ": vis=", p.visible, " pos=", p.position, " size=", p.size)
-    print("[HUD] ---------------")

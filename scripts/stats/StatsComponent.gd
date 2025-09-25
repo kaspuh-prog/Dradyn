@@ -349,3 +349,4 @@ func _enter_tree() -> void:
 # ------ Allocation helper ------
 func can_allocate(stat_name: String) -> bool:
 	return !(stat_name in ["HP","MP","END"])
+	

@@ -3,7 +3,7 @@ class_name HurtZone
 
 @export var amount: float = 10.0
 @export var dmg_type: String = "Slash"
-@export var tick_rate: float = 0.6
+@export var tick_rate: float = 1
 
 # Optional filters
 @export var require_stats_component: bool = true

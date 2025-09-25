@@ -320,12 +320,10 @@ stream = SubResource("AudioStreamRandomizer_6eyey")
 script = ExtResource("6_83j1v")
 stats = SubResource("Resource_khinc")
 auto_tick_modifiers = true
+end_regen_per_sec = 1.0
 metadata/_custom_type_script = "uid://scndil1j0hdu"
 
 [node name="CompanionFollow" type="Node2D" parent="."]
 script = ExtResource("9_63ih6")
-follow_speed = null
-stop_distance = null
-resume_distance = null
 
 [connection signal="frame_changed" from="AnimatedSprite2D" to="." method="_on_animated_sprite_2d_frame_changed"]

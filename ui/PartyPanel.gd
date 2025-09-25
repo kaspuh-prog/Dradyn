@@ -53,10 +53,7 @@ func _bind_stats(n: Node) -> void:
 		var who: String = "<null>"
 		if stats != null:
 			who = stats.name
-		print("[PartyPanel:", name, "] bound to:", who,
-			" hp=", _get_prop_num("current_hp"), "/", _call_num("max_hp", 0.0),
-			" mp=", _get_prop_num("current_mp"), "/", _call_num("max_mp", 0.0),
-			" end=", _get_prop_num("current_end"), "/", _call_num("max_end", 0.0))
+		
 
 func _connect_signal(obj: Object, sig: String, c: Callable) -> void:
 	if obj.has_signal(sig) and not obj.is_connected(sig, c):
@@ -78,22 +75,20 @@ func _on_hp_changed(current: float, max_value: float) -> void:
 	if hp_bar:
 		hp_bar.max_value = max_value
 		_tween_bar_value(hp_bar, current)
-	elif debug_logs:
-		print("[PartyPanel:", name, "] hp_bar missing")
+	
+		
 
 func _on_mp_changed(current: float, max_value: float) -> void:
 	if mp_bar:
 		mp_bar.max_value = max_value
 		_tween_bar_value(mp_bar, current)
-	elif debug_logs:
-		print("[PartyPanel:", name, "] mp_bar missing")
+	
 
 func _on_end_changed(current: float, max_value: float) -> void:
 	if end_bar:
 		end_bar.max_value = max_value
 		_tween_bar_value(end_bar, current)
-	elif debug_logs:
-		print("[PartyPanel:", name, "] end_bar missing")
+	
 
 # -------------------- helpers --------------------
 func _get_prop_num(prop: String) -> float:
@@ -136,9 +131,7 @@ func _resolve_bars() -> void:
 	if end_bar == null:
 		end_bar = _match_bar(self, ["end","endurance"])
 
-	if debug_logs:
-		print("[PartyPanel:", name, "] bars -> HP:", _node_info(hp_bar),
-			" MP:", _node_info(mp_bar), " END:", _node_info(end_bar))
+	
 
 func _match_bar(node: Node, hints: Array) -> ProgressBar:
 	# depth-first search for a ProgressBar whose name contains any hint
