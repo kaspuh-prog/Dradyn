@@ -1,4 +1,4 @@
-[gd_scene load_steps=33 format=3 uid="uid://c3peqdshs5m18"]
+[gd_scene load_steps=36 format=3 uid="uid://c3peqdshs5m18"]
 
 [ext_resource type="Script" uid="uid://dny6lg25m75y7" path="res://scripts/player.gd" id="1_88p8o"]
 [ext_resource type="Texture2D" uid="uid://cjf3c7pcs123l" path="res://assets/sprites/characters/Rosali.png" id="3_ha4ta"]
@@ -7,6 +7,8 @@
 [ext_resource type="Script" uid="uid://scndil1j0hdu" path="res://scripts/stats/StatsComponent.gd" id="6_4prkl"]
 [ext_resource type="Script" uid="uid://bqtthbimi2o3t" path="res://scripts/resources/CompanionFollow.gd" id="7_utrl0"]
 [ext_resource type="Script" uid="uid://bu1fg0bjwbliq" path="res://scripts/resources/StatsResource.gd" id="7_wa40i"]
+[ext_resource type="Script" uid="uid://blvyq0nyp35lh" path="res://scripts/stats/LevelComponent.gd" id="8_bhgg7"]
+[ext_resource type="Script" uid="uid://b7ipjii2rumgu" path="res://scripts/resources/ClassDefinition.gd" id="9_01n3w"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_khinc"]
 atlas = ExtResource("3_ha4ta")
@@ -139,7 +141,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"walk_down",
-"speed": 10.0
+"speed": 8.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -162,7 +164,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"walk_side",
-"speed": 10.0
+"speed": 8.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -185,7 +187,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"walk_up",
-"speed": 10.0
+"speed": 8.0
 }]
 
 [sub_resource type="RectangleShape2D" id="1"]
@@ -199,6 +201,10 @@ stream_1/stream = ExtResource("5_610j4")
 [sub_resource type="Resource" id="Resource_khinc"]
 script = ExtResource("7_wa40i")
 metadata/_custom_type_script = "uid://bu1fg0bjwbliq"
+
+[sub_resource type="Resource" id="Resource_cftud"]
+script = ExtResource("9_01n3w")
+metadata/_custom_type_script = "uid://b7ipjii2rumgu"
 
 [node name="Rosali" type="CharacterBody2D"]
 script = ExtResource("1_88p8o")
@@ -226,5 +232,10 @@ metadata/_custom_type_script = "uid://scndil1j0hdu"
 
 [node name="CompanionFollow" type="Node2D" parent="."]
 script = ExtResource("7_utrl0")
+
+[node name="LevelComponent" type="Node" parent="."]
+script = ExtResource("8_bhgg7")
+stats_component_path = NodePath("../StatsComponent")
+class_def = SubResource("Resource_cftud")
 
 [connection signal="frame_changed" from="AnimatedSprite2D" to="." method="_on_animated_sprite_2d_frame_changed"]

@@ -1,4 +1,4 @@
-[gd_scene load_steps=46 format=3 uid="uid://bv1umfw753ett"]
+[gd_scene load_steps=49 format=3 uid="uid://bv1umfw753ett"]
 
 [ext_resource type="Script" uid="uid://dny6lg25m75y7" path="res://scripts/player.gd" id="1_fnt11"]
 [ext_resource type="Texture2D" uid="uid://y3r8jjrvlkp2" path="res://assets/sprites/characters/TestP1attack.png" id="3_fnt11"]
@@ -8,6 +8,8 @@
 [ext_resource type="Script" uid="uid://scndil1j0hdu" path="res://scripts/stats/StatsComponent.gd" id="6_83j1v"]
 [ext_resource type="Script" uid="uid://bu1fg0bjwbliq" path="res://scripts/resources/StatsResource.gd" id="7_sgrov"]
 [ext_resource type="Script" uid="uid://bqtthbimi2o3t" path="res://scripts/resources/CompanionFollow.gd" id="9_63ih6"]
+[ext_resource type="Script" uid="uid://blvyq0nyp35lh" path="res://scripts/stats/LevelComponent.gd" id="9_jovfq"]
+[ext_resource type="Script" uid="uid://b7ipjii2rumgu" path="res://scripts/resources/ClassDefinition.gd" id="10_chjic"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_hh3hb"]
 atlas = ExtResource("3_fnt11")
@@ -296,9 +298,44 @@ streams_count = 2
 stream_0/stream = ExtResource("4_63ih6")
 stream_1/stream = ExtResource("5_isw50")
 
-[sub_resource type="Resource" id="Resource_khinc"]
+[sub_resource type="Resource" id="Resource_jovfq"]
 script = ExtResource("7_sgrov")
+base_stats = {
+"Attack": 8.0,
+"BlockChance": 0.0,
+"BluntRes": 0.0,
+"CHA": 10.0,
+"CritChance": 0.5,
+"CritHealChance": 0.0,
+"DEX": 10.0,
+"DarknessRes": 0.0,
+"Defense": 5.0,
+"END": 10.0,
+"EarthRes": 0.0,
+"Evasion": 0.0,
+"FireRes": 0.0,
+"HP": 120.0,
+"INT": 10.0,
+"IceRes": 0.0,
+"LCK": 10.0,
+"LightRes": 0.0,
+"MP": 30.0,
+"MagicRes": 0.0,
+"MoveSpeed": 90.0,
+"ParryChance": 0.0,
+"PierceRes": 0.0,
+"PoisonRes": 0.0,
+"STA": 10.0,
+"STR": 10.0,
+"SlashRes": 0.0,
+"WIS": 10.0,
+"WindRes": 0.0
+}
 metadata/_custom_type_script = "uid://bu1fg0bjwbliq"
+
+[sub_resource type="Resource" id="Resource_yplvk"]
+script = ExtResource("10_chjic")
+metadata/_custom_type_script = "uid://b7ipjii2rumgu"
 
 [node name="Player" type="CharacterBody2D"]
 script = ExtResource("1_fnt11")
@@ -318,12 +355,17 @@ stream = SubResource("AudioStreamRandomizer_6eyey")
 
 [node name="StatsComponent" type="Node" parent="."]
 script = ExtResource("6_83j1v")
-stats = SubResource("Resource_khinc")
+stats = SubResource("Resource_jovfq")
 auto_tick_modifiers = true
 end_regen_per_sec = 1.0
 metadata/_custom_type_script = "uid://scndil1j0hdu"
 
 [node name="CompanionFollow" type="Node2D" parent="."]
 script = ExtResource("9_63ih6")
+
+[node name="LevelComponent" type="Node" parent="."]
+script = ExtResource("9_jovfq")
+stats_component_path = NodePath("../StatsComponent")
+class_def = SubResource("Resource_yplvk")
 
 [connection signal="frame_changed" from="AnimatedSprite2D" to="." method="_on_animated_sprite_2d_frame_changed"]

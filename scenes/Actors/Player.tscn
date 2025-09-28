@@ -1,13 +1,14 @@
-[gd_scene load_steps=34 format=3 uid="uid://i0pg5f7pc445"]
+[gd_scene load_steps=36 format=3 uid="uid://i0pg5f7pc445"]
 
-[ext_resource type="Script" path="res://scenes/player.gd" id="1_v6fml"]
-[ext_resource type="PackedScene" uid="uid://eov3bna0cev1" path="res://scenes/DamageNumber.tscn" id="2_cw2d6"]
+[ext_resource type="Script" uid="uid://dny6lg25m75y7" path="res://scripts/player.gd" id="1_v6fml"]
 [ext_resource type="Texture2D" uid="uid://cjf3c7pcs123l" path="res://assets/sprites/characters/Rosali.png" id="3_cw2d6"]
 [ext_resource type="Script" uid="uid://scndil1j0hdu" path="res://scripts/stats/StatsComponent.gd" id="5_70d11"]
 [ext_resource type="AudioStream" uid="uid://dtgs8hm2cwwxh" path="res://assets/audio/sfx/grass/grassy-footstep3.wav" id="5_khinc"]
 [ext_resource type="AudioStream" uid="uid://dnxdxonett0a1" path="res://assets/audio/sfx/grass/grassy-footstep4.wav" id="6_bruh7"]
 [ext_resource type="Script" uid="uid://bu1fg0bjwbliq" path="res://scripts/resources/StatsResource.gd" id="6_cw2d6"]
 [ext_resource type="Script" uid="uid://bqtthbimi2o3t" path="res://scripts/resources/CompanionFollow.gd" id="8_bruh7"]
+[ext_resource type="Script" uid="uid://blvyq0nyp35lh" path="res://scripts/stats/LevelComponent.gd" id="8_lcrjy"]
+[ext_resource type="Script" uid="uid://b7ipjii2rumgu" path="res://scripts/resources/ClassDefinition.gd" id="9_c62qr"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_khinc"]
 atlas = ExtResource("3_cw2d6")
@@ -201,9 +202,12 @@ stream_1/stream = ExtResource("6_bruh7")
 script = ExtResource("6_cw2d6")
 metadata/_custom_type_script = "uid://bu1fg0bjwbliq"
 
+[sub_resource type="Resource" id="Resource_yu6nc"]
+script = ExtResource("9_c62qr")
+metadata/_custom_type_script = "uid://b7ipjii2rumgu"
+
 [node name="Player" type="CharacterBody2D"]
 script = ExtResource("1_v6fml")
-dmg_number_scene = ExtResource("2_cw2d6")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 position = Vector2(0, -8)
@@ -224,7 +228,12 @@ stats = SubResource("Resource_khinc")
 auto_tick_modifiers = true
 metadata/_custom_type_script = "uid://scndil1j0hdu"
 
-[node name="CompanionFollow" type="Node" parent="."]
+[node name="CompanionFollow" type="Node2D" parent="."]
 script = ExtResource("8_bruh7")
+
+[node name="LevelComponent" type="Node" parent="."]
+script = ExtResource("8_lcrjy")
+stats_component_path = NodePath("../StatsComponent")
+class_def = SubResource("Resource_yu6nc")
 
 [connection signal="frame_changed" from="AnimatedSprite2D" to="." method="_on_animated_sprite_2d_frame_changed"]

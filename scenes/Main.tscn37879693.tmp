@@ -120,6 +120,13 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("7_nxtc6")
+left_margin = null
+bottom_margin = null
+spacing = null
+max_members = null
+stats_node_name_hint = null
+always_show_at_least_one = null
+debug_logs = null
 
 [node name="Panel1Holder" type="Control" parent="HUDLayer/HUDRoot"]
 custom_minimum_size = Vector2(76, 40)

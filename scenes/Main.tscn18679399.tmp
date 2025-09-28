@@ -1,4 +1,4 @@
-[gd_scene load_steps=25 format=4 uid="uid://c8ty6h5dtvshr"]
+[gd_scene load_steps=21 format=4 uid="uid://c8ty6h5dtvshr"]
 
 [ext_resource type="Script" uid="uid://dk7asc2lrlrvg" path="res://scripts/Main.gd" id="2"]
 [ext_resource type="Script" uid="uid://bf5uecgu47cgm" path="res://scripts/LeaderCamera.gd" id="2_mwfav"]
@@ -13,12 +13,9 @@
 [ext_resource type="Script" uid="uid://ctmqf1kt5vt2m" path="res://scripts/PartyRoot_Bootstrap.gd" id="11_mwfav"]
 [ext_resource type="PackedScene" uid="uid://c3peqdshs5m18" path="res://scenes/Actors/Rosali.tscn" id="12_mwfav"]
 [ext_resource type="PackedScene" uid="uid://bv1umfw753ett" path="res://scenes/Actors/TestP1.tscn" id="13_3p2gp"]
-[ext_resource type="Script" uid="uid://bu1fg0bjwbliq" path="res://scripts/resources/StatsResource.gd" id="14_bb450"]
 [ext_resource type="Script" uid="uid://chdwtrvq5vslt" path="res://AutoLoads/SceneManager.gd" id="14_cvmbd"]
 [ext_resource type="PackedScene" uid="uid://dbtb83g08k0cw" path="res://scenes/Actors/EnemyBase.tscn" id="16_cvmbd"]
 [ext_resource type="PackedScene" uid="uid://bgeqrejsugfh4" path="res://scenes/WorldAreas/BattleTestArena.tscn" id="16_ft6cd"]
-[ext_resource type="Script" uid="uid://dnkikfbexng3j" path="res://scripts/LevelUpPopup.gd" id="17_ft6cd"]
-[ext_resource type="Script" uid="uid://bwayymdj2s753" path="res://scripts/EnemySpawner.gd" id="18_nfivy"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_vcsgt"]
 size = Vector2(47, 34)
@@ -39,48 +36,13 @@ bg_color = Color(0.039215688, 0.30980393, 0.627451, 1)
 corner_radius_top_left = 15
 corner_radius_bottom_left = 15
 
-[sub_resource type="Resource" id="Resource_nfivy"]
-script = ExtResource("14_bb450")
-base_stats = {
-"Attack": 10.0,
-"BlockChance": 0.0,
-"BluntRes": 0.0,
-"CHA": 10.0,
-"CritChance": 0.5,
-"CritHealChance": 0.0,
-"DEX": 10.0,
-"DarknessRes": 0.0,
-"Defense": 5.0,
-"END": 10.0,
-"EarthRes": 0.0,
-"Evasion": 0.0,
-"FireRes": 0.0,
-"HP": 100.0,
-"INT": 10.0,
-"IceRes": 0.0,
-"LCK": 10.0,
-"LightRes": 0.0,
-"MP": 30.0,
-"MagicRes": 0.0,
-"MoveSpeed": 90.0,
-"ParryChance": 0.0,
-"PierceRes": 0.0,
-"PoisonRes": 0.0,
-"STA": 10.0,
-"STR": 20.0,
-"SlashRes": 0.0,
-"WIS": 10.0,
-"WindRes": 0.0
-}
-metadata/_custom_type_script = "uid://bu1fg0bjwbliq"
-
 [node name="GameRoot" type="Node2D"]
 script = ExtResource("2")
 
 [node name="DamageNumberLayer" type="CanvasLayer" parent="."]
 script = ExtResource("2_qmy6f")
 scale_with_zoom = true
-debug_log = true
+debug_on_ready = true
 coalesce_window_sec = 0.0
 suppress_hp_after_damage_sec = 10.0
 font_px = 10
@@ -88,8 +50,6 @@ y_offset = -30.0
 rise_pixels = 30.0
 damage_color = Color(0.76989067, 6.2401516e-05, 0.13468432, 1)
 heal_color = Color(0.13928881, 0.8286577, 0.6590529, 1)
-crit_text_color = Color(0.6877213, 0.57477003, 0.19332707, 1)
-crit_flash_color = Color(0.9607843, 0.98039216, 0.85490197, 1)
 
 [node name="LeaderCamera" type="Camera2D" parent="." groups=["LeaderCamera"]]
 script = ExtResource("2_mwfav")
@@ -140,6 +100,7 @@ offset_top = 15.0
 offset_right = 5.0
 offset_bottom = 12.0
 script = ExtResource("9_bjd11")
+stats_path = NodePath("../../../../PartyRoot/Rosali/StatsComponent")
 hp_bar_path = NodePath("HPbar")
 mp_bar_path = NodePath("MPbar")
 end_bar_path = NodePath("ENDbar")
@@ -213,7 +174,10 @@ script = ExtResource("11_mwfav")
 leader_scene = ExtResource("12_mwfav")
 companion_scenes = Array[PackedScene]([ExtResource("13_3p2gp"), ExtResource("13_3p2gp")])
 
-[node name="TestP1" parent="PartyRoot" groups=["PartyLeader", "PartyMembers"] instance=ExtResource("13_3p2gp")]
+[node name="Rosali" parent="PartyRoot" groups=["party_member", "player_controlled"] instance=ExtResource("12_mwfav")]
+z_index = 1
+
+[node name="TestP1" parent="PartyRoot" groups=["party_member"] instance=ExtResource("13_3p2gp")]
 z_index = 1
 position = Vector2(-65, 6)
 
@@ -221,11 +185,7 @@ position = Vector2(-65, 6)
 animation = &"attack1_up"
 
 [node name="StatsComponent" parent="PartyRoot/TestP1" index="3"]
-debug_damage_log = true
-stats = SubResource("Resource_nfivy")
 derive_end_from_sta = false
-
-[node name="Rosali" parent="PartyRoot" groups=["PartyMembers"] instance=ExtResource("12_mwfav")]
 
 [node name="WorldRoot" type="Node2D" parent="."]
 script = ExtResource("14_cvmbd")
@@ -238,28 +198,10 @@ tile_map_data = PackedByteArray("AADx/+D/AAAFAAAAAADy/+D/AgAHAAAAAADz/+D/AgAIAAA
 [node name="L1_Details" parent="WorldRoot/BattleTestArena" index="1"]
 tile_map_data = PackedByteArray("AADy/+D/BQAAAAAAAAAXAOD/BQAAAAAAAAAMAOD/BQAAAAAAAAD9/+D/BQAAAAAAAAA=")
 
-[node name="EnemySpawner" type="Node2D" parent="WorldRoot/BattleTestArena"]
-script = ExtResource("18_nfivy")
-enemy_scene = ExtResource("16_cvmbd")
-max_alive = 3
-respawn_delay_sec = 30.0
-spawn_parent = NodePath("Marker2D")
-spawn_points = Array[NodePath]([NodePath("Marker2D2"), NodePath("Marker2D3")])
+[node name="EnemyBase" parent="WorldRoot/BattleTestArena" instance=ExtResource("16_cvmbd")]
+position = Vector2(40, -320)
 
-[node name="Marker2D" type="Marker2D" parent="WorldRoot/BattleTestArena/EnemySpawner"]
-position = Vector2(272, -392)
-
-[node name="Marker2D2" type="Marker2D" parent="WorldRoot/BattleTestArena/EnemySpawner"]
-position = Vector2(-144, -416)
-
-[node name="Marker2D3" type="Marker2D" parent="WorldRoot/BattleTestArena/EnemySpawner"]
-position = Vector2(80, -200)
-
-[node name="Levelpop" type="CanvasLayer" parent="."]
-script = ExtResource("17_ft6cd")
-text = "Level UP!"
-color = Color(0.26142663, 0.74286306, 0.72026473, 1)
-
-[editable path="PartyRoot/TestP1"]
 [editable path="PartyRoot/Rosali"]
+[editable path="PartyRoot/TestP1"]
 [editable path="WorldRoot/BattleTestArena"]
+[editable path="WorldRoot/BattleTestArena/EnemyBase"]
