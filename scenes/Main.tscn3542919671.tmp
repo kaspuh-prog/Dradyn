@@ -1,0 +1,441 @@
+[gd_scene load_steps=33 format=3 uid="uid://c8ty6h5dtvshr"]
+
+[ext_resource type="Script" uid="uid://dk7asc2lrlrvg" path="res://scripts/Main.gd" id="2"]
+[ext_resource type="Script" uid="uid://bf5uecgu47cgm" path="res://scripts/LeaderCamera.gd" id="2_mwfav"]
+[ext_resource type="Script" uid="uid://gs1i2fkis1j4" path="res://ui/DamageNumberLayer.gd" id="2_qmy6f"]
+[ext_resource type="PackedScene" uid="uid://obsw4c8r8ffc" path="res://scenes/PartyHUD.tscn" id="4_3p2gp"]
+[ext_resource type="PackedScene" uid="uid://bhtarksp2xskx" path="res://scenes/Actors/Player1.tscn" id="7_nfivy"]
+[ext_resource type="Script" uid="uid://cgydf6clfmbug" path="res://scenes/NightDarkenOverlay2D.gd" id="8_nfivy"]
+[ext_resource type="Script" uid="uid://ctmqf1kt5vt2m" path="res://scripts/PartyRoot_Bootstrap.gd" id="11_mwfav"]
+[ext_resource type="PackedScene" uid="uid://c3peqdshs5m18" path="res://scenes/Actors/Rosali.tscn" id="12_mwfav"]
+[ext_resource type="PackedScene" uid="uid://bv1umfw753ett" path="res://scenes/Actors/TestP1.tscn" id="13_3p2gp"]
+[ext_resource type="Texture2D" uid="uid://6q5vcngx3v1v" path="res://ui/styles/GoldCountField.png" id="14_1nqs0"]
+[ext_resource type="Script" uid="uid://phjfqrk5fsta" path="res://scenes/HUDLayer.gd" id="14_mwfav"]
+[ext_resource type="Script" uid="uid://cs8a7u0psyceu" path="res://scenes/SkillTreeSheet.gd" id="16_2ofn6"]
+[ext_resource type="PackedScene" uid="uid://chp3mvrodfse0" path="res://ui/menus/TabbedMenu.tscn" id="16_bb450"]
+[ext_resource type="Texture2D" uid="uid://b58lt5nidj2d1" path="res://ui/styles/SkillTreeBG.png" id="17_xa025"]
+[ext_resource type="Texture2D" uid="uid://2epufwh64ra0" path="res://ui/styles/SkillTreeBranchButton.png" id="18_36rkl"]
+[ext_resource type="Script" uid="uid://c4ikbryngxqlm" path="res://scripts/LevelUpToDamageNumbers.gd" id="18_bb450"]
+[ext_resource type="FontFile" uid="uid://cpfjwf504s6no" path="res://assets/fonts/KellsFLF.ttf" id="18_xa025"]
+[ext_resource type="FontFile" uid="uid://b6fk4o6k6dmrn" path="res://assets/fonts/Raleway-SemiBold.ttf" id="18_yxlcp"]
+[ext_resource type="Script" uid="uid://c5328pxcko3cy" path="res://scenes/ConsumableReadyBar.gd" id="19_1iba3"]
+[ext_resource type="Texture2D" uid="uid://dxelmya6q187x" path="res://assets/sprites/abilityicons/blank.png" id="19_36rkl"]
+[ext_resource type="Texture2D" uid="uid://fsgu1cyp7ntx" path="res://ui/styles/SkillTreeBranchButtonPressed.png" id="19_fs0b5"]
+[ext_resource type="Texture2D" uid="uid://bsw0jgkkv44q8" path="res://ui/styles/UsableItemSlots.png" id="20_2ofn6"]
+[ext_resource type="Script" uid="uid://8ujdf385vnp7" path="res://scenes/Hotbar.gd" id="20_yxlcp"]
+[ext_resource type="Script" uid="uid://er5fcywe2s8u" path="res://scenes/BootArea.gd" id="21_1iba3"]
+[ext_resource type="Script" uid="uid://byxs4xbww4gbo" path="res://scripts/SkillTreeMediator.gd" id="22_gsxep"]
+[ext_resource type="Texture2D" uid="uid://bsonkedm0mfob" path="res://ui/styles/8skillbar.png" id="22_xa025"]
+[ext_resource type="Script" uid="uid://bfyja723hh3pd" path="res://scenes/AbilitySuiteBootstrap.gd" id="22_yxlcp"]
+[ext_resource type="Script" uid="uid://1teqdngt3my4" path="res://Data/Abilities/AbilityUnlockDef.gd" id="23_v0vrg"]
+[ext_resource type="Resource" uid="uid://dcrouci1s5gp7" path="res://Data/Abilities/Unlocks/AttackUnlock.tres" id="24_dg70y"]
+[ext_resource type="Script" uid="uid://dga70jt1mmvqn" path="res://scenes/SkillTreeDebugHarness.gd" id="27_fs0b5"]
+[ext_resource type="Script" uid="uid://cmvmcqftv0jtg" path="res://scenes/HotbarDropCatcher.gd" id="29_v0vrg"]
+
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_qmy6f"]
+vertices = PackedVector2Array(217, -105.03906, 217, 117.03906, -214.78906, 118.953125, -210.20313, -106.953125)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3)])
+outlines = Array[PackedVector2Array]([PackedVector2Array(-220, -117, 227, -115, 227, 127, -225, 129)])
+
+[node name="GameRoot" type="Node2D"]
+script = ExtResource("2")
+
+[node name="DamageNumberLayer" type="CanvasLayer" parent="."]
+script = ExtResource("2_qmy6f")
+scale_with_zoom = true
+show_heals = true
+coalesce_window_sec = 0.0
+suppress_hp_after_damage_sec = 10.0
+font_px = 12
+y_offset = -30.0
+rise_pixels = 30.0
+jitter_px = 2.0
+life_sec = 1.0
+damage_color = Color(0.615765, 0, 0.0983688, 1)
+heal_color = Color(0.13928881, 0.8286577, 0.6590529, 1)
+outline_size = 3
+outline_color = Color(0.014275053, 0.014275307, 0.014275067, 1)
+crit_text_color = Color(0.6877213, 0.57477003, 0.19332707, 1)
+crit_flash_color = Color(0.998869, 0.9710488, 0.9679174, 1)
+crit_flash_time = 0.2
+crit_shake_cycles = 4
+levelup_text_scale = 0.5
+levelup_text_color = Color(0.54509807, 0.99215686, 0.7411765, 1)
+
+[node name="LeaderCamera" type="Camera2D" parent="." groups=["LeaderCamera"]]
+script = ExtResource("2_mwfav")
+
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="."]
+position = Vector2(-8, -1)
+navigation_polygon = SubResource("NavigationPolygon_qmy6f")
+
+[node name="PartyRoot" type="Node2D" parent="." groups=["PartyManager"]]
+position = Vector2(68, -75)
+script = ExtResource("11_mwfav")
+leader_scene = ExtResource("12_mwfav")
+companion_scenes = Array[PackedScene]([ExtResource("13_3p2gp"), ExtResource("13_3p2gp")])
+
+[node name="Player1" parent="PartyRoot" groups=["PartyMembers"] instance=ExtResource("7_nfivy")]
+
+[node name="CollisionShape2D" parent="PartyRoot/Player1" index="1"]
+position = Vector2(0, -16.5)
+
+[node name="WorldRoot" type="Node2D" parent="."]
+
+[node name="Timer" type="Timer" parent="WorldRoot"]
+wait_time = 5.027
+
+[node name="NightOverlayLayer" type="CanvasLayer" parent="WorldRoot"]
+layer = 6
+
+[node name="NightDarkenOverlay" type="ColorRect" parent="WorldRoot/NightOverlayLayer"]
+light_mask = 16
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("8_nfivy")
+night_tint_color = Color(0.047058824, 0.07058824, 0.18431373, 0.9019608)
+night_strength_at_max = 0.75
+night_black_mix_at_max = 0.65
+use_curve = true
+
+[node name="LvluptoDmgNum" type="Node" parent="."]
+script = ExtResource("18_bb450")
+message_template = "Level UP!"
+color = Color(0.014936994, 0.82711005, 0.75036603, 1)
+scale_mult = 0.25
+debug_logs = true
+
+[node name="AbilityBootstrap" type="Node" parent="."]
+script = ExtResource("22_yxlcp")
+
+[node name="HUDLayer" type="CanvasLayer" parent="."]
+layer = 10
+script = ExtResource("14_mwfav")
+party_hud_scene = ExtResource("4_3p2gp")
+hud_offset = Vector2i(-8, 224)
+
+[node name="TabbedMenu" parent="HUDLayer" instance=ExtResource("16_bb450")]
+alpha_when_visible = 0.9
+content_node_names = PackedStringArray()
+currency_value_label_path = NodePath("Content/InventorySheet/BagTabsRow/CurrencyBox/Gold Label")
+
+[node name="BG" parent="HUDLayer/TabbedMenu" index="0"]
+z_index = 9
+
+[node name="Content" parent="HUDLayer/TabbedMenu" index="2"]
+z_index = 9
+mouse_filter = 1
+
+[node name="InventorySheet" parent="HUDLayer/TabbedMenu/Content" index="0"]
+desc_gap_px = 6
+currency_box_path = NodePath("BagTabsRow/CurrencyBox")
+currency_value_label_path = NodePath("BagTabsRow/CurrencyBox/Gold Label")
+currency_box_width_px = 32
+currency_box_height_px = 8
+currency_nudge_x_px = 52
+currency_nudge_y_px = -82
+
+[node name="CurrencyBox" type="TextureRect" parent="HUDLayer/TabbedMenu/Content/InventorySheet/BagTabsRow" index="0"]
+layout_mode = 0
+offset_top = 80.0
+offset_right = 40.0
+offset_bottom = 120.0
+texture = ExtResource("14_1nqs0")
+
+[node name="Gold Label" type="Label" parent="HUDLayer/TabbedMenu/Content/InventorySheet/BagTabsRow/CurrencyBox"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 5
+
+[node name="Grid" parent="HUDLayer/TabbedMenu/Content/InventorySheet" index="1"]
+unlocked_capacity = 6
+
+[node name="IconOverlay" parent="HUDLayer/TabbedMenu/Content/InventorySheet/Grid" index="0"]
+z_index = 900
+show_debug_outlines = false
+
+[node name="Qty" parent="HUDLayer/TabbedMenu/Content/InventorySheet/DescriptionPane" index="2"]
+offset_left = 8.0
+offset_top = 68.0
+offset_right = 48.0
+offset_bottom = 91.0
+theme_override_colors/font_color = Color(0.98849684, 0.9688907, 0.96463376, 1)
+theme_override_font_sizes/font_size = 5
+
+[node name="SheetController" parent="HUDLayer/TabbedMenu/Content/InventorySheet" index="4"]
+desc_scroll_grabber_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+desc_scroll_corner_radius = 4
+
+[node name="StatsSheet" parent="HUDLayer/TabbedMenu/Content" index="1"]
+visible = true
+points_nudge_x = 14
+
+[node name="PointsLabel" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="0"]
+theme_override_colors/font_outline_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_constants/outline_size = 1
+log_debug = false
+
+[node name="Minus_STR" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="4"]
+toggle_mode = true
+
+[node name="Plus_STR" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="5"]
+toggle_mode = true
+
+[node name="Value_STR" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="6"]
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 10
+
+[node name="Label_STR" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="7"]
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 10
+text = "STR"
+
+[node name="Value_DEX" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="10"]
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 10
+
+[node name="Label_DEX" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="11"]
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 10
+text = "DEX"
+
+[node name="Value_STA" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="14"]
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 10
+
+[node name="Label_STA" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="15"]
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 10
+text = "STA"
+
+[node name="Value_INT" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="18"]
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 10
+
+[node name="Label_INT" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="19"]
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 10
+text = "INT"
+
+[node name="Value_WIS" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="22"]
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 10
+
+[node name="Label_WIS" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="23"]
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 10
+text = "WIS"
+
+[node name="Value_LCK" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="26"]
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 10
+
+[node name="Label_LCK" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="27"]
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 10
+text = "LCK"
+
+[node name="RightPanelBG" parent="HUDLayer/TabbedMenu/Content/StatsSheet/RightPanel" index="0"]
+stretch_mode = 2
+list_inset = 6
+use_unified_font_settings = true
+unified_font = ExtResource("18_yxlcp")
+unified_font_size = 6
+unified_font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+scrollbar_width = 4
+scrollbar_alpha_normal = 0.0
+scrollbar_alpha_hover = 0.2
+scrollbar_alpha_pressed = 0.25
+scrollbar_corner_radius = 3
+stat_order_override = ["HP", "MP", "END", "Attack", "Defense", "STR", "DEX", "STA", "INT", "WIS", "LCK", "BlockChance", "ParryChance", "Evasion", "CritChance", "CritHealChance", "SlashRes", "PierceRes", "BluntRes", "FireRes", "IceRes", "WindRes", "EarthRes", "MagicRes", "LightRes", "DarknessRes", "PoisonRes", "MoveSpeed"]
+
+[node name="StatsHeaderBinder" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="30"]
+actor_path = NodePath("../../../../../PartyRoot/Player1")
+
+[node name="SkillTreeSheet" parent="HUDLayer/TabbedMenu/Content" index="2"]
+visible = true
+script = ExtResource("16_2ofn6")
+background_size = Vector2i(148, 160)
+points_font = ExtResource("18_xa025")
+points_font_size = 10
+points_font_color_spent = Color(0.2509804, 0.13333334, 0.10980392, 1)
+points_font_color_avail = Color(0.2509804, 0.13333334, 0.10980392, 1)
+points_line_gap = 8
+points_text_prefix_avail = "Available: "
+scrollbar_width = 3
+scrollbar_grabber_min_size = 3
+scrollbar_grabber_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+scrollbar_grabber_hover_color = Color(0.3327438, 0.18444413, 0.1547533, 1)
+scrollbar_grabber_pressed_color = Color(0.21609959, 0.11169342, 0.0908188, 1)
+debug_draw_layout = true
+demo_icon = ExtResource("19_36rkl")
+
+[node name="SkillTreeBG" type="TextureRect" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet" index="0"]
+custom_minimum_size = Vector2(148, 160)
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+texture = ExtResource("17_xa025")
+stretch_mode = 2
+
+[node name="Panel_1" type="Panel" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet/SkillTreeBG"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Panel_2" type="Panel" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet/SkillTreeBG"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Panel_3" type="Panel" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet/SkillTreeBG"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Panel_4" type="Panel" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet/SkillTreeBG"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Btn_1" type="TextureButton" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet" index="1"]
+layout_mode = 0
+offset_right = 64.0
+offset_bottom = 16.0
+texture_normal = ExtResource("18_36rkl")
+texture_pressed = ExtResource("19_fs0b5")
+
+[node name="Btn_Label1" type="Label" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet/Btn_1"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 6
+
+[node name="Btn_2" type="TextureButton" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet" index="2"]
+layout_mode = 0
+offset_right = 64.0
+offset_bottom = 16.0
+texture_normal = ExtResource("18_36rkl")
+texture_pressed = ExtResource("19_fs0b5")
+
+[node name="Btn_Label2" type="Label" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet/Btn_2"]
+layout_mode = 0
+offset_top = -20.0
+offset_right = 40.0
+offset_bottom = 3.0
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 6
+
+[node name="Btn_3" type="TextureButton" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet" index="3"]
+layout_mode = 0
+offset_right = 64.0
+offset_bottom = 16.0
+texture_normal = ExtResource("18_36rkl")
+texture_pressed = ExtResource("19_fs0b5")
+
+[node name="Btn_Label3" type="Label" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet/Btn_3"]
+layout_mode = 0
+offset_top = 20.0
+offset_right = 64.0
+offset_bottom = 43.0
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 6
+
+[node name="Btn_4" type="TextureButton" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet" index="4"]
+layout_mode = 0
+offset_right = 64.0
+offset_bottom = 16.0
+texture_normal = ExtResource("18_36rkl")
+texture_pressed = ExtResource("19_fs0b5")
+
+[node name="Btn_Label4" type="Label" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet/Btn_4"]
+layout_mode = 0
+offset_top = -27.0
+offset_right = 64.0
+offset_bottom = -4.0
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 6
+
+[node name="SkillTreeMediator" type="Node" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet" index="5"]
+script = ExtResource("22_gsxep")
+sheet_path = NodePath("..")
+unlock_defs = Array[ExtResource("23_v0vrg")]([ExtResource("24_dg70y")])
+auto_register_on_ready = true
+
+[node name="ConsumableReadyBar" type="Control" parent="HUDLayer"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 3
+anchors_preset = 0
+offset_left = 368.0
+offset_top = 238.0
+offset_right = 400.0
+offset_bottom = 270.0
+mouse_filter = 1
+script = ExtResource("19_1iba3")
+background = ExtResource("20_2ofn6")
+qty_offset_x = 3
+qty_offset_y = -6
+qty_offset_x2 = 3
+qty_offset_y2 = -6
+qty_font_size = 5
+
+[node name="BG" type="TextureRect" parent="HUDLayer/ConsumableReadyBar"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Hotbar" type="Control" parent="HUDLayer"]
+z_index = 100
+custom_minimum_size = Vector2(64, 32)
+layout_mode = 3
+anchors_preset = 0
+offset_left = 288.0
+offset_top = 238.0
+offset_right = 352.0
+offset_bottom = 302.0
+script = ExtResource("20_yxlcp")
+background = ExtResource("22_xa025")
+slot_positions = PackedVector2Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+
+[node name="BG" type="TextureRect" parent="HUDLayer/Hotbar"]
+custom_minimum_size = Vector2(32, 64)
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="HotbarDropCatcher" type="Control" parent="HUDLayer"]
+z_index = 1000
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("29_v0vrg")
+debug_outline = true
+
+[node name="BootArea" type="Node" parent="."]
+script = ExtResource("21_1iba3")
+start_area = "uid://cgr11keydyxqf"
+
+[node name="Node" type="Node" parent="."]
+script = ExtResource("27_fs0b5")
+sheet_path = NodePath("../HUDLayer/TabbedMenu/Content/SkillTreeSheet")
+
+[editable path="PartyRoot/Player1"]
+[editable path="HUDLayer/TabbedMenu"]

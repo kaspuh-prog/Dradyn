@@ -4,395 +4,768 @@ extends CharacterBody2D
 @onready var stats: Node = $StatsComponent
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 
+# --- Debug ---
+@export var debug_log: bool = false
+
 # --- Config / Exports ---
 @export var is_leader: bool = false : set = _set_is_leader, get = _get_is_leader
-@export var sprint_mul: float = 1.35
-@export var stamina_cost_per_second: float = 2.0
-@export var sprint_step_cost: float = 0.2
+@export var sprint_mul: float = 1.5
+@export var end_cost_per_second: float = 0.5
+@export var sprint_step_cost: float = 0.08
 @export var accel_lerp: float = 0.18
 @export var resume_sprint_end: float = 1.0
 
-@export var attack_cooldown_sec: float = 0.5
-@export var attack_queue_buffer_sec: float = 0.16
-@export var attack_hit_frame: int = 2
-@export var melee_range: float = 28.0
-@export var melee_arc_deg: float = 70.0
-@export var melee_forward_offset: float = 8.0
+# Hotbar provider path (optional override). Default is the autoload: /root/HotbarSys.
+@export var hotbar_provider_path: NodePath
 
-# NEW: damage shaping
-@export var noncrit_variance: float = 0.15     # ±15% spread
-@export var crit_multiplier: float = 1.5
+# Movement
+@export var base_move_speed: float = 86.0
 
-const SPRINT_ACTION := "sprint"
-const SPRINT_ACTION_ALT := "ui_sprint"
-const ATTACK_ACTION := "attack"
+# Targeting
+@export var target_pick_radius: float = 96.0
+var _current_target: Node = null
 
-var _party: Node = null
-var _registered: bool = false
-var _is_leader_cache: bool = false
-var _sprinting: bool = false
+# Anim profile: side-only left/right (walk_side/idle_side) with flip for left
+@export var use_side_anims: bool = false
 
-const SPEED_FALLBACK: float = 96.0
+# --- Interaction ---
+@export var interact_action_name: String = "interact"
+@export var interact_cooldown_ms: int = 160
+var _can_interact_at_msec: int = 0
 
-# --- State ---
-var controlled: bool = false
-var last_move_dir: Vector2 = Vector2.DOWN
+# State
+var _controlled: bool = false
+var _is_sprinting: bool = false
+var _last_move_dir: Vector2 = Vector2.ZERO
 
-var _attacking: bool = false
-var _attack_cd: float = 0.0
-var _attack_anim_name: String = ""
-var _attack_hit_pending: bool = false
-var _attack_post_cd: float = 0.0
-var _attack_buffer: float = 0.0
+# Action animation lock
+var _action_anim_until_msec: int = 0
+var _pending_hit_frame: int = -1
+var _pending_hit_callable: Callable = Callable()
 
-# NEW: per-actor RNG + dedupe ids
-var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
-var _attack_seq: int = 0
-var _current_attack_id: int = -1
+# Legacy fallback
+@export var legacy_attack_cooldown_sec: float = 0.5
+var _legacy_can_attack_at_msec: int = 0
+var _legacy_attack_anim: String = "attack1_down"
 
-# NEW: guard to avoid double registration
-var _damage_numbers_registered: bool = false
+# Constants
+const MOVE_DIR_THRESHOLD: float = 0.05
+const HOTBAR_DEFAULT_SLOTS: int = 8
 
-# -------------------- Lifecycle --------------------
+# --- Lifecycle ----------------------------------------------------------------
+
 func _ready() -> void:
-	_rng.randomize()
+	set_physics_process(true)
+	set_process_unhandled_input(true)
 
 	if is_instance_valid(sprite):
 		sprite.frame_changed.connect(Callable(self, "_on_sprite_frame_changed"))
 		sprite.animation_finished.connect(Callable(self, "_on_sprite_animation_finished"))
 
-	# Defer registration so DamageNumberLayer (CanvasLayer) is surely in the tree
-	call_deferred("_register_damage_numbers")
+	var party: Node = get_node_or_null("/root/Party")
+	if party != null and party.has_signal("controlled_changed"):
+		party.controlled_changed.connect(_on_controlled_changed)
 
-	_party = get_node_or_null("/root/Party")
-	if _party != null and _party.has_signal("controlled_changed"):
-		_party.controlled_changed.connect(_on_controlled_changed)
-	elif _party == null:
-		push_warning("[Player] /root/Party not found — defaulting to controlled=true")
-		controlled = true
+	# Sync controlled on load
+	_sync_controlled_from_party()
+
+	# Proactively ensure HotbarSys is bound to Hotbar if both exist
+	call_deferred("_ensure_hotbar_bound")
 
 	call_deferred("_join_party")
 
-func _join_party() -> void:
-	if _registered:
+	if is_instance_valid(stats) and stats.has_signal("healed"):
+		stats.healed.connect(_on_self_healed)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not _controlled:
 		return
-	if _party == null:
-		_party = get_node_or_null("/root/Party")
-		if _party == null:
+
+	# Interact-first on E or action
+	if _is_interact_press(event):
+		if debug_log:
+			_printd("[PLAYER] interact-press detected")
+		if _try_interact_now():
+			if debug_log:
+				_printd("[PLAYER] interact consumed input")
 			return
-		if _party.has_signal("controlled_changed"):
-			_party.controlled_changed.connect(_on_controlled_changed)
+		else:
+			if debug_log:
+				_printd("[PLAYER] no interact target; falling through to hotbar")
 
-	if stats == null:
-		push_warning("[Player] StatsComponent missing under " + name)
-
-	_party.call("add_member", self, is_leader)
-	_registered = true
-
-# Registers this actor as a damage-number emitter (once).
-func _register_damage_numbers() -> void:
-	if _damage_numbers_registered:
+	var idx: int = _hotbar_index_from_event(event)
+	if idx != -1:
+		if debug_log:
+			_printd("[PLAYER] hotbar index resolved=", str(idx))
+		_try_hotbar(idx)
 		return
-	if stats == null:
-		return
-	var anchor: Node2D = null
-	if is_instance_valid(sprite):
-		anchor = sprite
-	else:
-		anchor = self
-	get_tree().call_group("DamageNumberSpawners", "register_emitter", stats, anchor)
-	_damage_numbers_registered = true
 
-# -------------------- Leader <-> Control link --------------------
-func _set_is_leader(v: bool) -> void:
-	_is_leader_cache = v
-	if v and _party != null and _party.has_method("set_controlled"):
-		_party.call("set_controlled", self)
-
-func _get_is_leader() -> bool:
-	return _is_leader_cache
-
-func set_controlled(v: bool) -> void:
-	controlled = v
-	set_process_input(v)
-	print("[", name, "] controlled=", v)
-
-func _on_controlled_changed(current: Node) -> void:
-	_is_leader_cache = (current == self)
-	if controlled:
-		modulate = Color(1, 1, 1, 1)
-	else:
-		modulate = Color(0.82, 0.82, 0.82, 1)
-
-# -------------------- Movement / Sprint --------------------
 func _physics_process(delta: float) -> void:
-	_attack_cd = max(0.0, _attack_cd - delta)
-	if _attack_buffer > 0.0:
-		_attack_buffer = max(0.0, _attack_buffer - delta)
-
 	var dir: Vector2 = Vector2.ZERO
+	var dead_now: bool = _is_dead()
 
-	if controlled:
-		# Attack input
-		if Input.is_action_just_pressed(ATTACK_ACTION):
-			if _attacking or _attack_cd > 0.0:
-				_attack_buffer = attack_queue_buffer_sec
-			else:
-				_start_attack()
-				return
+	if _controlled:
+		if dead_now:
+			_is_sprinting = false
+			velocity = velocity.lerp(Vector2.ZERO, clamp(accel_lerp, 0.0, 1.0))
+			move_and_slide()
+		else:
+			dir = _read_move_dir()
+			_is_sprinting = _should_sprint(dir)
 
-		# Movement input
-		dir = Vector2(
-			Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left"),
-			Input.get_action_strength("ui_down")  - Input.get_action_strength("ui_up")
-		)
-		if dir.length_squared() > 1.0:
-			dir = dir.normalized()
+			var speed: float = base_move_speed
+			if _is_sprinting:
+				speed = base_move_speed * sprint_mul
+				_spend_endurance_tick(delta)
 
-		_sprinting = _is_sprint_pressed() and dir != Vector2.ZERO
-
-		if _sprinting and stats != null and stats.has_method("spend_end"):
-			var drain: float = stamina_cost_per_second * delta
-			var ok: bool = stats.call("spend_end", drain)
-			if not ok:
-				_sprinting = false
-
-		var base_speed: float = SPEED_FALLBACK
-		if stats != null and stats.has_method("get_final_stat"):
-			var v_any: Variant = stats.call("get_final_stat", "MoveSpeed")
-			if typeof(v_any) == TYPE_INT or typeof(v_any) == TYPE_FLOAT:
-				var v_f: float = float(v_any)
-				if v_f > 0.0:
-					base_speed = v_f
-
-		var target_speed: float = base_speed
-		if _sprinting:
-			target_speed *= sprint_mul
-
-		var desired: Vector2 = dir * target_speed
-		velocity = velocity.lerp(desired, accel_lerp)
-		move_and_slide()
-
-		if sprite != null:
-			if _sprinting:
-				sprite.speed_scale = 1.25
-			else:
-				sprite.speed_scale = 1.0
+			var desired: Vector2 = dir * speed
+			velocity = velocity.lerp(desired, clamp(accel_lerp, 0.0, 1.0))
+			move_and_slide()
 	else:
-		if sprite != null:
-			sprite.speed_scale = 1.0
+		if velocity.length() > MOVE_DIR_THRESHOLD:
+			dir = velocity.normalized()
+		else:
+			dir = Vector2.ZERO
 
-	_update_animation()
+	if not dead_now:
+		_set_move_anim(dir)
 
-	# Buffered re-attack as soon as allowed
-	if not _attacking and _attack_cd <= 0.0 and _attack_buffer > 0.0:
-		_attack_buffer = 0.0
-		_start_attack()
+	if dir.length() > 0.0:
+		_last_move_dir = dir
 
-func _is_sprint_pressed() -> bool:
-	if InputMap.has_action(SPRINT_ACTION) and Input.is_action_pressed(SPRINT_ACTION):
-		return true
-	if InputMap.has_action(SPRINT_ACTION_ALT) and Input.is_action_pressed(SPRINT_ACTION_ALT):
+	_pick_target_if_none()
+
+# --- Interaction helpers -----------------------------------------------------
+
+func _is_interact_press(event: InputEvent) -> bool:
+	if interact_action_name != "" and InputMap.has_action(interact_action_name):
+		if event.is_action_pressed(interact_action_name):
+			return true
+	var k: InputEventKey = event as InputEventKey
+	if k != null and k.pressed and not k.echo:
+		if k.keycode == KEY_E:
+			return true
+	return false
+
+func _try_interact_now() -> bool:
+	var now: int = Time.get_ticks_msec()
+	if now < _can_interact_at_msec:
+		return false
+
+	var sys: Node = _resolve_interaction_sys()
+	if sys == null:
+		return false
+	if not sys.has_method("find_best_target"):
+		return false
+	if not sys.has_method("try_interact_from"):
+		return false
+
+	var facing: Vector2 = Vector2.ZERO
+	var target: Node = null
+	var v: Variant = sys.call("find_best_target", self, facing)
+	if v is Node:
+		target = v as Node
+	if target == null:
+		return false
+
+	var ok_any: Variant = sys.call("try_interact_from", self, facing)
+	var ok: bool = false
+	if typeof(ok_any) == TYPE_BOOL:
+		ok = bool(ok_any)
+	if ok:
+		_can_interact_at_msec = now + max(0, interact_cooldown_ms)
+		var vp: Viewport = get_viewport()
+		if vp != null:
+			vp.set_input_as_handled()
 		return true
 	return false
 
-# -------------------- Animation --------------------
-func _update_animation() -> void:
-	if not is_instance_valid(sprite):
-		return
-	if _attacking:
-		return
-
-	var v: Vector2 = velocity
-	var speed: float = v.length()
-	var moving: bool = speed > 1.0
-	if moving:
-		last_move_dir = v / max(speed, 0.001)
-
-	var use_side: bool = absf(last_move_dir.x) >= absf(last_move_dir.y)
-	var anim_name: String = ""
-	var flip_h: bool = false
-
-	if moving:
-		if use_side:
-			anim_name = "walk_side"
-			flip_h = last_move_dir.x < 0.0
-		else:
-			if last_move_dir.y < 0.0:
-				anim_name = "walk_up"
-			else:
-				anim_name = "walk_down"
-	else:
-		if use_side:
-			anim_name = "idle_side"
-			flip_h = last_move_dir.x < 0.0
-		else:
-			if last_move_dir.y < 0.0:
-				anim_name = "idle_up"
-			else:
-				anim_name = "idle_down"
-
-	if sprite.animation != anim_name:
-		sprite.flip_h = flip_h
-		sprite.play(anim_name)
-	elif anim_name.ends_with("_side"):
-		sprite.flip_h = flip_h
-
-# -------------------- Attack --------------------
-func _start_attack() -> void:
-	if _attacking:
-		return
-	if _attack_cd > 0.0:
-		return
-
-	_attacking = true
-	_attack_anim_name = ""
-	_attack_hit_pending = true
-
-	_attack_seq += 1
-	_current_attack_id = _attack_seq
-
-	# Choose anim by facing
-	var use_side: bool = absf(last_move_dir.x) >= absf(last_move_dir.y)
-	var anim_name: String = ""
-	var flip_h: bool = false
-	if use_side:
-		anim_name = "attack1_side"
-		flip_h = last_move_dir.x < 0.0
-	else:
-		if last_move_dir.y < 0.0:
-			anim_name = "attack1_up"
-		else:
-			anim_name = "attack1_down"
-
-	_attack_anim_name = anim_name
-
-	if sprite != null:
-		var frames: SpriteFrames = sprite.sprite_frames
-		if frames != null and frames.has_animation(anim_name):
-			frames.set_animation_loop(anim_name, false)
-		sprite.flip_h = flip_h
-		sprite.frame = 0
-		sprite.play(anim_name)
-
-func _finish_attack() -> void:
-	_attacking = false
-	_attack_cd = _attack_post_cd
-	_attack_anim_name = ""
-	if _attack_buffer > 0.0 and _attack_cd <= 0.0:
-		_attack_buffer = 0.0
-		_start_attack()
-	else:
-		_update_animation()
-
-# --- RNG helpers ---
-func _roll_noncrit_amount(attacker_stats: Node) -> float:
-	var atk: float = 10.0
-	if attacker_stats != null and attacker_stats.has_method("get_final_stat"):
-		var v = attacker_stats.call("get_final_stat", "Attack")
-		if typeof(v) == TYPE_INT or typeof(v) == TYPE_FLOAT:
-			atk = float(v)
-	var spread: float = clamp(noncrit_variance, 0.0, 0.95)
-	var mult: float = 1.0
-	if spread > 0.0:
-		mult = _rng.randf_range(1.0 - spread, 1.0 + spread)
-	return atk * mult
-
-func _roll_crit(attacker_stats: Node) -> bool:
-	var cc: float = 0.0
-	if attacker_stats != null and attacker_stats.has_method("get_final_stat"):
-		var v = attacker_stats.call("get_final_stat", "CritChance")
-		if typeof(v) == TYPE_INT or typeof(v) == TYPE_FLOAT:
-			cc = float(v)
-	if cc > 1.0:
-		cc = cc * 0.01
-	cc = clamp(cc, 0.0, 0.95)
-	return _rng.randf() < cc
-
-# --- Signals from sprite ---
-func _on_sprite_frame_changed() -> void:
-	if not is_instance_valid(sprite):
-		return
-
-	# Sprint stamina footstep drain
-	if _sprinting and controlled and sprint_step_cost > 0.0:
-		var anim: String = sprite.animation
-		if anim.begins_with("walk_"):
-			var f: int = sprite.frame
-			if f == 0 or f == 3:
-				if stats != null and stats.has_method("spend_end"):
-					stats.call("spend_end", sprint_step_cost)
-
-	# Trigger the actual hit on the configured frame
-	if _attacking and _attack_hit_pending and _attack_anim_name != "" and sprite.animation == _attack_anim_name:
-		if sprite.frame == attack_hit_frame:
-			_attack_hit_pending = false
-			_player_do_attack_hit()
-
-	# Fallback: finish attack automatically on the last frame even if something goes off
-	if _attacking and _attack_anim_name != "" and sprite.animation == _attack_anim_name:
-		var frames: SpriteFrames = sprite.sprite_frames
-		if frames != null and frames.has_animation(_attack_anim_name):
-			var last: int = frames.get_frame_count(_attack_anim_name) - 1
-			if sprite.frame >= last:
-				_finish_attack()
-
-func _on_sprite_animation_finished() -> void:
-	if _attacking and _attack_anim_name != "" and sprite != null:
-		if sprite.animation == _attack_anim_name:
-			_finish_attack()
-
-# --- Do the melee hit (arc/angle gate) ---
-func _player_do_attack_hit() -> void:
-	var aim: Vector2 = last_move_dir
-	if aim == Vector2.ZERO:
-		aim = Vector2.DOWN
-	var origin: Vector2 = global_position + aim.normalized() * melee_forward_offset
-	var half_angle_rad: float = deg_to_rad(melee_arc_deg * 0.5)
-
-	# Build the packet once per swing
-	var did_crit: bool = _roll_crit(stats)
-	var amt: float = _roll_noncrit_amount(stats)
-	if did_crit:
-		amt = amt * crit_multiplier
-
-	var packet := {
-		"amount": amt,
-		"source": name,
-		"is_crit": did_crit,
-		"attack_id": _current_attack_id
-	}
-
-	# Find enemies in arc
-	var enemies := get_tree().get_nodes_in_group("Enemies")
-	for e in enemies:
-		if not (e is Node2D):
-			continue
-		var n2: Node2D = e
-		var to: Vector2 = n2.global_position - origin
-		var dist: float = to.length()
-		if dist > melee_range:
-			continue
-		var dir: Vector2 = to / max(0.001, dist)
-		var dot: float = aim.normalized().dot(dir)
-		if dot > 1.0:
-			dot = 1.0
-		if dot < -1.0:
-			dot = -1.0
-		var ang: float = acos(dot)
-		if ang > half_angle_rad:
-			continue
-
-		var t_stats := _find_stats_component(n2)
-		if t_stats != null:
-			t_stats.apply_damage_packet(packet)
-
-func _find_stats_component(root: Node) -> Node:
+func _resolve_interaction_sys() -> Node:
+	var root: Viewport = get_tree().root
 	if root == null:
 		return null
-	var by_name: Node = root.find_child("StatsComponent", true, false)
-	if by_name != null:
-		return by_name
-	if root.has_method("apply_damage_packet"):
-		return root
+	var n: Node = root.get_node_or_null("InteractionSys")
+	if n != null:
+		return n
+	return root.get_node_or_null("InteractionSystem")
+
+# --- Hotbar provider + binding ------------------------------------------------
+
+func _hotbar_provider() -> Node:
+	# 1) explicit path if assigned
+	if hotbar_provider_path != NodePath():
+		var n: Node = get_node_or_null(hotbar_provider_path)
+		if n != null:
+			return n
+
+	# 2) project autoload node (confirmed in project.godot)
+	var root: Viewport = get_tree().root
+	if root == null:
+		return null
+	var sys: Node = root.get_node_or_null("HotbarSys")
+	if sys != null:
+		return sys
+
+	# 3) legacy fallback
+	return root.get_node_or_null("HotbarSystem")
+
+func _find_hotbar_node() -> Node:
+	# Find the Hotbar scene instance (class_name Hotbar) or a node with the 3 signals.
+	var root: Node = get_tree().root
+	if root == null:
+		return null
+	var queue: Array[Node] = [root]
+	while queue.size() > 0:
+		var n: Node = queue.pop_front()
+		if n == null:
+			continue
+		# Best: class_name
+		if n.get_class() == "Hotbar":
+			return n
+		# Fallback: signal signature
+		var has_assign: bool = n.has_signal("slot_assigned")
+		var has_clear: bool = n.has_signal("slot_cleared")
+		var has_trig: bool = n.has_signal("slot_triggered")
+		if has_assign and has_clear and has_trig:
+			return n
+		for c in n.get_children():
+			queue.push_back(c)
 	return null
+
+func _ensure_hotbar_bound() -> void:
+	var provider: Node = _hotbar_provider()
+	if provider == null:
+		return
+	if not provider.has_method("bind_to_hotbar"):
+		return
+	var hb: Node = _find_hotbar_node()
+	if hb == null:
+		return
+	# Bind and let the autoload rebuild its internal model from Hotbar signals
+	provider.call("bind_to_hotbar", hb)
+	if debug_log:
+		_printd("[PLAYER] ensured HotbarSys bound to ", hb.get_path())
+
+func _get_hotbar_ability_at(index: int) -> String:
+	var provider: Node = _hotbar_provider()
+	if provider == null:
+		return ""
+	if not provider.has_method("get_ability_id_at"):
+		return ""
+	# First read
+	var v0: Variant = provider.call("get_ability_id_at", index)
+	if typeof(v0) == TYPE_STRING:
+		var s0: String = String(v0)
+		if s0 != "":
+			return s0
+	# If empty, force-bind and retry once
+	_ensure_hotbar_bound()
+	var v1: Variant = provider.call("get_ability_id_at", index)
+	if typeof(v1) == TYPE_STRING:
+		return String(v1)
+	return ""
+
+func _get_hotbar_slot_count() -> int:
+	var provider: Node = _hotbar_provider()
+	if provider != null and provider.has_method("get_slot_count"):
+		var v: Variant = provider.call("get_slot_count")
+		if typeof(v) == TYPE_INT:
+			return int(v)
+	return HOTBAR_DEFAULT_SLOTS
+
+# --- Ability routing ----------------------------------------------------------
+
+func _pick_heal_target_or_self() -> Node:
+	if has_method("_pick_ally_target"):
+		var t: Variant = call("_pick_ally_target")
+		if t != null and t is Node:
+			return t as Node
+	return self
+
+func _try_hotbar(index: int) -> void:
+	if index < 0:
+		return
+	if index >= _get_hotbar_slot_count():
+		return
+
+	var ability_id: String = _get_hotbar_ability_at(index)
+	if ability_id == "":
+		if debug_log:
+			_printd("[PLAYER] hotbar idx=", str(index), " empty after bind check")
+		return
+
+	if ability_id == "attack" and is_action_locked():
+		if debug_log:
+			_printd("[PLAYER] attack locked by action gate")
+		return
+
+	var ability_sys: Node = _ability_system()
+	if ability_sys == null:
+		if debug_log:
+			_printd("[PLAYER] AbilitySys not found.")
+		return
+
+	var ctx: Dictionary = {}
+	ctx["source"] = "player"
+
+	# Prefer a concrete target for abilities that care about it.
+	if _current_target != null and is_instance_valid(_current_target) and _current_target is Node2D:
+		ctx["target"] = _current_target
+		ctx["prefer"] = "target"
+
+	# --- New: establish aim for melee / general abilities ---
+	var aim: Vector2 = Vector2.ZERO
+
+	if ability_id == "attack":
+		# Melee: aim toward our current or nearest enemy so the swing cone points correctly.
+		var tgt2d: Node2D = null
+		if ctx.has("target"):
+			var tv: Variant = ctx["target"]
+			if tv is Node2D:
+				tgt2d = tv as Node2D
+		if tgt2d == null:
+			var nearest: Node = _find_nearest_enemy()
+			if nearest is Node2D:
+				tgt2d = nearest as Node2D
+		if tgt2d != null:
+			aim = tgt2d.global_position - global_position
+
+	# Fallback aim for any ability (including attack if no enemy is near)
+	if aim == Vector2.ZERO:
+		aim = _last_move_dir
+	if aim == Vector2.ZERO and velocity.length() > MOVE_DIR_THRESHOLD:
+		aim = velocity.normalized()
+	if aim == Vector2.ZERO:
+		aim = Vector2.DOWN
+
+	ctx["aim_dir"] = aim
+
+	if ability_id == "heal":
+		var heal_tgt: Node = _pick_heal_target_or_self()
+		ctx["manual_target"] = heal_tgt
+		ctx["prefer"] = "target"
+		ctx["target"] = heal_tgt
+
+	if ability_id == "attack":
+		ctx["use_gcd"] = false
+
+	if debug_log:
+		var msg: String = "[PLAYER] calling AbilitySys.request_cast id=" + ability_id + " idx=" + str(index) + " ctx=" + str(ctx)
+		_printd(msg)
+
+	var ok_any: Variant = ability_sys.call("request_cast", self, ability_id, ctx)
+	var ok: bool = false
+	if typeof(ok_any) == TYPE_BOOL:
+		ok = bool(ok_any)
+
+	if debug_log:
+		if ok:
+			_printd("[PLAYER] AbilitySys.request_cast accepted id=", ability_id)
+		else:
+			_printd("[PLAYER] AbilitySys.request_cast rejected id=", ability_id)
+
+# --- AnimationBridge compatibility -------------------------------------------
+
+func play_melee_attack(aim_dir: Vector2, hit_frame: int, on_hit: Callable) -> void:
+	var bridge: Node = _animation_bridge()
+	if bridge != null and bridge.has_method("play_melee_attack"):
+		bridge.call("play_melee_attack", aim_dir, hit_frame, on_hit)
+		return
+	play_melee_attack_anim(aim_dir, hit_frame, on_hit)
+
+func lock_action_for(ms: int) -> void:
+	var now: int = Time.get_ticks_msec()
+	var until: int = now + max(0, ms)
+	if until > _action_anim_until_msec:
+		_action_anim_until_msec = until
+
+func lock_action(seconds: float) -> void:
+	var ms: int = int(max(0.0, seconds) * 1000.0)
+	lock_action_for(ms)
+
+func unlock_action() -> void:
+	_action_anim_until_msec = 0
+
+func is_action_locked() -> bool:
+	return Time.get_ticks_msec() < _action_anim_until_msec
+
+# --- Legacy melee anim fallback ----------------------------------------------
+
+func play_melee_attack_anim(aim_dir: Vector2, hit_frame: int, on_hit: Callable) -> void:
+	if sprite == null:
+		return
+	lock_action_for(400)
+	_pending_hit_frame = max(0, hit_frame)
+	_pending_hit_callable = on_hit
+
+	var use_side: bool = false
+	if use_side_anims and sprite.sprite_frames != null:
+		if sprite.sprite_frames.has_animation("attack1_side"):
+			use_side = true
+
+	var name: String = "attack1_down"
+	if use_side:
+		if absf(aim_dir.x) >= absf(aim_dir.y):
+			name = "attack1_side"
+			sprite.flip_h = aim_dir.x < 0.0
+		else:
+			if aim_dir.y >= 0.0:
+				name = "attack1_down"
+			else:
+				name = "attack1_up"
+			sprite.flip_h = false
+	else:
+		if absf(aim_dir.x) > absf(aim_dir.y):
+			if aim_dir.x > 0.0:
+				name = "attack1_right"
+			else:
+				name = "attack1_left"
+		else:
+			if aim_dir.y >= 0.0:
+				name = "attack1_down"
+			else:
+				name = "attack1_up"
+
+	if sprite.sprite_frames != null and sprite.sprite_frames.has_animation(name):
+		sprite.sprite_frames.set_animation_loop(name, false)
+	sprite.frame = 0
+	sprite.play(name)
+
+# --- Input / Hotbar mapping ---------------------------------------------------
+
+func _hotbar_index_from_event(event: InputEvent) -> int:
+	if _action_pressed(event, "hb_e"):
+		return 0
+	if _action_pressed(event, "hb_r"):
+		return 1
+	if _action_pressed(event, "hb_f"):
+		return 2
+	if _action_pressed(event, "hb_c"):
+		return 3
+	if _action_pressed(event, "hb_se"):
+		return 4
+	if _action_pressed(event, "hb_sr"):
+		return 5
+	if _action_pressed(event, "hb_sf"):
+		return 6
+	if _action_pressed(event, "hb_sc"):
+		return 7
+
+	var k: InputEventKey = event as InputEventKey
+	if k != null and k.pressed and not k.echo:
+		var shift: bool = k.shift_pressed
+		if k.keycode == KEY_E:
+			if shift:
+				return 4
+			else:
+				return 0
+		if k.keycode == KEY_R:
+			if shift:
+				return 5
+			else:
+				return 1
+		if k.keycode == KEY_F:
+			if shift:
+				return 6
+			else:
+				return 2
+		if k.keycode == KEY_C:
+			if shift:
+				return 7
+			else:
+				return 3
+
+	return -1
+
+func _action_pressed(event: InputEvent, action_name: String) -> bool:
+	if not InputMap.has_action(action_name):
+		return false
+	return event.is_action_pressed(action_name)
+
+func _find_slot_with_ability(ability_id: String) -> int:
+	var count: int = _get_hotbar_slot_count()
+	var i: int = 0
+	while i < count:
+		if _get_hotbar_ability_at(i) == ability_id:
+			return i
+		i += 1
+	return -1
+
+# --- Movement helpers ---------------------------------------------------------
+
+func _read_move_dir() -> Vector2:
+	var x: float = 0.0
+	var y: float = 0.0
+	if Input.is_action_pressed("ui_left"):
+		x -= 1.0
+	if Input.is_action_pressed("ui_right"):
+		x += 1.0
+	if Input.is_action_pressed("ui_up"):
+		y -= 1.0
+	if Input.is_action_pressed("ui_down"):
+		y += 1.0
+	var v: Vector2 = Vector2(x, y)
+	if v.length() > 1.0:
+		v = v.normalized()
+	return v
+
+func _should_sprint(dir: Vector2) -> bool:
+	if dir.length() <= 0.01:
+		return false
+	if stats == null:
+		return Input.is_action_pressed("sprint")
+
+	var cur: float = 0.0
+	if "current_end" in stats:
+		var v_any: Variant = stats.get("current_end")
+		if typeof(v_any) == TYPE_FLOAT or typeof(v_any) == TYPE_INT:
+			cur = float(v_any)
+	else:
+		if stats.has_method("current_end"):
+			var v2_any: Variant = stats.call("current_end")
+			if typeof(v2_any) == TYPE_FLOAT or typeof(v2_any) == TYPE_INT:
+				cur = float(v2_any)
+
+	if cur < resume_sprint_end:
+		return false
+
+	return Input.is_action_pressed("sprint")
+
+func _spend_endurance_tick(delta: float) -> void:
+	if stats == null:
+		return
+	if not stats.has_method("spend_end"):
+		return
+	var spend: float = end_cost_per_second * delta + sprint_step_cost
+	stats.call("spend_end", spend)
+
+# --- Targeting ---------------------------------------------------------------
+
+func _pick_target_if_none() -> void:
+	if _current_target != null and is_instance_valid(_current_target):
+		return
+	_current_target = _find_nearest_enemy()
+
+func _find_nearest_enemy() -> Node:
+	var world: World2D = get_world_2d()
+	if world == null:
+		return null
+	var space: PhysicsDirectSpaceState2D = world.direct_space_state
+	if space == null:
+		return null
+	var query: PhysicsPointQueryParameters2D = PhysicsPointQueryParameters2D.new()
+	query.position = global_position
+	query.collide_with_areas = true
+	query.collide_with_bodies = true
+	query.collision_mask = 0xFFFFFFFF
+	var hits: Array = space.intersect_point(query, 32)
+	var best: Node = null
+	var best_d2: float = target_pick_radius * target_pick_radius
+	for h in hits:
+		var c: Object = h.get("collider")
+		if c == null:
+			continue
+		if c == self:
+			continue
+		var n: Node = c as Node
+		if not n.is_in_group("Enemy") and not n.is_in_group("Enemies"):
+			continue
+		var n2: Node2D = c as Node2D
+		if n2 == null:
+			continue
+		var d2: float = n2.global_position.distance_squared_to(global_position)
+		if d2 <= best_d2:
+			best_d2 = d2
+			best = n2
+	return best
+
+# --- Animations --------------------------------------------------------------
+
+func _set_move_anim(dir: Vector2) -> void:
+	if sprite == null:
+		return
+	if is_action_locked():
+		return
+	if _is_dead():
+		return
+
+	if dir.length() < MOVE_DIR_THRESHOLD:
+		var idle_name: String = _idle_anim_name()
+		if idle_name != "" and sprite.animation != idle_name:
+			if sprite.sprite_frames != null and sprite.sprite_frames.has_animation(idle_name):
+				sprite.play(idle_name)
+		if use_side_anims:
+			_apply_side_flip_for_idle()
+		return
+
+	var anim_name: String = _walk_anim_name(dir)
+	if anim_name != "" and sprite.animation != anim_name:
+		sprite.play(anim_name)
+
+	if use_side_anims:
+		_apply_side_flip_for_move(dir)
+
+func _idle_anim_name() -> String:
+	if use_side_anims:
+		if absf(_last_move_dir.x) >= absf(_last_move_dir.y) and absf(_last_move_dir.x) > 0.01:
+			return "idle_side"
+		else:
+			if _last_move_dir.y >= 0.0:
+				return "idle_down"
+			else:
+				return "idle_up"
+	if absf(_last_move_dir.x) > absf(_last_move_dir.y):
+		if _last_move_dir.x > 0.0:
+			return "idle_right"
+		else:
+			return "idle_left"
+	else:
+		if _last_move_dir.y >= 0.0:
+			return "idle_down"
+		else:
+			return "idle_up"
+
+func _walk_anim_name(dir: Vector2) -> String:
+	if use_side_anims:
+		if absf(dir.x) >= absf(dir.y):
+			return "walk_side"
+		else:
+			if dir.y >= 0.0:
+				return "walk_down"
+			else:
+				return "walk_up"
+	if absf(dir.x) > absf(dir.y):
+		if dir.x > 0.0:
+			return "walk_right"
+		else:
+			return "walk_left"
+	else:
+		if dir.y >= 0.0:
+			return "walk_down"
+		else:
+			return "walk_up"
+
+func _apply_side_flip_for_move(dir: Vector2) -> void:
+	if not is_instance_valid(sprite):
+		return
+	if absf(dir.x) >= absf(dir.y):
+		if dir.x < 0.0:
+			sprite.flip_h = true
+		else:
+			sprite.flip_h = false
+
+func _apply_side_flip_for_idle() -> void:
+	if not is_instance_valid(sprite):
+		return
+	if absf(_last_move_dir.x) > 0.01:
+		if _last_move_dir.x < 0.0:
+			sprite.flip_h = true
+		else:
+			sprite.flip_h = false
+
+func _on_sprite_frame_changed() -> void:
+	if _pending_hit_frame >= 0 and sprite != null and sprite.frame == _pending_hit_frame:
+		if _pending_hit_callable.is_valid():
+			_pending_hit_callable.call()
+		_pending_hit_frame = -1
+		_pending_hit_callable = Callable()
+
+func _on_sprite_animation_finished() -> void:
+	_action_anim_until_msec = 0
+
+# --- Heal VFX bridge ---------------------------------------------------------
+
+func _on_self_healed(amount: float, source: String, is_crit: bool) -> void:
+	_spawn_heal_vfx_on(self, int(amount))
+
+func _spawn_heal_vfx_on(target_root: Node, amount: int) -> void:
+	if target_root == null:
+		return
+	# hook for heal VFX
+	pass
+
+# --- Party / Leader ----------------------------------------------------------
+
+func _on_controlled_changed(actor: Node) -> void:
+	_controlled = (actor == self)
+	if debug_log:
+		_printd("[PLAYER] controlled_changed -> controlled=", str(_controlled))
+
+func _join_party() -> void:
+	var pm: Node = get_node_or_null("/root/Party")
+	if pm == null:
+		return
+	if pm.has_method("register_member"):
+		pm.call("register_member", self, false)
+	elif pm.has_method("add_member"):
+		pm.call("add_member", self, false)
+
+func _sync_controlled_from_party() -> void:
+	var pm: Node = get_node_or_null("/root/Party")
+	if pm == null:
+		return
+	if pm.has_method("get_controlled"):
+		var cur_any: Variant = pm.call("get_controlled")
+		if cur_any is Node:
+			_controlled = (cur_any as Node) == self
+
+var _leader: bool = false
+func _set_is_leader(v: bool) -> void:
+	_leader = v
+func _get_is_leader() -> bool:
+	return _leader
+
+# --- Helpers -----------------------------------------------------------------
+
+func _animation_bridge() -> Node:
+	var n: Node = get_node_or_null("AnimationBridge")
+	if n != null:
+		return n
+	for c in get_children():
+		if c != null and c.has_method("play_melee_attack"):
+			return c
+	return null
+
+func _ability_system() -> Node:
+	var root: Viewport = get_tree().root
+	if root == null:
+		return null
+	var n: Node = root.get_node_or_null("AbilitySys")
+	if n == null:
+		n = root.get_node_or_null("AbilitySystem")
+	return n
+
+# ---- Dead check (no recursion) ----
+func _is_dead() -> bool:
+	var sc: Node = get_node_or_null("StatusConditions")
+	if sc != null and sc.has_method("is_dead"):
+		var v: Variant = sc.call("is_dead")
+		if typeof(v) == TYPE_BOOL and bool(v):
+			return true
+
+	if stats != null:
+		if stats.has_method("get_hp"):
+			var gh: Variant = stats.call("get_hp")
+			if (typeof(gh) == TYPE_INT or typeof(gh) == TYPE_FLOAT) and float(gh) <= 0.0:
+				return true
+		if stats.has_method("current_hp"):
+			var ch: Variant = stats.call("current_hp")
+			if (typeof(ch) == TYPE_INT or typeof(ch) == TYPE_FLOAT) and float(ch) <= 0.0:
+				return true
+
+	if "dead" in self:
+		var df: Variant = get("dead")
+		if typeof(df) == TYPE_BOOL and bool(df):
+			return true
+
+	return false
+
+func is_dead() -> bool:
+	return _is_dead()
+
+# --- Debug helper -------------------------------------------------------------
+
+func _printd(a: String, b: String = "", c: String = "", d: String = "", e: String = "", f: String = "") -> void:
+	if not debug_log:
+		return
+	print(a, b, c, d, e, f)

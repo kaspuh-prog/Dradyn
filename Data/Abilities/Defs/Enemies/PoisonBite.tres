@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=6 format=3 uid="uid://ct6ubx4da84it"]
+
+[ext_resource type="Script" uid="uid://u63t4oseank1" path="res://scenes/Actors/status/StatusApplySpec.gd" id="1_7f40x"]
+[ext_resource type="Resource" uid="uid://wec8ib2hukuc" path="res://Data/Abilities/Defs/Enemies/RatBitePoison.tres" id="2_eley8"]
+[ext_resource type="Script" uid="uid://byobol8rhb4cs" path="res://scripts/stats/StatModifier.gd" id="2_wk48o"]
+[ext_resource type="Script" uid="uid://dsj3lq6kwixdp" path="res://Data/Abilities/AbilityDef.gd" id="3_eley8"]
+[ext_resource type="Texture2D" uid="uid://dxelmya6q187x" path="res://assets/sprites/abilityicons/blank.png" id="3_wk48o"]
+
+[resource]
+script = ExtResource("3_eley8")
+ability_id = "PoisonBite"
+display_name = "Poison Bite"
+icon = ExtResource("3_wk48o")
+description = "Rats develop poisononous bites. 
+"
+unlock_cost = 0
+ability_type = "MELEE"
+requires_target = false
+cooldown_sec = 2.0
+scale_stat = "WIS"
+cast_anim = "attack1"
+vfx_hint = "PoisonBite"
+melee_range_px = 50.0
+melee_arc_deg = 180.0
+melee_forward_offset_px = 5.0
+cure_status_ids = null
+cure_modifier_sources = null
+cure_stacking_keys = null
+applies_status = Array[ExtResource("1_7f40x")]([ExtResource("2_eley8")])
+metadata/_custom_type_script = "uid://dsj3lq6kwixdp"

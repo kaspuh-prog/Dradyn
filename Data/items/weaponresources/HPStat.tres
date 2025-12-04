@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="StatModifier" load_steps=2 format=3 uid="uid://d2hlswnul33lv"]
+
+[ext_resource type="Script" uid="uid://byobol8rhb4cs" path="res://scripts/stats/StatModifier.gd" id="1_uxmws"]
+
+[resource]
+script = ExtResource("1_uxmws")
+stat_name = &"HP"
+add_value = 5.0
+refresh_duration_on_stack = false
+source_type = 1
+metadata/_custom_type_script = "uid://byobol8rhb4cs"

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=6 format=3 uid="uid://dbfbiguke46bu"]
+
+[ext_resource type="Script" uid="uid://u63t4oseank1" path="res://scenes/Actors/status/StatusApplySpec.gd" id="1_6wilx"]
+[ext_resource type="Script" uid="uid://byobol8rhb4cs" path="res://scripts/stats/StatModifier.gd" id="2_cph7l"]
+[ext_resource type="Resource" uid="uid://d1j3udy8jh4pd" path="res://Data/Abilities/Defs/Classes/Warrior/Training(Physique)/ConditioningI(HP).tres" id="3_cph7l"]
+[ext_resource type="Script" uid="uid://dsj3lq6kwixdp" path="res://Data/Abilities/AbilityDef.gd" id="3_pg1ee"]
+[ext_resource type="Texture2D" uid="uid://ubf0m1ni6udf" path="res://assets/sprites/abilityicons/Conditioning I.png" id="4_pg1ee"]
+
+[resource]
+script = ExtResource("3_pg1ee")
+ability_id = "ConditioningI"
+display_name = "Conditioning I"
+icon = ExtResource("4_pg1ee")
+description = "Warriors train their bodies to withstand blows more effectively.  +5% HP"
+ability_type = "PASSIVE"
+requires_target = false
+cast_anim_is_prefix = false
+buff_mods = Array[ExtResource("2_cph7l")]([ExtResource("3_cph7l")])
+cure_status_ids = null
+cure_modifier_sources = null
+cure_stacking_keys = null
+metadata/_custom_type_script = "uid://dsj3lq6kwixdp"

@@ -22,6 +22,7 @@ class_name StatsResource
 	"WIS": 10.0,
 	"CHA": 10.0,
 	"LCK": 10.0,
+	"AGI": 10.0,
 
 	# ---- Resistances (–0.9..0.9) ----
 	"SlashRes": 0.0, "PierceRes": 0.0, "BluntRes": 0.0,
@@ -33,7 +34,9 @@ class_name StatsResource
 	"CritHealChance": 0.0,
 	"BlockChance": 0.0,
 	"ParryChance": 0.0,
-	"Evasion": 0.0
+	"Evasion": 0.0,
+	"BaseAttackDelay": 0.50,
+	"WeaponWeight": 1.0,       # 0.5 dagger, 1 sword, 2 greatsword, etc.
 }
 
 # ------------------------------------------------------------
@@ -49,7 +52,7 @@ func _migrate_legacy_keys() -> void:
 	if base_stats == null:
 		base_stats = {}
 	var legacy_to_end: Array = [
-		"Stamina", "StaminaMax", "ENDU", "Endu", "Endurance", "EnduranceMax"
+		"end", "endMax", "ENDU", "Endu", "Endurance", "EnduranceMax"
 	]
 	for old_key in legacy_to_end:
 		if base_stats.has(old_key):
@@ -81,11 +84,12 @@ func _ensure_required_defaults() -> void:
 	var required: Dictionary = {
 		"HP": 100.0, "MP": 30.0, "END": 10.0,
 		"MoveSpeed": 90.0, "Attack": 10.0, "Defense": 5.0,
-		"STR": 10.0, "DEX": 10.0, "STA": 10.0, "INT": 10.0, "WIS": 10.0, "CHA": 10.0, "LCK": 10.0,
+		"STR": 10.0, "DEX": 10.0, "STA": 10.0, "INT": 10.0, "WIS": 10.0, "CHA": 10.0, "LCK": 10.0, "AGI": 10.0,
 		"SlashRes": 0.0, "PierceRes": 0.0, "BluntRes": 0.0,
 		"FireRes": 0.0, "IceRes": 0.0, "WindRes": 0.0, "EarthRes": 0.0,
 		"MagicRes": 0.0, "LightRes": 0.0, "DarknessRes": 0.0, "PoisonRes": 0.0,
-		"CritChance": 0.0, "CritHealChance": 0.0, "BlockChance": 0.0, "ParryChance": 0.0, "Evasion": 0.0
+		"CritChance": 0.0, "CritHealChance": 0.0, "BlockChance": 0.0, "ParryChance": 0.0, "Evasion": 0.0, "BaseAttackDelay": 0.50, "WeaponWeight": 1.0,
+
 	}
 	for k in required.keys():
 		if not base_stats.has(k) or base_stats[k] == null:
@@ -168,3 +172,4 @@ func from_dict(data: Dictionary) -> void:
 	if data.has("base_stats") and typeof(data["base_stats"]) == TYPE_DICTIONARY:
 		base_stats = data["base_stats"]
 		_init()
+	# --- Attack cadence inputs ---

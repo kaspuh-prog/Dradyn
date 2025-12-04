@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="ClassDefinition" load_steps=3 format=3 uid="uid://cmy11xno3xj46"]
+
+[ext_resource type="Script" uid="uid://b7ipjii2rumgu" path="res://scripts/resources/ClassDefinition.gd" id="1_4nkfv"]
+[ext_resource type="Script" uid="uid://bw2bhebcfgp1u" path="res://Data/KeyFloatPair.gd" id="1_k1hnm"]
+
+[resource]
+script = ExtResource("1_4nkfv")
+class_title = "Warrior"
+description = "Front-line melee. High STR/STA growth, best physical mitigation."
+mp_source = "none"
+mp_weight_INT = 0.0
+mp_weight_WIS = 0.0
+mul_Attack = 1.2
+gr_STR = 0.9
+gr_DEX = 0.5
+gr_STA = 0.9
+gr_INT = 0.1
+gr_WIS = 0.1
+gr_CHA = 0.3
+gr_LCK = 0.2
+gr_Attack = 0.2
+gr_Defense = 0.2
+grv_HP = 1.0
+allowed_point_targets = PackedStringArray()
+allowed_equipment_classes = PackedStringArray("cloth", "sword", "leather", "chain", "plate", "hammer", "axe")
+skilltree_base_dir = "res://Data/Abilities/Defs/Classes/Warrior"
+section0_name = "Slash"
+section1_name = "Blunt"
+section2_name = "Pierce"
+section3_name = "Training(Physique)"
+section0_dir = "res://Data/Abilities/Defs/Classes/Warrior/Slash/"
+section1_dir = "res://Data/Abilities/Defs/Classes/Warrior/Blunt/"
+section2_dir = "res://Data/Abilities/Defs/Classes/Warrior/Pierce/"
+section3_dir = "res://Data/Abilities/Defs/Classes/Warrior/Training(Physique)/"
+metadata/_custom_type_script = "uid://b7ipjii2rumgu"

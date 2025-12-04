@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=5 format=3 uid="uid://bwbltsklry11s"]
+
+[ext_resource type="Script" uid="uid://byobol8rhb4cs" path="res://scripts/stats/StatModifier.gd" id="1_2k0li"]
+[ext_resource type="Texture2D" uid="uid://brryg5xghyvhl" path="res://assets/sprites/abilityicons/Attack.png" id="1_amh3u"]
+[ext_resource type="Script" uid="uid://dsj3lq6kwixdp" path="res://Data/Abilities/AbilityDef.gd" id="1_ha4rb"]
+[ext_resource type="Script" uid="uid://u63t4oseank1" path="res://scenes/Actors/status/StatusApplySpec.gd" id="3_nbah5"]
+
+[resource]
+script = ExtResource("1_ha4rb")
+ability_id = "attack"
+display_name = "Attack"
+icon = ExtResource("1_amh3u")
+description = "A basic attack learned as a child. "
+unlock_cost = 0
+ability_type = "MELEE"
+requires_target = false
+cooldown_sec = 0.3
+scale_stat = "STR"
+cast_anim = "attack1"
+melee_range_px = 30.0
+melee_arc_deg = 140.0
+melee_forward_offset_px = 5.0
+melee_swing_thickness_px = 8.0
+cure_status_ids = null
+cure_modifier_sources = null
+cure_stacking_keys = null
+metadata/_custom_type_script = "uid://dsj3lq6kwixdp"

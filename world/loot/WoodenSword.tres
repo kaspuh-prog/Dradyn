@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="LootEntry" load_steps=3 format=3 uid="uid://377rtheh0j0e"]
+
+[ext_resource type="Resource" uid="uid://b8y282qapatvm" path="res://Data/items/weaponresources/WoodenSword.tres" id="1_8rksh"]
+[ext_resource type="Script" uid="uid://bj3tpnw12ybt7" path="res://world/loot/LootEntry.gd" id="1_axfl5"]
+
+[resource]
+script = ExtResource("1_axfl5")
+percent_chance = 50.6
+item_def = ExtResource("1_8rksh")
+metadata/_custom_type_script = "uid://bj3tpnw12ybt7"

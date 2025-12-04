@@ -1,0 +1,67 @@
+[gd_scene load_steps=4 format=3 uid="uid://bd4a738e4g535"]
+
+[ext_resource type="Script" uid="uid://1tntbexjb6kl" path="res://ui/ItemObtainedPopup.gd" id="1_ldb5v"]
+[ext_resource type="Texture2D" uid="uid://cer1dda87356e" path="res://ui/styles/chatbox.png" id="2_xu7kw"]
+[ext_resource type="FontFile" uid="uid://b6fk4o6k6dmrn" path="res://assets/fonts/Raleway-SemiBold.ttf" id="3_xu7kw"]
+
+[node name="ItemObtainedPopup" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_ldb5v")
+
+[node name="Panel" type="NinePatchRect" parent="."]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -96.0
+offset_top = -48.0
+offset_bottom = 48.0
+grow_horizontal = 0
+grow_vertical = 2
+texture = ExtResource("2_xu7kw")
+patch_margin_left = 48
+patch_margin_top = 48
+patch_margin_right = 48
+patch_margin_bottom = 48
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 80.0
+offset_bottom = 80.0
+
+[node name="TitleLabel" type="Label" parent="Panel/VBox"]
+custom_minimum_size = Vector2(55, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_fonts/font = ExtResource("3_xu7kw")
+theme_override_font_sizes/font_size = 6
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="ContentRow" type="HBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+
+[node name="Icon" type="TextureRect" parent="Panel/VBox/ContentRow"]
+layout_mode = 2
+
+[node name="ItemLabel" type="Label" parent="Panel/VBox/ContentRow"]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_fonts/font = ExtResource("3_xu7kw")
+theme_override_font_sizes/font_size = 6
+vertical_alignment = 2
+autowrap_mode = 3
+
+[node name="Timer" type="Timer" parent="Panel"]

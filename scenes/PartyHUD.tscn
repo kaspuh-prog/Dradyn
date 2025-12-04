@@ -1,0 +1,23 @@
+[gd_scene load_steps=3 format=3 uid="uid://obsw4c8r8ffc"]
+
+[ext_resource type="PackedScene" uid="uid://cfm3n0mp8gtra" path="res://scenes/ui/PartyBarsPanel.tscn" id="2_eek0c"]
+[ext_resource type="Script" uid="uid://bsmuutxabnf3t" path="res://scenes/PartyHUD.gd" id="6_5qtni"]
+
+[node name="PartyHUD" type="CanvasLayer"]
+layer = 10
+follow_viewport_enabled = true
+
+[node name="Root" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("6_5qtni")
+panel_scene = ExtResource("2_eek0c")
+x_spacing = 2
+panel_scale = 0.25
+
+[node name="Row" type="Control" parent="Root"]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0

@@ -1,0 +1,45 @@
+[gd_scene load_steps=8 format=3 uid="uid://cfm3n0mp8gtra"]
+
+[ext_resource type="Script" uid="uid://23vbnkfhs0hm" path="res://scenes/ui/PartyBarsPanel.gd" id="1_p83ma"]
+[ext_resource type="Texture2D" uid="uid://vrhij246sghk" path="res://ui/styles/3bars.png" id="2_tckff"]
+[ext_resource type="Texture2D" uid="uid://ceoe3s2dcm3io" path="res://ui/styles/BarNoFill.png" id="3_dy0rn"]
+[ext_resource type="Texture2D" uid="uid://b6v8mvjurii4x" path="res://ui/styles/FilledHP.png" id="4_coq3n"]
+[ext_resource type="Texture2D" uid="uid://dq13xashg36of" path="res://ui/styles/FilledMP.png" id="5_mgpgw"]
+[ext_resource type="Texture2D" uid="uid://cnfnxs0ojs2br" path="res://ui/styles/FilledEND.png" id="6_hklin"]
+[ext_resource type="Script" uid="uid://b5u35l3rblvnw" path="res://scenes/ui/PartyBars.gd" id="7_oo3gf"]
+
+[node name="PartyBarsPanel" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_p83ma")
+texture_frame = ExtResource("2_tckff")
+texture_under = ExtResource("3_dy0rn")
+texture_hp_fill = ExtResource("4_coq3n")
+texture_mp_fill = ExtResource("5_mgpgw")
+texture_end_fill = ExtResource("6_hklin")
+
+[node name="Bars" type="Control" parent="."]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("7_oo3gf")
+
+[node name="HpBar" type="TextureProgressBar" parent="Bars"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="MpBar" type="TextureProgressBar" parent="Bars"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="EndBar" type="TextureProgressBar" parent="Bars"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Frame" type="TextureRect" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0

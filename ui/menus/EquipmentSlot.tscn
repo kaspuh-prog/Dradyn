@@ -1,0 +1,19 @@
+[gd_scene load_steps=2 format=3 uid="uid://bjho172ltd8f3"]
+
+[ext_resource type="Texture2D" uid="uid://bklds8d0prc0v" path="res://ui/styles/HeadSlot.png" id="1_o4nm1"]
+
+[node name="Slot_Head" type="Control"]
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 3
+anchors_preset = 0
+offset_left = 16.0
+offset_right = 56.0
+offset_bottom = 40.0
+
+[node name="Frame" type="TextureRect" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+texture = ExtResource("1_o4nm1")

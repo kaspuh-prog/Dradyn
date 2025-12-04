@@ -1,0 +1,88 @@
+[gd_resource type="SpriteFrames" load_steps=13 format=3 uid="uid://bgb4bkrtdvicq"]
+
+[ext_resource type="Texture2D" uid="uid://ddut4wjskfmbn" path="res://assets/VFX/BlessingofLife.png" id="1_i1th7"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xv11s"]
+atlas = ExtResource("1_i1th7")
+region = Rect2(0, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fwmij"]
+atlas = ExtResource("1_i1th7")
+region = Rect2(128, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_acdje"]
+atlas = ExtResource("1_i1th7")
+region = Rect2(256, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_k8x66"]
+atlas = ExtResource("1_i1th7")
+region = Rect2(384, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_nyew6"]
+atlas = ExtResource("1_i1th7")
+region = Rect2(512, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3meyl"]
+atlas = ExtResource("1_i1th7")
+region = Rect2(0, 128, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wyogv"]
+atlas = ExtResource("1_i1th7")
+region = Rect2(128, 128, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gqiol"]
+atlas = ExtResource("1_i1th7")
+region = Rect2(256, 128, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_u3ain"]
+atlas = ExtResource("1_i1th7")
+region = Rect2(384, 128, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bwyco"]
+atlas = ExtResource("1_i1th7")
+region = Rect2(512, 128, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gfrv5"]
+atlas = ExtResource("1_i1th7")
+region = Rect2(0, 256, 128, 128)
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xv11s")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fwmij")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_acdje")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_k8x66")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_nyew6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3meyl")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wyogv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gqiol")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_u3ain")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bwyco")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gfrv5")
+}],
+"loop": true,
+"name": &"default",
+"speed": 8.0
+}]

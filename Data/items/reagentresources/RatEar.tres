@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=3 format=3 uid="uid://27p80ggq760h"]
+
+[ext_resource type="Script" uid="uid://2mjbmehwxafs" path="res://Data/items/ItemDef.gd" id="1_e1kv8"]
+[ext_resource type="Texture2D" uid="uid://cc16m8trbkeaf" path="res://assets/sprites/items/reagents/rat ear.png" id="1_g0y7t"]
+
+[resource]
+script = ExtResource("1_e1kv8")
+id = &"RatEar"
+display_name = "Rat ear"
+description = "Collecting these ears don't make you a mercenary. "
+icon = ExtResource("1_g0y7t")
+item_type = "reagent"
+base_gold_value = 3
+metadata/_custom_type_script = "uid://2mjbmehwxafs"

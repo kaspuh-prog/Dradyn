@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://1ujt58wg8xyu"]
+
+[ext_resource type="Script" uid="uid://b3fmshsrh7n2y" path="res://debug/TestInventoryHarness.gd" id="1_soytc"]
+
+[node name="TestInventoryHarness" type="Node"]
+script = ExtResource("1_soytc")

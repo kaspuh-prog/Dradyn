@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=5 format=3 uid="uid://edh65y5frk4b"]
+
+[ext_resource type="Texture2D" uid="uid://mwkvoofrmsmm" path="res://assets/sprites/abilityicons/BlessingofLife.png" id="1_5kcom"]
+[ext_resource type="Script" uid="uid://dsj3lq6kwixdp" path="res://Data/Abilities/AbilityDef.gd" id="1_vlwm0"]
+[ext_resource type="Script" uid="uid://u63t4oseank1" path="res://scenes/Actors/status/StatusApplySpec.gd" id="1_xoh72"]
+[ext_resource type="Script" uid="uid://byobol8rhb4cs" path="res://scripts/stats/StatModifier.gd" id="2_a80i7"]
+
+[resource]
+script = ExtResource("1_vlwm0")
+ability_id = "BlessingofLife"
+display_name = "Blessing of Life"
+icon = ExtResource("1_5kcom")
+unlock_cost = 3
+level = 5
+ability_type = "REVIVE_SPELL"
+target_rule = "ALLY_SINGLE"
+mp_cost = 30.0
+cooldown_sec = 3.0
+cast_anim = "cast2"
+vfx_hint = "BlessingofLife"
+revive_fixed_hp = 1
+cure_status_ids = null
+cure_modifier_sources = null
+cure_stacking_keys = null
+metadata/_custom_type_script = "uid://dsj3lq6kwixdp"

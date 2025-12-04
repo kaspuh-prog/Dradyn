@@ -1,0 +1,29 @@
+[gd_scene load_steps=5 format=3 uid="uid://cir0u84wdxg38"]
+
+[ext_resource type="Script" uid="uid://dj6wqwe6lt4sv" path="res://scenes/InteractableChest.gd" id="1_hahrq"]
+[ext_resource type="SpriteFrames" uid="uid://brq20frs2dx4s" path="res://assets/sprites/items/Chest.tres" id="2_yvhg0"]
+[ext_resource type="Script" uid="uid://dj8kg456sgnn5" path="res://world/loot/InteractableLoot.gd" id="3_bu0ik"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_5d3qv"]
+size = Vector2(20, 14)
+
+[node name="InteractableChest" type="Node2D" groups=["interactable"]]
+script = ExtResource("1_hahrq")
+use_sprite_animations = true
+destroy_after_open = true
+verbose_debug = true
+
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+sprite_frames = ExtResource("2_yvhg0")
+animation = &"closed"
+
+[node name="Loot" type="Node" parent="."]
+script = ExtResource("3_bu0ik")
+auto_register_group = false
+quantities = PackedInt32Array()
+verbose_debug = true
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+shape = SubResource("RectangleShape2D_5d3qv")

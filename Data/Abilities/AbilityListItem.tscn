@@ -1,0 +1,26 @@
+[gd_scene load_steps=4 format=3 uid="uid://btp41a6r86gry"]
+
+[ext_resource type="Script" uid="uid://3r5hmctfanhi" path="res://ui/menus/sheets/SkillTree/AbilityListItem.gd" id="1_51ckv"]
+[ext_resource type="FontFile" uid="uid://b6fk4o6k6dmrn" path="res://assets/fonts/Raleway-SemiBold.ttf" id="2_gm1un"]
+
+[sub_resource type="FontVariation" id="FontVariation_pceps"]
+base_font = ExtResource("2_gm1un")
+spacing_space = 1
+spacing_top = -2
+spacing_bottom = -2
+
+[node name="AbilityListItem" type="HBoxContainer"]
+script = ExtResource("1_51ckv")
+row_height = 18
+name_font_size = 4
+desc_font_size = 4
+cost_font_size = 8
+text_line_separation = 1
+desc_font = SubResource("FontVariation_pceps")
+cost_min_width = 6
+cost_right_inset = 0
+color_name_locked = Color(0.043137256, 0.043137256, 0.043137256, 0.88235295)
+color_desc_unlocked = Color(0.973535, 0.9735351, 0.973535, 1)
+color_desc_locked = Color(0.11858118, 0.118581496, 0.11858127, 0.9019608)
+color_cost_affordable = Color(0, 0.7019608, 0.18431373, 0.5647059)
+color_cost_unaffordable = Color(0.3008615, 1.504086e-07, 0.090012975, 1)

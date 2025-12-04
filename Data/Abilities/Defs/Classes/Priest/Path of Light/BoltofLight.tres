@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=6 format=3 uid="uid://dht8e2r16xy4f"]
+
+[ext_resource type="Script" uid="uid://dsj3lq6kwixdp" path="res://Data/Abilities/AbilityDef.gd" id="1_emldi"]
+[ext_resource type="Texture2D" uid="uid://cq0pbohe88yim" path="res://assets/sprites/abilityicons/BoltofLight.png" id="1_jkk0f"]
+[ext_resource type="Script" uid="uid://u63t4oseank1" path="res://scenes/Actors/status/StatusApplySpec.gd" id="1_q60g8"]
+[ext_resource type="PackedScene" uid="uid://eap8c84fyjiq" path="res://scenes/Projectiles/BoltofLight.tscn" id="2_5po4h"]
+[ext_resource type="Script" uid="uid://byobol8rhb4cs" path="res://scripts/stats/StatModifier.gd" id="2_vk7h6"]
+
+[resource]
+script = ExtResource("1_emldi")
+ability_id = "BoltofLight"
+display_name = "Bolt of Light"
+icon = ExtResource("1_jkk0f")
+description = "The first iteration of controlling light to protect oneself. "
+unlock_cost = 0
+section_index = 1
+ability_type = "PROJECTILE"
+requires_target = false
+cooldown_sec = 1.0
+scale_stat = "WIS"
+cast_anim = "projectile1"
+vfx_hint = "BoltofLightImpact"
+projectile_scene = ExtResource("2_5po4h")
+cure_status_ids = null
+cure_modifier_sources = null
+cure_stacking_keys = null
+metadata/_custom_type_script = "uid://dsj3lq6kwixdp"

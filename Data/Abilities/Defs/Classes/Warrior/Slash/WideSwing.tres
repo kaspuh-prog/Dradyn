@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=5 format=3 uid="uid://pmb3ts8acfc4"]
+
+[ext_resource type="Script" uid="uid://u63t4oseank1" path="res://scenes/Actors/status/StatusApplySpec.gd" id="1_hbax8"]
+[ext_resource type="Script" uid="uid://byobol8rhb4cs" path="res://scripts/stats/StatModifier.gd" id="2_u300r"]
+[ext_resource type="Texture2D" uid="uid://cx31lmgghsjd8" path="res://assets/sprites/abilityicons/WideSwing.png" id="3_u300r"]
+[ext_resource type="Script" uid="uid://dsj3lq6kwixdp" path="res://Data/Abilities/AbilityDef.gd" id="3_v0t6k"]
+
+[resource]
+script = ExtResource("3_v0t6k")
+ability_id = "WideSwing"
+display_name = "Wide Swing"
+icon = ExtResource("3_u300r")
+description = "A mighty 180 degree swing striking all targets in it's Arc. "
+ability_type = "MELEE"
+requires_target = false
+cooldown_sec = 1.5
+power = 2.0
+scale_stat = "STR"
+cast_anim = "attack2"
+melee_range_px = 40.0
+melee_arc_deg = 180.0
+melee_forward_offset_px = 5.0
+melee_swing_thickness_px = 30.0
+cure_status_ids = null
+cure_modifier_sources = null
+cure_stacking_keys = null
+metadata/_custom_type_script = "uid://dsj3lq6kwixdp"

@@ -1,0 +1,30 @@
+[gd_resource type="SpriteFrames" load_steps=4 format=3 uid="uid://bdrnmmpkdu6bn"]
+
+[ext_resource type="Texture2D" uid="uid://cpul3csrymocc" path="res://assets/sprites/Doors/InteriorSingleDoorWOOD.png" id="1_ku4lf"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dt7t5"]
+atlas = ExtResource("1_ku4lf")
+region = Rect2(0, 0, 16, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_x4dgy"]
+atlas = ExtResource("1_ku4lf")
+region = Rect2(16, 0, 16, 32)
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dt7t5")
+}],
+"loop": true,
+"name": &"closed",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_x4dgy")
+}],
+"loop": true,
+"name": &"open",
+"speed": 5.0
+}]

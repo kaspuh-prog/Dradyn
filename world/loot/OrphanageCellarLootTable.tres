@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="LootTable" load_steps=6 format=3 uid="uid://bopv64nrrrfwa"]
+
+[ext_resource type="Script" uid="uid://bj3tpnw12ybt7" path="res://world/loot/LootEntry.gd" id="1_vyv8p"]
+[ext_resource type="Resource" uid="uid://dukcalgeot3fu" path="res://world/loot/LeatherVestLootEntry.tres" id="2_su7ko"]
+[ext_resource type="Resource" uid="uid://cq4wstpq1xrcx" path="res://world/loot/MinorDraughtofLifeLootEntry.tres" id="3_v2bcq"]
+[ext_resource type="Script" uid="uid://cyfln17m0bmbe" path="res://world/loot/LootTable.gd" id="4_2f1as"]
+[ext_resource type="Resource" uid="uid://dsva4utgj0onc" path="res://world/loot/RatEarLootEntry.tres" id="4_su7ko"]
+
+[resource]
+script = ExtResource("4_2f1as")
+allow_duplicates = false
+entries = Array[ExtResource("1_vyv8p")]([ExtResource("2_su7ko"), ExtResource("3_v2bcq"), ExtResource("4_su7ko")])
+currency_percent_chance = 15.7
+currency_max = 3
+metadata/_custom_type_script = "uid://cyfln17m0bmbe"

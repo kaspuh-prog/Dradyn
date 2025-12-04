@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://fgp8vxsday4"]
+
+[ext_resource type="Script" uid="uid://c3axi77bm768x" path="res://scenes/WorldAreas/StairTrigger.gd" id="1_8a6x7"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hdmxu"]
+size = Vector2(29, 30)
+
+[node name="StairTrigger" type="Area2D"]
+priority = 1
+script = ExtResource("1_8a6x7")
+local_offset = Vector2(0, 0)
+target_area_path = "res://scenes/WorldAreas/OrphanageCellar.tscn"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_hdmxu")

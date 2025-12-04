@@ -1,78 +1,48 @@
-[gd_scene load_steps=25 format=4 uid="uid://c8ty6h5dtvshr"]
+[gd_scene load_steps=40 format=3 uid="uid://c8ty6h5dtvshr"]
 
 [ext_resource type="Script" uid="uid://dk7asc2lrlrvg" path="res://scripts/Main.gd" id="2"]
 [ext_resource type="Script" uid="uid://bf5uecgu47cgm" path="res://scripts/LeaderCamera.gd" id="2_mwfav"]
 [ext_resource type="Script" uid="uid://gs1i2fkis1j4" path="res://ui/DamageNumberLayer.gd" id="2_qmy6f"]
-[ext_resource type="Script" uid="uid://da6g0adw067f6" path="res://sandbox/HurtZone.gd" id="4_rarhs"]
-[ext_resource type="Script" uid="uid://gw6on7c5qvr6" path="res://ui/hud_root.gd" id="7_nxtc6"]
-[ext_resource type="PackedScene" uid="uid://cxjdkuse2lvra" path="res://ui/PartyPanel.tscn" id="7_q8u5g"]
-[ext_resource type="StyleBox" uid="uid://1232tbywe6ji" path="res://ui/styles/bar_fill_red_flat.tres" id="8_lhr70"]
-[ext_resource type="Script" uid="uid://cawyojqqdou3f" path="res://ui/PartyPanel.gd" id="9_bjd11"]
-[ext_resource type="StyleBox" uid="uid://blkwljfk0qvak" path="res://ui/styles/bar_bg_flat.tres" id="9_lhr70"]
-[ext_resource type="Texture2D" uid="uid://ddpxx8220pcqm" path="res://ui/styles/fantasy_panel_overlay.png" id="9_wp0k4"]
+[ext_resource type="PackedScene" uid="uid://obsw4c8r8ffc" path="res://scenes/PartyHUD.tscn" id="4_3p2gp"]
+[ext_resource type="PackedScene" uid="uid://bhtarksp2xskx" path="res://scenes/Actors/PCs/Player1.tscn" id="7_nfivy"]
+[ext_resource type="Script" uid="uid://cgydf6clfmbug" path="res://scenes/NightDarkenOverlay2D.gd" id="8_nfivy"]
 [ext_resource type="Script" uid="uid://ctmqf1kt5vt2m" path="res://scripts/PartyRoot_Bootstrap.gd" id="11_mwfav"]
-[ext_resource type="PackedScene" uid="uid://c3peqdshs5m18" path="res://scenes/Actors/Rosali.tscn" id="12_mwfav"]
-[ext_resource type="PackedScene" uid="uid://bv1umfw753ett" path="res://scenes/Actors/TestP1.tscn" id="13_3p2gp"]
-[ext_resource type="Script" uid="uid://bu1fg0bjwbliq" path="res://scripts/resources/StatsResource.gd" id="14_bb450"]
-[ext_resource type="Script" uid="uid://chdwtrvq5vslt" path="res://AutoLoads/SceneManager.gd" id="14_cvmbd"]
-[ext_resource type="PackedScene" uid="uid://dbtb83g08k0cw" path="res://scenes/Actors/EnemyBase.tscn" id="16_cvmbd"]
-[ext_resource type="PackedScene" uid="uid://bgeqrejsugfh4" path="res://scenes/WorldAreas/BattleTestArena.tscn" id="16_ft6cd"]
-[ext_resource type="Script" uid="uid://dnkikfbexng3j" path="res://scripts/LevelUpPopup.gd" id="17_ft6cd"]
-[ext_resource type="Script" uid="uid://bwayymdj2s753" path="res://scripts/EnemySpawner.gd" id="18_nfivy"]
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_vcsgt"]
-size = Vector2(47, 34)
+[ext_resource type="PackedScene" uid="uid://c3peqdshs5m18" path="res://scenes/Actors/PCs/Rosali.tscn" id="12_mwfav"]
+[ext_resource type="PackedScene" uid="uid://bv1umfw753ett" path="res://scenes/Actors/PCs/TestP1.tscn" id="13_3p2gp"]
+[ext_resource type="PackedScene" uid="uid://bd4a738e4g535" path="res://ui/ItemObtainedPopup.tscn" id="13_cobve"]
+[ext_resource type="Texture2D" uid="uid://6q5vcngx3v1v" path="res://ui/styles/GoldCountField.png" id="14_1nqs0"]
+[ext_resource type="Script" uid="uid://phjfqrk5fsta" path="res://scenes/HUDLayer.gd" id="14_mwfav"]
+[ext_resource type="Script" uid="uid://cs8a7u0psyceu" path="res://scenes/SkillTreeSheet.gd" id="16_2ofn6"]
+[ext_resource type="PackedScene" uid="uid://chp3mvrodfse0" path="res://ui/menus/TabbedMenu.tscn" id="16_bb450"]
+[ext_resource type="Texture2D" uid="uid://b58lt5nidj2d1" path="res://ui/styles/SkillTreeBG.png" id="17_xa025"]
+[ext_resource type="Texture2D" uid="uid://2epufwh64ra0" path="res://ui/styles/SkillTreeBranchButton.png" id="18_36rkl"]
+[ext_resource type="Script" uid="uid://c4ikbryngxqlm" path="res://scripts/LevelUpToDamageNumbers.gd" id="18_bb450"]
+[ext_resource type="PackedScene" uid="uid://btp41a6r86gry" path="res://Data/Abilities/AbilityListItem.tscn" id="18_e2s0e"]
+[ext_resource type="FontFile" uid="uid://cpfjwf504s6no" path="res://assets/fonts/KellsFLF.ttf" id="18_xa025"]
+[ext_resource type="FontFile" uid="uid://b6fk4o6k6dmrn" path="res://assets/fonts/Raleway-SemiBold.ttf" id="18_yxlcp"]
+[ext_resource type="Script" uid="uid://c5328pxcko3cy" path="res://scenes/ConsumableReadyBar.gd" id="19_1iba3"]
+[ext_resource type="Texture2D" uid="uid://dxelmya6q187x" path="res://assets/sprites/abilityicons/blank.png" id="19_36rkl"]
+[ext_resource type="Texture2D" uid="uid://fsgu1cyp7ntx" path="res://ui/styles/SkillTreeBranchButtonPressed.png" id="19_fs0b5"]
+[ext_resource type="Texture2D" uid="uid://bsw0jgkkv44q8" path="res://ui/styles/UsableItemSlots.png" id="20_2ofn6"]
+[ext_resource type="Script" uid="uid://8ujdf385vnp7" path="res://scenes/Hotbar.gd" id="20_yxlcp"]
+[ext_resource type="Script" uid="uid://er5fcywe2s8u" path="res://scenes/BootArea.gd" id="21_1iba3"]
+[ext_resource type="Script" uid="uid://byxs4xbww4gbo" path="res://scripts/SkillTreeMediator.gd" id="22_gsxep"]
+[ext_resource type="Texture2D" uid="uid://bsonkedm0mfob" path="res://ui/styles/8skillbar.png" id="22_xa025"]
+[ext_resource type="Script" uid="uid://bfyja723hh3pd" path="res://scenes/AbilitySuiteBootstrap.gd" id="22_yxlcp"]
+[ext_resource type="Script" uid="uid://bfl4q3jfeurcy" path="res://ui/menus/sheets/MerchantController.gd" id="29_dg70y"]
+[ext_resource type="PackedScene" uid="uid://cxiv3nb2t55vl" path="res://ui/menus/sheets/MerchantMenu.tscn" id="29_gsxep"]
+[ext_resource type="Script" uid="uid://cmvmcqftv0jtg" path="res://scenes/HotbarDropTarget.gd" id="29_v0vrg"]
+[ext_resource type="Script" uid="uid://2mjbmehwxafs" path="res://Data/items/ItemDef.gd" id="31_pnhog"]
+[ext_resource type="Resource" uid="uid://1b6nwvtpbjgr" path="res://Data/items/consumableresources/MinorDraughtofLife.tres" id="32_2c4at"]
+[ext_resource type="Script" uid="uid://713ltxakrh54" path="res://scenes/InnController.gd" id="33_2c4at"]
+[ext_resource type="PackedScene" uid="uid://coil8siiotaun" path="res://scenes/ui/DialogueBox.tscn" id="34_g6wdg"]
+[ext_resource type="Script" uid="uid://daiem0tmxsah5" path="res://scenes/TalkController.gd" id="35_hq6as"]
+[ext_resource type="Script" uid="uid://cuegcp0hbe3ue" path="res://scripts/DebugSaveSlot.gd" id="37_kxyth"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_qmy6f"]
 vertices = PackedVector2Array(217, -105.03906, 217, 117.03906, -214.78906, 118.953125, -210.20313, -106.953125)
 polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3)])
 outlines = Array[PackedVector2Array]([PackedVector2Array(-220, -117, 227, -115, 227, 127, -225, 129)])
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bjd11"]
-bg_color = Color(0.33333334, 0.019607844, 0.019607844, 0.94509804)
-border_color = Color(0.9867516, 0.9867516, 0.9867516, 1)
-corner_radius_top_left = 15
-corner_radius_bottom_left = 15
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qmy6f"]
-bg_color = Color(0.039215688, 0.30980393, 0.627451, 1)
-corner_radius_top_left = 15
-corner_radius_bottom_left = 15
-
-[sub_resource type="Resource" id="Resource_nfivy"]
-script = ExtResource("14_bb450")
-base_stats = {
-"Attack": 10.0,
-"BlockChance": 0.0,
-"BluntRes": 0.0,
-"CHA": 10.0,
-"CritChance": 0.5,
-"CritHealChance": 0.0,
-"DEX": 10.0,
-"DarknessRes": 0.0,
-"Defense": 5.0,
-"END": 10.0,
-"EarthRes": 0.0,
-"Evasion": 0.0,
-"FireRes": 0.0,
-"HP": 100.0,
-"INT": 10.0,
-"IceRes": 0.0,
-"LCK": 10.0,
-"LightRes": 0.0,
-"MP": 30.0,
-"MagicRes": 0.0,
-"MoveSpeed": 90.0,
-"ParryChance": 0.0,
-"PierceRes": 0.0,
-"PoisonRes": 0.0,
-"STA": 10.0,
-"STR": 20.0,
-"SlashRes": 0.0,
-"WIS": 10.0,
-"WindRes": 0.0
-}
-metadata/_custom_type_script = "uid://bu1fg0bjwbliq"
 
 [node name="GameRoot" type="Node2D"]
 script = ExtResource("2")
@@ -80,186 +50,482 @@ script = ExtResource("2")
 [node name="DamageNumberLayer" type="CanvasLayer" parent="."]
 script = ExtResource("2_qmy6f")
 scale_with_zoom = true
-debug_log = true
+show_heals = true
 coalesce_window_sec = 0.0
 suppress_hp_after_damage_sec = 10.0
-font_px = 10
+font_px = 12
 y_offset = -30.0
 rise_pixels = 30.0
-damage_color = Color(0.76989067, 6.2401516e-05, 0.13468432, 1)
+jitter_px = 2.0
+life_sec = 1.0
+damage_color = Color(0.615765, 0, 0.0983688, 1)
 heal_color = Color(0.13928881, 0.8286577, 0.6590529, 1)
+outline_size = 3
+outline_color = Color(0.014275053, 0.014275307, 0.014275067, 1)
 crit_text_color = Color(0.6877213, 0.57477003, 0.19332707, 1)
-crit_flash_color = Color(0.9607843, 0.98039216, 0.85490197, 1)
+crit_flash_color = Color(0.998869, 0.9710488, 0.9679174, 1)
+crit_flash_time = 0.2
+crit_shake_cycles = 4
+levelup_text_scale = 0.5
+levelup_text_color = Color(0.54509807, 0.99215686, 0.7411765, 1)
 
 [node name="LeaderCamera" type="Camera2D" parent="." groups=["LeaderCamera"]]
 script = ExtResource("2_mwfav")
-
-[node name="HurtZone" type="Area2D" parent="."]
-visible = false
-script = ExtResource("4_rarhs")
-dmg_type = "Wind"
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtZone"]
-position = Vector2(-203.5, -97)
-shape = SubResource("RectangleShape2D_vcsgt")
-
-[node name="Timer" type="Timer" parent="HurtZone"]
-wait_time = 5.027
 
 [node name="NavigationRegion2D" type="NavigationRegion2D" parent="."]
 position = Vector2(-8, -1)
 navigation_polygon = SubResource("NavigationPolygon_qmy6f")
 
-[node name="HUDLayer" type="CanvasLayer" parent="."]
+[node name="PartyRoot" type="Node2D" parent="." groups=["PartyManager"]]
+position = Vector2(68, -75)
+script = ExtResource("11_mwfav")
+leader_scene = ExtResource("12_mwfav")
+companion_scenes = Array[PackedScene]([ExtResource("13_3p2gp"), ExtResource("13_3p2gp")])
 
-[node name="HUDRoot" type="Control" parent="HUDLayer"]
+[node name="Rosali" parent="PartyRoot" instance=ExtResource("12_mwfav")]
+
+[node name="Player1" parent="PartyRoot" groups=["PartyMembers"] instance=ExtResource("7_nfivy")]
+debug_log = false
+
+[node name="AnimatedSprite2D" parent="PartyRoot/Player1" index="0"]
+animation = &"attack2_down"
+
+[node name="CollisionShape2D" parent="PartyRoot/Player1" index="1"]
+position = Vector2(0, -16.5)
+
+[node name="WorldRoot" type="Node2D" parent="."]
+
+[node name="Timer" type="Timer" parent="WorldRoot"]
+wait_time = 5.027
+
+[node name="NightOverlayLayer" type="CanvasLayer" parent="WorldRoot"]
+layer = 6
+
+[node name="NightDarkenOverlay" type="ColorRect" parent="WorldRoot/NightOverlayLayer"]
+light_mask = 16
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("8_nfivy")
+debug_logging = false
+night_tint_color = Color(0.047058824, 0.07058824, 0.18431373, 0.9019608)
+night_strength_at_max = 0.45
+night_black_mix_at_max = 0.4
+dusk_start = 0.497
+night_start = 0.703
+use_curve = true
+smooth_transition_sec = 0.27
+
+[node name="LvluptoDmgNum" type="Node" parent="."]
+script = ExtResource("18_bb450")
+message_template = "Level UP!"
+color = Color(0.014936994, 0.82711005, 0.75036603, 1)
+scale_mult = 0.25
+
+[node name="AbilityBootstrap" type="Node" parent="."]
+script = ExtResource("22_yxlcp")
+
+[node name="HUDLayer" type="CanvasLayer" parent="."]
+layer = 10
+script = ExtResource("14_mwfav")
+party_hud_scene = ExtResource("4_3p2gp")
+hud_offset = Vector2i(-8, 224)
+item_obtained_popup_scene = ExtResource("13_cobve")
+
+[node name="TabbedMenu" parent="HUDLayer" instance=ExtResource("16_bb450")]
+alpha_when_visible = 0.9
+content_node_names = PackedStringArray()
+currency_value_label_path = NodePath("Content/InventorySheet/BagTabsRow/CurrencyBox/Gold Label")
+
+[node name="Content" parent="HUDLayer/TabbedMenu" index="2"]
+z_index = 9
+mouse_filter = 1
+
+[node name="InventorySheet" parent="HUDLayer/TabbedMenu/Content" index="0"]
+desc_gap_px = 6
+currency_box_path = NodePath("BagTabsRow/CurrencyBox")
+currency_value_label_path = NodePath("BagTabsRow/CurrencyBox/Gold Label")
+currency_box_width_px = 32
+currency_box_height_px = 8
+currency_nudge_x_px = 52
+currency_nudge_y_px = -82
+
+[node name="CurrencyBox" type="TextureRect" parent="HUDLayer/TabbedMenu/Content/InventorySheet/BagTabsRow" index="0"]
+layout_mode = 0
+offset_top = 80.0
+offset_right = 40.0
+offset_bottom = 120.0
+texture = ExtResource("14_1nqs0")
+
+[node name="Gold Label" type="Label" parent="HUDLayer/TabbedMenu/Content/InventorySheet/BagTabsRow/CurrencyBox"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 5
+
+[node name="Grid" parent="HUDLayer/TabbedMenu/Content/InventorySheet" index="1"]
+unlocked_capacity = 6
+
+[node name="IconOverlay" parent="HUDLayer/TabbedMenu/Content/InventorySheet/Grid" index="0"]
+z_index = 900
+show_debug_outlines = false
+
+[node name="Qty" parent="HUDLayer/TabbedMenu/Content/InventorySheet/DescriptionPane" index="2"]
+offset_left = 8.0
+offset_top = 68.0
+offset_right = 48.0
+offset_bottom = 91.0
+theme_override_colors/font_color = Color(0.98849684, 0.9688907, 0.96463376, 1)
+theme_override_font_sizes/font_size = 5
+
+[node name="SheetController" parent="HUDLayer/TabbedMenu/Content/InventorySheet" index="4"]
+desc_scroll_grabber_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+desc_scroll_corner_radius = 4
+
+[node name="StatsSheet" parent="HUDLayer/TabbedMenu/Content" index="1"]
+visible = true
+points_nudge_x = 14
+
+[node name="PointsLabel" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="0"]
+theme_override_colors/font_outline_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_constants/outline_size = 1
+log_debug = false
+
+[node name="Minus_STR" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="4"]
+toggle_mode = true
+
+[node name="Plus_STR" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="5"]
+toggle_mode = true
+
+[node name="Value_STR" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="6"]
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 10
+
+[node name="Label_STR" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="7"]
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 10
+text = "STR"
+
+[node name="Value_DEX" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="10"]
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 10
+
+[node name="Label_DEX" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="11"]
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 10
+text = "DEX"
+
+[node name="Value_STA" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="14"]
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 10
+
+[node name="Label_STA" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="15"]
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 10
+text = "STA"
+
+[node name="Value_INT" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="18"]
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 10
+
+[node name="Label_INT" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="19"]
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 10
+text = "INT"
+
+[node name="Value_WIS" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="22"]
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 10
+
+[node name="Label_WIS" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="23"]
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 10
+text = "WIS"
+
+[node name="Value_LCK" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="26"]
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 10
+
+[node name="Label_LCK" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="27"]
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 10
+text = "LCK"
+
+[node name="RightPanelBG" parent="HUDLayer/TabbedMenu/Content/StatsSheet/RightPanel" index="0"]
+stretch_mode = 2
+list_inset = 6
+use_unified_font_settings = true
+unified_font = ExtResource("18_yxlcp")
+unified_font_size = 6
+unified_font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+scrollbar_width = 4
+scrollbar_alpha_normal = 0.0
+scrollbar_alpha_hover = 0.2
+scrollbar_alpha_pressed = 0.25
+scrollbar_corner_radius = 3
+stat_order_override = ["HP", "MP", "END", "Attack", "Defense", "STR", "DEX", "STA", "INT", "WIS", "LCK", "BlockChance", "ParryChance", "Evasion", "CritChance", "CritHealChance", "SlashRes", "PierceRes", "BluntRes", "FireRes", "IceRes", "WindRes", "EarthRes", "MagicRes", "LightRes", "DarknessRes", "PoisonRes", "MoveSpeed"]
+
+[node name="StatsBinder" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="29"]
+log_debug = true
+
+[node name="StatsHeaderBinder" parent="HUDLayer/TabbedMenu/Content/StatsSheet" index="30"]
+actor_path = NodePath("../../../../../PartyRoot/Player1")
+
+[node name="SkillTreeSheet" parent="HUDLayer/TabbedMenu/Content" index="2"]
+visible = true
+script = ExtResource("16_2ofn6")
+row_name_font_size_override = 5
+row_cost_font_size_override = 5
+row_cost_min_width = 6
+row_cost_left_inset = 0
+row_cost_right_inset = 0
+background_size = Vector2i(148, 160)
+points_font = ExtResource("18_xa025")
+points_font_size = 10
+points_font_color_spent = Color(0.2509804, 0.13333334, 0.10980392, 1)
+points_font_color_avail = Color(0.2509804, 0.13333334, 0.10980392, 1)
+points_line_gap = 8
+points_text_prefix_avail = "Available: "
+scrollbar_width = 3
+scrollbar_grabber_min_size = 3
+scrollbar_grabber_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+scrollbar_grabber_hover_color = Color(0.3327438, 0.18444413, 0.1547533, 1)
+scrollbar_grabber_pressed_color = Color(0.21609959, 0.11169342, 0.0908188, 1)
+ability_item_scene = ExtResource("18_e2s0e")
+demo_icon = ExtResource("19_36rkl")
+rows_offset = Vector2i(5, 6)
+name_font_size_override = 2
+desc_inline_prefix = " : "
+
+[node name="SkillTreeBG" type="TextureRect" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet" index="0"]
+custom_minimum_size = Vector2(148, 160)
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+texture = ExtResource("17_xa025")
+stretch_mode = 2
+
+[node name="Panel_1" type="ScrollContainer" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet/SkillTreeBG"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Pad" type="MarginContainer" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet/SkillTreeBG/Panel_1"]
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet/SkillTreeBG/Panel_1/Pad"]
+layout_mode = 2
+
+[node name="Panel_2" type="ScrollContainer" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet/SkillTreeBG"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Pad" type="MarginContainer" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet/SkillTreeBG/Panel_2"]
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet/SkillTreeBG/Panel_2/Pad"]
+layout_mode = 2
+
+[node name="Panel_3" type="ScrollContainer" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet/SkillTreeBG"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Pad" type="MarginContainer" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet/SkillTreeBG/Panel_3"]
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet/SkillTreeBG/Panel_3/Pad"]
+layout_mode = 2
+
+[node name="Panel_4" type="ScrollContainer" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet/SkillTreeBG"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Pad" type="MarginContainer" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet/SkillTreeBG/Panel_4"]
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet/SkillTreeBG/Panel_4/Pad"]
+layout_mode = 2
+
+[node name="Btn_1" type="TextureButton" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet" index="1"]
+layout_mode = 0
+offset_right = 64.0
+offset_bottom = 16.0
+texture_normal = ExtResource("18_36rkl")
+texture_pressed = ExtResource("19_fs0b5")
+
+[node name="Btn_Label1" type="Label" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet/Btn_1"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 6
+
+[node name="Btn_2" type="TextureButton" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet" index="2"]
+layout_mode = 0
+offset_right = 64.0
+offset_bottom = 16.0
+texture_normal = ExtResource("18_36rkl")
+texture_pressed = ExtResource("19_fs0b5")
+
+[node name="Btn_Label2" type="Label" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet/Btn_2"]
+layout_mode = 0
+offset_top = -20.0
+offset_right = 40.0
+offset_bottom = 3.0
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 6
+
+[node name="Btn_3" type="TextureButton" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet" index="3"]
+layout_mode = 0
+offset_right = 64.0
+offset_bottom = 16.0
+texture_normal = ExtResource("18_36rkl")
+texture_pressed = ExtResource("19_fs0b5")
+
+[node name="Btn_Label3" type="Label" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet/Btn_3"]
+layout_mode = 0
+offset_top = 20.0
+offset_right = 64.0
+offset_bottom = 43.0
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 6
+
+[node name="Btn_4" type="TextureButton" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet" index="4"]
+layout_mode = 0
+offset_right = 64.0
+offset_bottom = 16.0
+texture_normal = ExtResource("18_36rkl")
+texture_pressed = ExtResource("19_fs0b5")
+
+[node name="Btn_Label4" type="Label" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet/Btn_4"]
+layout_mode = 0
+offset_top = -27.0
+offset_right = 64.0
+offset_bottom = -4.0
+theme_override_fonts/font = ExtResource("18_yxlcp")
+theme_override_font_sizes/font_size = 6
+
+[node name="SkillTreeMediator" type="Node" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet" index="5"]
+script = ExtResource("22_gsxep")
+sheet_path = NodePath("..")
+auto_register_on_ready = true
+
+[node name="PointsHUD" type="Control" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet" index="6"]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Top" type="Label" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet/PointsHUD"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="Bottom" type="Label" parent="HUDLayer/TabbedMenu/Content/SkillTreeSheet/PointsHUD"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="ConsumableReadyBar" type="Control" parent="HUDLayer"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 3
+anchors_preset = 0
+offset_left = 368.0
+offset_top = 238.0
+offset_right = 400.0
+offset_bottom = 270.0
+mouse_filter = 1
+script = ExtResource("19_1iba3")
+background = ExtResource("20_2ofn6")
+qty_offset_x = 3
+qty_offset_y = -6
+qty_offset_x2 = 3
+qty_offset_y2 = -6
+qty_font_size = 5
+
+[node name="BG" type="TextureRect" parent="HUDLayer/ConsumableReadyBar"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Hotbar" type="Control" parent="HUDLayer"]
+z_index = 100
+custom_minimum_size = Vector2(64, 32)
+layout_mode = 3
+anchors_preset = 0
+offset_left = 288.0
+offset_top = 238.0
+offset_right = 352.0
+offset_bottom = 302.0
+script = ExtResource("20_yxlcp")
+background = ExtResource("22_xa025")
+
+[node name="BG" type="TextureRect" parent="HUDLayer/Hotbar"]
+custom_minimum_size = Vector2(32, 64)
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="DropTarget" type="Control" parent="HUDLayer/Hotbar"]
+custom_minimum_size = Vector2(64, 32)
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("29_v0vrg")
+
+[node name="MerchantController" type="Control" parent="HUDLayer"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("7_nxtc6")
+mouse_filter = 2
+script = ExtResource("29_dg70y")
+merchant_menu_scene = ExtResource("29_gsxep")
+default_buy_stock = Array[ExtResource("31_pnhog")]([ExtResource("32_2c4at")])
 
-[node name="Panel1Holder" type="Control" parent="HUDLayer/HUDRoot"]
-custom_minimum_size = Vector2(76, 40)
-layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = -104.0
-offset_top = -127.0
-offset_right = -28.0
-offset_bottom = -87.0
-grow_vertical = 0
+[node name="InnController" type="Control" parent="HUDLayer"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("33_2c4at")
+dialogue_box_scene = ExtResource("34_g6wdg")
 
-[node name="PartyPanel" parent="HUDLayer/HUDRoot/Panel1Holder" instance=ExtResource("7_q8u5g")]
-layout_mode = 1
-offset_left = 8.0
-offset_top = 15.0
-offset_right = 5.0
-offset_bottom = 12.0
-script = ExtResource("9_bjd11")
-hp_bar_path = NodePath("HPbar")
-mp_bar_path = NodePath("MPbar")
-end_bar_path = NodePath("ENDbar")
+[node name="TalkController" type="Control" parent="HUDLayer"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("35_hq6as")
+dialogue_box_scene = ExtResource("34_g6wdg")
 
-[node name="HPbar" type="ProgressBar" parent="HUDLayer/HUDRoot/Panel1Holder/PartyPanel"]
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.16
-anchor_top = 0.145
-anchor_right = 0.62
-anchor_bottom = 0.33
-offset_left = 3.3200083
-offset_top = -2.000002
-offset_right = -3.2600098
-offset_bottom = -2.2100067
-theme_override_styles/background = ExtResource("9_lhr70")
-theme_override_styles/fill = SubResource("StyleBoxFlat_bjd11")
-min_value = 5.0
-value = 5.0
-fill_mode = 1
-show_percentage = false
+[node name="BootArea" type="Node" parent="."]
+script = ExtResource("21_1iba3")
+start_area = "uid://cgr11keydyxqf"
+start_entry_tag = "WakeUp"
 
-[node name="MPbar" type="ProgressBar" parent="HUDLayer/HUDRoot/Panel1Holder/PartyPanel"]
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.18100001
-anchor_top = 0.40500003
-anchor_right = 0.62
-anchor_bottom = 0.578
-offset_left = 1.7869997
-offset_top = -2.9850044
-offset_right = -3.2600098
-offset_bottom = -2.3860016
-theme_override_styles/background = ExtResource("9_lhr70")
-theme_override_styles/fill = SubResource("StyleBoxFlat_qmy6f")
-fill_mode = 1
-show_percentage = false
+[node name="DebugSaveSlot" type="Node" parent="."]
+script = ExtResource("37_kxyth")
 
-[node name="ENDbar" type="ProgressBar" parent="HUDLayer/HUDRoot/Panel1Holder/PartyPanel"]
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.16
-anchor_top = 0.62
-anchor_right = 0.62
-anchor_bottom = 0.805
-offset_left = 3.3200083
-offset_top = -2.0
-offset_right = -2.2600098
-offset_bottom = -2.0
-theme_override_styles/background = ExtResource("9_lhr70")
-theme_override_styles/fill = ExtResource("8_lhr70")
-fill_mode = 1
-show_percentage = false
-
-[node name="FrameOverlay" type="TextureRect" parent="HUDLayer/HUDRoot/Panel1Holder/PartyPanel"]
-layout_mode = 1
-anchors_preset = -1
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -3.0
-offset_right = 2.0
-offset_bottom = -2.0
-grow_horizontal = 2
-grow_vertical = 2
-texture = ExtResource("9_wp0k4")
-expand_mode = 2
-stretch_mode = 5
-
-[node name="PartyRoot" type="Node2D" parent="." groups=["PartyManager"]]
-script = ExtResource("11_mwfav")
-leader_scene = ExtResource("12_mwfav")
-companion_scenes = Array[PackedScene]([ExtResource("13_3p2gp"), ExtResource("13_3p2gp")])
-
-[node name="TestP1" parent="PartyRoot" groups=["PartyLeader", "PartyMembers"] instance=ExtResource("13_3p2gp")]
-z_index = 1
-position = Vector2(-65, 6)
-
-[node name="AnimatedSprite2D" parent="PartyRoot/TestP1" index="0"]
-animation = &"attack1_up"
-
-[node name="StatsComponent" parent="PartyRoot/TestP1" index="3"]
-debug_damage_log = true
-stats = SubResource("Resource_nfivy")
-derive_end_from_sta = false
-
-[node name="Rosali" parent="PartyRoot" groups=["PartyMembers"] instance=ExtResource("12_mwfav")]
-
-[node name="WorldRoot" type="Node2D" parent="."]
-script = ExtResource("14_cvmbd")
-
-[node name="BattleTestArena" parent="WorldRoot" instance=ExtResource("16_ft6cd")]
-
-[node name="L0_Ground" parent="WorldRoot/BattleTestArena" index="0"]
-tile_map_data = PackedByteArray("AADx/+D/AAAFAAAAAADy/+D/AgAHAAAAAADz/+D/AgAIAAAAAAD0/+D/AgAHAAAAAAD1/+D/AgAIAAAAAAD2/+D/AgAHAAAAAAD3/+D/AgAIAAAAAAD4/+D/AgAHAAAAAAD5/+D/AgAIAAAAAAD6/+D/AgAHAAAAAAD7/+D/AgAIAAAAAAD8/+D/AgAHAAAAAAD9/+D/AgAIAAAAAAD+/+D/AgAHAAAAAAD//+D/AgAIAAAAAAAAAOD/AgAHAAAAAAABAOD/AgAIAAAAAAACAOD/AgAHAAAAAAADAOD/AgAIAAAAAAAEAOD/AgAHAAAAAAAFAOD/AgAIAAAAAAAGAOD/AgAHAAAAAAAHAOD/AgAIAAAAAAAIAOD/AgAHAAAAAAAJAOD/AgAIAAAAAAAKAOD/AgAHAAAAAAALAOD/AgAIAAAAAAAMAOD/AgAHAAAAAAANAOD/AgAIAAAAAAAOAOD/AgAHAAAAAAAPAOD/AgAIAAAAAAAQAOD/AgAHAAAAAAARAOD/AgAIAAAAAAASAOD/AgAHAAAAAAATAOD/AgAIAAAAAAAUAOD/AgAHAAAAAAAVAOD/AgAIAAAAAAAWAOD/AgAHAAAAAAAXAOD/AgAIAAAAAAAYAOD/AAAFAAAAAADy/+L/AgAAAAIAAADz/+L/AgABAAIAAAD0/+L/AgACAAIAAAD1/+L/AgADAAIAAADy/+P/AgAAAAIAAADz/+P/AgABAAIAAAD0/+P/AgACAAIAAAD1/+P/AgADAAIAAADy/+T/AgAAAAIAAADz/+T/AgABAAIAAAD0/+T/AgACAAIAAAD1/+T/AgADAAIAAADy/+X/AgAAAAIAAADz/+X/AgABAAIAAAD0/+X/AgACAAIAAAD1/+X/AgADAAIAAADy/+b/AgAAAAIAAADz/+b/AgABAAIAAAD0/+b/AgACAAIAAAD1/+b/AgADAAIAAADy/+f/AgAAAAIAAADz/+f/AgABAAIAAAD0/+f/AgACAAIAAAD1/+f/AgADAAIAAADy/+j/AgAAAAIAAADz/+j/AgABAAIAAAD0/+j/AgACAAIAAAD1/+j/AgADAAIAAADy/+n/AgAAAAIAAADz/+n/AgABAAIAAAD0/+n/AgACAAIAAAD1/+n/AgADAAIAAADy/+r/AgAAAAIAAADz/+r/AgABAAIAAAD0/+r/AgACAAIAAAD1/+r/AgADAAIAAADy/+v/AgAAAAIAAADz/+v/AgABAAIAAAD0/+v/AgACAAIAAAD1/+v/AgADAAIAAADy/+z/AgAAAAIAAADz/+z/AgABAAIAAAD0/+z/AgACAAIAAAD1/+z/AgADAAIAAADy/+3/AgAAAAIAAADz/+3/AgABAAIAAAD0/+3/AgACAAIAAAD1/+3/AgADAAIAAADy/+7/AgAAAAIAAADz/+7/AgABAAIAAAD0/+7/AgACAAIAAAD1/+7/AgADAAIAAADy/+//AgAAAAIAAADz/+//AgABAAIAAAD0/+//AgACAAIAAAD1/+//AgADAAIAAADy//D/AgAAAAIAAADz//D/AgABAAIAAAD0//D/AgACAAIAAAD1//D/AgADAAIAAADy//H/AgAAAAIAAADz//H/AgABAAIAAAD0//H/AgACAAIAAAD1//H/AgADAAIAAADy//L/AgAAAAIAAADz//L/AgABAAIAAAD0//L/AgACAAIAAAD1//L/AgADAAIAAADy//P/AgAAAAIAAADz//P/AgABAAIAAAD0//P/AgACAAIAAAD1//P/AgADAAIAAADy//T/AgAAAAIAAADz//T/AgABAAIAAAD0//T/AgACAAIAAAD1//T/AgADAAIAAADy//X/AgAAAAIAAADz//X/AgABAAIAAAD0//X/AgACAAIAAAD1//X/AgADAAIAAADy//b/AgAAAAIAAADz//b/AgABAAIAAAD0//b/AgACAAIAAAD1//b/AgADAAIAAADy//f/AgAAAAIAAADz//f/AgABAAIAAAD0//f/AgACAAIAAAD1//f/AgADAAIAAADy//j/AgAAAAIAAADz//j/AgABAAIAAAD0//j/AgACAAIAAAD1//j/AgADAAIAAADy//n/AgAAAAIAAADz//n/AgABAAIAAAD0//n/AgACAAIAAAD1//n/AgADAAIAAADy//r/AgAAAAIAAADz//r/AgABAAIAAAD0//r/AgACAAIAAAD1//r/AgADAAIAAADy//v/AgAAAAIAAADz//v/AgABAAIAAAD0//v/AgACAAIAAAD1//v/AgADAAIAAADy//z/AgAAAAIAAADz//z/AgABAAIAAAD0//z/AgACAAIAAAD1//z/AgADAAIAAADy//3/AgAAAAIAAADz//3/AgABAAIAAAD0//3/AgACAAIAAAD1//3/AgADAAIAAADy//7/AgAAAAIAAADz//7/AgABAAIAAAD0//7/AgACAAIAAAD1//7/AgADAAIAAADy////AgAAAAIAAADz////AgABAAIAAAD0////AgACAAIAAAD1////AgADAAIAAADy/wAAAgAAAAIAAADz/wAAAgABAAIAAAD0/wAAAgACAAIAAAD1/wAAAgADAAIAAADy/wEAAgAAAAIAAADz/wEAAgABAAIAAAD0/wEAAgACAAIAAAD1/wEAAgADAAIAAADy/wIAAgAAAAIAAADz/wIAAgABAAIAAAD0/wIAAgACAAIAAAD1/wIAAgADAAIAAAD2/+L/AgAAAAIAAAD3/+L/AgABAAIAAAD4/+L/AgACAAIAAAD5/+L/AgADAAIAAAD2/+P/AgAAAAIAAAD3/+P/AgABAAIAAAD4/+P/AgACAAIAAAD5/+P/AgADAAIAAAD2/+T/AgAAAAIAAAD3/+T/AgABAAIAAAD4/+T/AgACAAIAAAD5/+T/AgADAAIAAAD2/+X/AgAAAAIAAAD3/+X/AgABAAIAAAD4/+X/AgACAAIAAAD5/+X/AgADAAIAAAD2/+b/AgAAAAIAAAD3/+b/AgABAAIAAAD4/+b/AgACAAIAAAD5/+b/AgADAAIAAAD2/+f/AgAAAAIAAAD3/+f/AgABAAIAAAD4/+f/AgACAAIAAAD5/+f/AgADAAIAAAD2/+j/AgAAAAIAAAD3/+j/AgABAAIAAAD4/+j/AgACAAIAAAD5/+j/AgADAAIAAAD2/+n/AgAAAAIAAAD3/+n/AgABAAIAAAD4/+n/AgACAAIAAAD5/+n/AgADAAIAAAD2/+r/AgAAAAIAAAD3/+r/AgABAAIAAAD4/+r/AgACAAIAAAD5/+r/AgADAAIAAAD2/+v/AgAAAAIAAAD3/+v/AgABAAIAAAD4/+v/AgACAAIAAAD5/+v/AgADAAIAAAD2/+z/AgAAAAIAAAD3/+z/AgABAAIAAAD4/+z/AgACAAIAAAD5/+z/AgADAAIAAAD2/+3/AgAAAAIAAAD3/+3/AgABAAIAAAD4/+3/AgACAAIAAAD5/+3/AgADAAIAAAD2/+7/AgAAAAIAAAD3/+7/AgABAAIAAAD4/+7/AgACAAIAAAD5/+7/AgADAAIAAAD2/+//AgAAAAIAAAD3/+//AgABAAIAAAD4/+//AgACAAIAAAD5/+//AgADAAIAAAD2//D/AgAAAAIAAAD3//D/AgABAAIAAAD4//D/AgACAAIAAAD5//D/AgADAAIAAAD2//H/AgAAAAIAAAD3//H/AgABAAIAAAD4//H/AgACAAIAAAD5//H/AgADAAIAAAD2//L/AgAAAAIAAAD3//L/AgABAAIAAAD4//L/AgACAAIAAAD5//L/AgADAAIAAAD2//P/AgAAAAIAAAD3//P/AgABAAIAAAD4//P/AgACAAIAAAD5//P/AgADAAIAAAD2//T/AgAAAAIAAAD3//T/AgABAAIAAAD4//T/AgACAAIAAAD5//T/AgADAAIAAAD2//X/AgAAAAIAAAD3//X/AgABAAIAAAD4//X/AgACAAIAAAD5//X/AgADAAIAAAD2//b/AgAAAAIAAAD3//b/AgABAAIAAAD4//b/AgACAAIAAAD5//b/AgADAAIAAAD2//f/AgAAAAIAAAD3//f/AgABAAIAAAD4//f/AgACAAIAAAD5//f/AgADAAIAAAD2//j/AgAAAAIAAAD3//j/AgABAAIAAAD4//j/AgACAAIAAAD5//j/AgADAAIAAAD2//n/AgAAAAIAAAD3//n/AgABAAIAAAD4//n/AgACAAIAAAD5//n/AgADAAIAAAD2//r/AgAAAAIAAAD3//r/AgABAAIAAAD4//r/AgACAAIAAAD5//r/AgADAAIAAAD2//v/AgAAAAIAAAD3//v/AgABAAIAAAD4//v/AgACAAIAAAD5//v/AgADAAIAAAD2//z/AgAAAAIAAAD3//z/AgABAAIAAAD4//z/AgACAAIAAAD5//z/AgADAAIAAAD2//3/AgAAAAIAAAD3//3/AgABAAIAAAD4//3/AgACAAIAAAD5//3/AgADAAIAAAD2//7/AgAAAAIAAAD3//7/AgABAAIAAAD4//7/AgACAAIAAAD5//7/AgADAAIAAAD2////AgAAAAIAAAD3////AgABAAIAAAD4////AgACAAIAAAD5////AgADAAIAAAD2/wAAAgAAAAIAAAD3/wAAAgABAAIAAAD4/wAAAgACAAIAAAD5/wAAAgADAAIAAAD2/wEAAgAAAAIAAAD3/wEAAgABAAIAAAD4/wEAAgACAAIAAAD5/wEAAgADAAIAAAD2/wIAAgAAAAIAAAD3/wIAAgABAAIAAAD4/wIAAgACAAIAAAD5/wIAAgADAAIAAAD6/+L/AgAAAAIAAAD7/+L/AgABAAIAAAD8/+L/AgACAAIAAAD9/+L/AgADAAIAAAD6/+P/AgAAAAIAAAD7/+P/AgABAAIAAAD8/+P/AgACAAIAAAD9/+P/AgADAAIAAAD6/+T/AgAAAAIAAAD7/+T/AgABAAIAAAD8/+T/AgACAAIAAAD9/+T/AgADAAIAAAD6/+X/AgAAAAIAAAD7/+X/AgABAAIAAAD8/+X/AgACAAIAAAD9/+X/AgADAAIAAAD6/+b/AgAAAAIAAAD7/+b/AgABAAIAAAD8/+b/AgACAAIAAAD9/+b/AgADAAIAAAD6/+f/AgAAAAIAAAD7/+f/AgABAAIAAAD8/+f/AgACAAIAAAD9/+f/AgADAAIAAAD6/+j/AgAAAAIAAAD7/+j/AgABAAIAAAD8/+j/AgACAAIAAAD9/+j/AgADAAIAAAD6/+n/AgAAAAIAAAD7/+n/AgABAAIAAAD8/+n/AgACAAIAAAD9/+n/AgADAAIAAAD6/+r/AgAAAAIAAAD7/+r/AgABAAIAAAD8/+r/AgACAAIAAAD9/+r/AgADAAIAAAD6/+v/AgAAAAIAAAD7/+v/AgABAAIAAAD8/+v/AgACAAIAAAD9/+v/AgADAAIAAAD6/+z/AgAAAAIAAAD7/+z/AgABAAIAAAD8/+z/AgACAAIAAAD9/+z/AgADAAIAAAD6/+3/AgAAAAIAAAD7/+3/AgABAAIAAAD8/+3/AgACAAIAAAD9/+3/AgADAAIAAAD6/+7/AgAAAAIAAAD7/+7/AgABAAIAAAD8/+7/AgACAAIAAAD9/+7/AgADAAIAAAD6/+//AgAAAAIAAAD7/+//AgABAAIAAAD8/+//AgACAAIAAAD9/+//AgADAAIAAAD6//D/AgAAAAIAAAD7//D/AgABAAIAAAD8//D/AgACAAIAAAD9//D/AgADAAIAAAD6//H/AgAAAAIAAAD7//H/AgABAAIAAAD8//H/AgACAAIAAAD9//H/AgADAAIAAAD6//L/AgAAAAIAAAD7//L/AgABAAIAAAD8//L/AgACAAIAAAD9//L/AgADAAIAAAD6//P/AgAAAAIAAAD7//P/AgABAAIAAAD8//P/AgACAAIAAAD9//P/AgADAAIAAAD6//T/AgAAAAIAAAD7//T/AgABAAIAAAD8//T/AgACAAIAAAD9//T/AgADAAIAAAD6//X/AgAAAAIAAAD7//X/AgABAAIAAAD8//X/AgACAAIAAAD9//X/AgADAAIAAAD6//b/AgAAAAIAAAD7//b/AgABAAIAAAD8//b/AgACAAIAAAD9//b/AgADAAIAAAD6//f/AgAAAAIAAAD7//f/AgABAAIAAAD8//f/AgACAAIAAAD9//f/AgADAAIAAAD6//j/AgAAAAIAAAD7//j/AgABAAIAAAD8//j/AgACAAIAAAD9//j/AgADAAIAAAD6//n/AgAAAAIAAAD7//n/AgABAAIAAAD8//n/AgACAAIAAAD9//n/AgADAAIAAAD6//r/AgAAAAIAAAD7//r/AgABAAIAAAD8//r/AgACAAIAAAD9//r/AgADAAIAAAD6//v/AgAAAAIAAAD7//v/AgABAAIAAAD8//v/AgACAAIAAAD9//v/AgADAAIAAAD6//z/AgAAAAIAAAD7//z/AgABAAIAAAD8//z/AgACAAIAAAD9//z/AgADAAIAAAD6//3/AgAAAAIAAAD7//3/AgABAAIAAAD8//3/AgACAAIAAAD9//3/AgADAAIAAAD6//7/AgAAAAIAAAD7//7/AgABAAIAAAD8//7/AgACAAIAAAD9//7/AgADAAIAAAD6////AgAAAAIAAAD7////AgABAAIAAAD8////AgACAAIAAAD9////AgADAAIAAAD6/wAAAgAAAAIAAAD7/wAAAgABAAIAAAD8/wAAAgACAAIAAAD9/wAAAgADAAIAAAD6/wEAAgAAAAIAAAD7/wEAAgABAAIAAAD8/wEAAgACAAIAAAD9/wEAAgADAAIAAAD6/wIAAgAAAAIAAAD7/wIAAgABAAIAAAD8/wIAAgACAAIAAAD9/wIAAgADAAIAAAD+/+L/AgAAAAIAAAD//+L/AgABAAIAAAAAAOL/AgACAAIAAAABAOL/AgADAAIAAAD+/+P/AgAAAAIAAAD//+P/AgABAAIAAAAAAOP/AgACAAIAAAABAOP/AgADAAIAAAD+/+T/AgAAAAIAAAD//+T/AgABAAIAAAAAAOT/AgACAAIAAAABAOT/AgADAAIAAAD+/+X/AgAAAAIAAAD//+X/AgABAAIAAAAAAOX/AgACAAIAAAABAOX/AgADAAIAAAD+/+b/AgAAAAIAAAD//+b/AgABAAIAAAAAAOb/AgACAAIAAAABAOb/AgADAAIAAAD+/+f/AgAAAAIAAAD//+f/AgABAAIAAAAAAOf/AgACAAIAAAABAOf/AgADAAIAAAD+/+j/AgAAAAIAAAD//+j/AgABAAIAAAAAAOj/AgACAAIAAAABAOj/AgADAAIAAAD+/+n/AgAAAAIAAAD//+n/AgABAAIAAAAAAOn/AgACAAIAAAABAOn/AgADAAIAAAD+/+r/AgAAAAIAAAD//+r/AgABAAIAAAAAAOr/AgACAAIAAAABAOr/AgADAAIAAAD+/+v/AgAAAAIAAAD//+v/AgABAAIAAAAAAOv/AgACAAIAAAABAOv/AgADAAIAAAD+/+z/AgAAAAIAAAD//+z/AgABAAIAAAAAAOz/AgACAAIAAAABAOz/AgADAAIAAAD+/+3/AgAAAAIAAAD//+3/AgABAAIAAAAAAO3/AgACAAIAAAABAO3/AgADAAIAAAD+/+7/AgAAAAIAAAD//+7/AgABAAIAAAAAAO7/AgACAAIAAAABAO7/AgADAAIAAAD+/+//AgAAAAIAAAD//+//AgABAAIAAAAAAO//AgACAAIAAAABAO//AgADAAIAAAD+//D/AgAAAAIAAAD///D/AgABAAIAAAAAAPD/AgACAAIAAAABAPD/AgADAAIAAAD+//H/AgAAAAIAAAD///H/AgABAAIAAAAAAPH/AgACAAIAAAABAPH/AgADAAIAAAD+//L/AgAAAAIAAAD///L/AgABAAIAAAAAAPL/AgACAAIAAAABAPL/AgADAAIAAAD+//P/AgAAAAIAAAD///P/AgABAAIAAAAAAPP/AgACAAIAAAABAPP/AgADAAIAAAD+//T/AgAAAAIAAAD///T/AgABAAIAAAAAAPT/AgACAAIAAAABAPT/AgADAAIAAAD+//X/AgAAAAIAAAD///X/AgABAAIAAAAAAPX/AgACAAIAAAABAPX/AgADAAIAAAD+//b/AgAAAAIAAAD///b/AgABAAIAAAAAAPb/AgACAAIAAAABAPb/AgADAAIAAAD+//f/AgAAAAIAAAD///f/AgABAAIAAAAAAPf/AgACAAIAAAABAPf/AgADAAIAAAD+//j/AgAAAAIAAAD///j/AgABAAIAAAAAAPj/AgACAAIAAAABAPj/AgADAAIAAAD+//n/AgAAAAIAAAD///n/AgABAAIAAAAAAPn/AgACAAIAAAABAPn/AgADAAIAAAD+//r/AgAAAAIAAAD///r/AgABAAIAAAAAAPr/AgACAAIAAAABAPr/AgADAAIAAAD+//v/AgAAAAIAAAD///v/AgABAAIAAAAAAPv/AgACAAIAAAABAPv/AgADAAIAAAD+//z/AgAAAAIAAAD///z/AgABAAIAAAAAAPz/AgACAAIAAAABAPz/AgADAAIAAAD+//3/AgAAAAIAAAD///3/AgABAAIAAAAAAP3/AgACAAIAAAABAP3/AgADAAIAAAD+//7/AgAAAAIAAAD///7/AgABAAIAAAAAAP7/AgACAAIAAAABAP7/AgADAAIAAAD+////AgAAAAIAAAD/////AgABAAIAAAAAAP//AgACAAIAAAABAP//AgADAAIAAAD+/wAAAgAAAAIAAAD//wAAAgABAAIAAAAAAAAAAgACAAIAAAABAAAAAgADAAIAAAD+/wEAAgAAAAIAAAD//wEAAgABAAIAAAAAAAEAAgACAAIAAAABAAEAAgADAAIAAAD+/wIAAgAAAAIAAAD//wIAAgABAAIAAAAAAAIAAgACAAIAAAABAAIAAgADAAIAAAACAOL/AgAAAAIAAAADAOL/AgABAAIAAAAEAOL/AgACAAIAAAAFAOL/AgADAAIAAAACAOP/AgAAAAIAAAADAOP/AgABAAIAAAAEAOP/AgACAAIAAAAFAOP/AgADAAIAAAACAOT/AgAAAAIAAAADAOT/AgABAAIAAAAEAOT/AgACAAIAAAAFAOT/AgADAAIAAAACAOX/AgAAAAIAAAADAOX/AgABAAIAAAAEAOX/AgACAAIAAAAFAOX/AgADAAIAAAACAOb/AgAAAAIAAAADAOb/AgABAAIAAAAEAOb/AgACAAIAAAAFAOb/AgADAAIAAAACAOf/AgAAAAIAAAADAOf/AgABAAIAAAAEAOf/AgACAAIAAAAFAOf/AgADAAIAAAACAOj/AgAAAAIAAAADAOj/AgABAAIAAAAEAOj/AgACAAIAAAAFAOj/AgADAAIAAAACAOn/AgAAAAIAAAADAOn/AgABAAIAAAAEAOn/AgACAAIAAAAFAOn/AgADAAIAAAACAOr/AgAAAAIAAAADAOr/AgABAAIAAAAEAOr/AgACAAIAAAAFAOr/AgADAAIAAAACAOv/AgAAAAIAAAADAOv/AgABAAIAAAAEAOv/AgACAAIAAAAFAOv/AgADAAIAAAACAOz/AgAAAAIAAAADAOz/AgABAAIAAAAEAOz/AgACAAIAAAAFAOz/AgADAAIAAAACAO3/AgAAAAIAAAADAO3/AgABAAIAAAAEAO3/AgACAAIAAAAFAO3/AgADAAIAAAACAO7/AgAAAAIAAAADAO7/AgABAAIAAAAEAO7/AgACAAIAAAAFAO7/AgADAAIAAAACAO//AgAAAAIAAAADAO//AgABAAIAAAAEAO//AgACAAIAAAAFAO//AgADAAIAAAACAPD/AgAAAAIAAAADAPD/AgABAAIAAAAEAPD/AgACAAIAAAAFAPD/AgADAAIAAAACAPH/AgAAAAIAAAADAPH/AgABAAIAAAAEAPH/AgACAAIAAAAFAPH/AgADAAIAAAACAPL/AgAAAAIAAAADAPL/AgABAAIAAAAEAPL/AgACAAIAAAAFAPL/AgADAAIAAAACAPP/AgAAAAIAAAADAPP/AgABAAIAAAAEAPP/AgACAAIAAAAFAPP/AgADAAIAAAACAPT/AgAAAAIAAAADAPT/AgABAAIAAAAEAPT/AgACAAIAAAAFAPT/AgADAAIAAAACAPX/AgAAAAIAAAADAPX/AgABAAIAAAAEAPX/AgACAAIAAAAFAPX/AgADAAIAAAACAPb/AgAAAAIAAAADAPb/AgABAAIAAAAEAPb/AgACAAIAAAAFAPb/AgADAAIAAAACAPf/AgAAAAIAAAADAPf/AgABAAIAAAAEAPf/AgACAAIAAAAFAPf/AgADAAIAAAACAPj/AgAAAAIAAAADAPj/AgABAAIAAAAEAPj/AgACAAIAAAAFAPj/AgADAAIAAAACAPn/AgAAAAIAAAADAPn/AgABAAIAAAAEAPn/AgACAAIAAAAFAPn/AgADAAIAAAACAPr/AgAAAAIAAAADAPr/AgABAAIAAAAEAPr/AgACAAIAAAAFAPr/AgADAAIAAAACAPv/AgAAAAIAAAADAPv/AgABAAIAAAAEAPv/AgACAAIAAAAFAPv/AgADAAIAAAACAPz/AgAAAAIAAAADAPz/AgABAAIAAAAEAPz/AgACAAIAAAAFAPz/AgADAAIAAAACAP3/AgAAAAIAAAADAP3/AgABAAIAAAAEAP3/AgACAAIAAAAFAP3/AgADAAIAAAACAP7/AgAAAAIAAAADAP7/AgABAAIAAAAEAP7/AgACAAIAAAAFAP7/AgADAAIAAAACAP//AgAAAAIAAAADAP//AgABAAIAAAAEAP//AgACAAIAAAAFAP//AgADAAIAAAACAAAAAgAAAAIAAAADAAAAAgABAAIAAAAEAAAAAgACAAIAAAAFAAAAAgADAAIAAAACAAEAAgAAAAIAAAADAAEAAgABAAIAAAAEAAEAAgACAAIAAAAFAAEAAgADAAIAAAACAAIAAgAAAAIAAAADAAIAAgABAAIAAAAEAAIAAgACAAIAAAAFAAIAAgADAAIAAAAGAOL/AgAAAAIAAAAHAOL/AgABAAIAAAAIAOL/AgACAAIAAAAJAOL/AgADAAIAAAAGAOP/AgAAAAIAAAAHAOP/AgABAAIAAAAIAOP/AgACAAIAAAAJAOP/AgADAAIAAAAGAOT/AgAAAAIAAAAHAOT/AgABAAIAAAAIAOT/AgACAAIAAAAJAOT/AgADAAIAAAAGAOX/AgAAAAIAAAAHAOX/AgABAAIAAAAIAOX/AgACAAIAAAAJAOX/AgADAAIAAAAGAOb/AgAAAAIAAAAHAOb/AgABAAIAAAAIAOb/AgACAAIAAAAJAOb/AgADAAIAAAAGAOf/AgAAAAIAAAAHAOf/AgABAAIAAAAIAOf/AgACAAIAAAAJAOf/AgADAAIAAAAGAOj/AgAAAAIAAAAHAOj/AgABAAIAAAAIAOj/AgACAAIAAAAJAOj/AgADAAIAAAAGAOn/AgAAAAIAAAAHAOn/AgABAAIAAAAIAOn/AgACAAIAAAAJAOn/AgADAAIAAAAGAOr/AgAAAAIAAAAHAOr/AgABAAIAAAAIAOr/AgACAAIAAAAJAOr/AgADAAIAAAAGAOv/AgAAAAIAAAAHAOv/AgABAAIAAAAIAOv/AgACAAIAAAAJAOv/AgADAAIAAAAGAOz/AgAAAAIAAAAHAOz/AgABAAIAAAAIAOz/AgACAAIAAAAJAOz/AgADAAIAAAAGAO3/AgAAAAIAAAAHAO3/AgABAAIAAAAIAO3/AgACAAIAAAAJAO3/AgADAAIAAAAGAO7/AgAAAAIAAAAHAO7/AgABAAIAAAAIAO7/AgACAAIAAAAJAO7/AgADAAIAAAAGAO//AgAAAAIAAAAHAO//AgABAAIAAAAIAO//AgACAAIAAAAJAO//AgADAAIAAAAGAPD/AgAAAAIAAAAHAPD/AgABAAIAAAAIAPD/AgACAAIAAAAJAPD/AgADAAIAAAAGAPH/AgAAAAIAAAAHAPH/AgABAAIAAAAIAPH/AgACAAIAAAAJAPH/AgADAAIAAAAGAPL/AgAAAAIAAAAHAPL/AgABAAIAAAAIAPL/AgACAAIAAAAJAPL/AgADAAIAAAAGAPP/AgAAAAIAAAAHAPP/AgABAAIAAAAIAPP/AgACAAIAAAAJAPP/AgADAAIAAAAGAPT/AgAAAAIAAAAHAPT/AgABAAIAAAAIAPT/AgACAAIAAAAJAPT/AgADAAIAAAAGAPX/AgAAAAIAAAAHAPX/AgABAAIAAAAIAPX/AgACAAIAAAAJAPX/AgADAAIAAAAGAPb/AgAAAAIAAAAHAPb/AgABAAIAAAAIAPb/AgACAAIAAAAJAPb/AgADAAIAAAAGAPf/AgAAAAIAAAAHAPf/AgABAAIAAAAIAPf/AgACAAIAAAAJAPf/AgADAAIAAAAGAPj/AgAAAAIAAAAHAPj/AgABAAIAAAAIAPj/AgACAAIAAAAJAPj/AgADAAIAAAAGAPn/AgAAAAIAAAAHAPn/AgABAAIAAAAIAPn/AgACAAIAAAAJAPn/AgADAAIAAAAGAPr/AgAAAAIAAAAHAPr/AgABAAIAAAAIAPr/AgACAAIAAAAJAPr/AgADAAIAAAAGAPv/AgAAAAIAAAAHAPv/AgABAAIAAAAIAPv/AgACAAIAAAAJAPv/AgADAAIAAAAGAPz/AgAAAAIAAAAHAPz/AgABAAIAAAAIAPz/AgACAAIAAAAJAPz/AgADAAIAAAAGAP3/AgAAAAIAAAAHAP3/AgABAAIAAAAIAP3/AgACAAIAAAAJAP3/AgADAAIAAAAGAP7/AgAAAAIAAAAHAP7/AgABAAIAAAAIAP7/AgACAAIAAAAJAP7/AgADAAIAAAAGAP//AgAAAAIAAAAHAP//AgABAAIAAAAIAP//AgACAAIAAAAJAP//AgADAAIAAAAGAAAAAgAAAAIAAAAHAAAAAgABAAIAAAAIAAAAAgACAAIAAAAJAAAAAgADAAIAAAAGAAEAAgAAAAIAAAAHAAEAAgABAAIAAAAIAAEAAgACAAIAAAAJAAEAAgADAAIAAAAGAAIAAgAAAAIAAAAHAAIAAgABAAIAAAAIAAIAAgACAAIAAAAJAAIAAgADAAIAAAAKAOL/AgAAAAIAAAALAOL/AgABAAIAAAAMAOL/AgACAAIAAAANAOL/AgADAAIAAAAKAOP/AgAAAAIAAAALAOP/AgABAAIAAAAMAOP/AgACAAIAAAANAOP/AgADAAIAAAAKAOT/AgAAAAIAAAALAOT/AgABAAIAAAAMAOT/AgACAAIAAAANAOT/AgADAAIAAAAKAOX/AgAAAAIAAAALAOX/AgABAAIAAAAMAOX/AgACAAIAAAANAOX/AgADAAIAAAAKAOb/AgAAAAIAAAALAOb/AgABAAIAAAAMAOb/AgACAAIAAAANAOb/AgADAAIAAAAKAOf/AgAAAAIAAAALAOf/AgABAAIAAAAMAOf/AgACAAIAAAANAOf/AgADAAIAAAAKAOj/AgAAAAIAAAALAOj/AgABAAIAAAAMAOj/AgACAAIAAAANAOj/AgADAAIAAAAKAOn/AgAAAAIAAAALAOn/AgABAAIAAAAMAOn/AgACAAIAAAANAOn/AgADAAIAAAAKAOr/AgAAAAIAAAALAOr/AgABAAIAAAAMAOr/AgACAAIAAAANAOr/AgADAAIAAAAKAOv/AgAAAAIAAAALAOv/AgABAAIAAAAMAOv/AgACAAIAAAANAOv/AgADAAIAAAAKAOz/AgAAAAIAAAALAOz/AgABAAIAAAAMAOz/AgACAAIAAAANAOz/AgADAAIAAAAKAO3/AgAAAAIAAAALAO3/AgABAAIAAAAMAO3/AgACAAIAAAANAO3/AgADAAIAAAAKAO7/AgAAAAIAAAALAO7/AgABAAIAAAAMAO7/AgACAAIAAAANAO7/AgADAAIAAAAKAO//AgAAAAIAAAALAO//AgABAAIAAAAMAO//AgACAAIAAAANAO//AgADAAIAAAAKAPD/AgAAAAIAAAALAPD/AgABAAIAAAAMAPD/AgACAAIAAAANAPD/AgADAAIAAAAKAPH/AgAAAAIAAAALAPH/AgABAAIAAAAMAPH/AgACAAIAAAANAPH/AgADAAIAAAAKAPL/AgAAAAIAAAALAPL/AgABAAIAAAAMAPL/AgACAAIAAAANAPL/AgADAAIAAAAKAPP/AgAAAAIAAAALAPP/AgABAAIAAAAMAPP/AgACAAIAAAANAPP/AgADAAIAAAAKAPT/AgAAAAIAAAALAPT/AgABAAIAAAAMAPT/AgACAAIAAAANAPT/AgADAAIAAAAKAPX/AgAAAAIAAAALAPX/AgABAAIAAAAMAPX/AgACAAIAAAANAPX/AgADAAIAAAAKAPb/AgAAAAIAAAALAPb/AgABAAIAAAAMAPb/AgACAAIAAAANAPb/AgADAAIAAAAKAPf/AgAAAAIAAAALAPf/AgABAAIAAAAMAPf/AgACAAIAAAANAPf/AgADAAIAAAAKAPj/AgAAAAIAAAALAPj/AgABAAIAAAAMAPj/AgACAAIAAAANAPj/AgADAAIAAAAKAPn/AgAAAAIAAAALAPn/AgABAAIAAAAMAPn/AgACAAIAAAANAPn/AgADAAIAAAAKAPr/AgAAAAIAAAALAPr/AgABAAIAAAAMAPr/AgACAAIAAAANAPr/AgADAAIAAAAKAPv/AgAAAAIAAAALAPv/AgABAAIAAAAMAPv/AgACAAIAAAANAPv/AgADAAIAAAAKAPz/AgAAAAIAAAALAPz/AgABAAIAAAAMAPz/AgACAAIAAAANAPz/AgADAAIAAAAKAP3/AgAAAAIAAAALAP3/AgABAAIAAAAMAP3/AgACAAIAAAANAP3/AgADAAIAAAAKAP7/AgAAAAIAAAALAP7/AgABAAIAAAAMAP7/AgACAAIAAAANAP7/AgADAAIAAAAKAP//AgAAAAIAAAALAP//AgABAAIAAAAMAP//AgACAAIAAAANAP//AgADAAIAAAAKAAAAAgAAAAIAAAALAAAAAgABAAIAAAAMAAAAAgACAAIAAAANAAAAAgADAAIAAAAKAAEAAgAAAAIAAAALAAEAAgABAAIAAAAMAAEAAgACAAIAAAANAAEAAgADAAIAAAAKAAIAAgAAAAIAAAALAAIAAgABAAIAAAAMAAIAAgACAAIAAAANAAIAAgADAAIAAAAOAOL/AgAAAAIAAAAPAOL/AgABAAIAAAAQAOL/AgACAAIAAAARAOL/AgADAAIAAAAOAOP/AgAAAAIAAAAPAOP/AgABAAIAAAAQAOP/AgACAAIAAAARAOP/AgADAAIAAAAOAOT/AgAAAAIAAAAPAOT/AgABAAIAAAAQAOT/AgACAAIAAAARAOT/AgADAAIAAAAOAOX/AgAAAAIAAAAPAOX/AgABAAIAAAAQAOX/AgACAAIAAAARAOX/AgADAAIAAAAOAOb/AgAAAAIAAAAPAOb/AgABAAIAAAAQAOb/AgACAAIAAAARAOb/AgADAAIAAAAOAOf/AgAAAAIAAAAPAOf/AgABAAIAAAAQAOf/AgACAAIAAAARAOf/AgADAAIAAAAOAOj/AgAAAAIAAAAPAOj/AgABAAIAAAAQAOj/AgACAAIAAAARAOj/AgADAAIAAAAOAOn/AgAAAAIAAAAPAOn/AgABAAIAAAAQAOn/AgACAAIAAAARAOn/AgADAAIAAAAOAOr/AgAAAAIAAAAPAOr/AgABAAIAAAAQAOr/AgACAAIAAAARAOr/AgADAAIAAAAOAOv/AgAAAAIAAAAPAOv/AgABAAIAAAAQAOv/AgACAAIAAAARAOv/AgADAAIAAAAOAOz/AgAAAAIAAAAPAOz/AgABAAIAAAAQAOz/AgACAAIAAAARAOz/AgADAAIAAAAOAO3/AgAAAAIAAAAPAO3/AgABAAIAAAAQAO3/AgACAAIAAAARAO3/AgADAAIAAAAOAO7/AgAAAAIAAAAPAO7/AgABAAIAAAAQAO7/AgACAAIAAAARAO7/AgADAAIAAAAOAO//AgAAAAIAAAAPAO//AgABAAIAAAAQAO//AgACAAIAAAARAO//AgADAAIAAAAOAPD/AgAAAAIAAAAPAPD/AgABAAIAAAAQAPD/AgACAAIAAAARAPD/AgADAAIAAAAOAPH/AgAAAAIAAAAPAPH/AgABAAIAAAAQAPH/AgACAAIAAAARAPH/AgADAAIAAAAOAPL/AgAAAAIAAAAPAPL/AgABAAIAAAAQAPL/AgACAAIAAAARAPL/AgADAAIAAAAOAPP/AgAAAAIAAAAPAPP/AgABAAIAAAAQAPP/AgACAAIAAAARAPP/AgADAAIAAAAOAPT/AgAAAAIAAAAPAPT/AgABAAIAAAAQAPT/AgACAAIAAAARAPT/AgADAAIAAAAOAPX/AgAAAAIAAAAPAPX/AgABAAIAAAAQAPX/AgACAAIAAAARAPX/AgADAAIAAAAOAPb/AgAAAAIAAAAPAPb/AgABAAIAAAAQAPb/AgACAAIAAAARAPb/AgADAAIAAAAOAPf/AgAAAAIAAAAPAPf/AgABAAIAAAAQAPf/AgACAAIAAAARAPf/AgADAAIAAAAOAPj/AgAAAAIAAAAPAPj/AgABAAIAAAAQAPj/AgACAAIAAAARAPj/AgADAAIAAAAOAPn/AgAAAAIAAAAPAPn/AgABAAIAAAAQAPn/AgACAAIAAAARAPn/AgADAAIAAAAOAPr/AgAAAAIAAAAPAPr/AgABAAIAAAAQAPr/AgACAAIAAAARAPr/AgADAAIAAAAOAPv/AgAAAAIAAAAPAPv/AgABAAIAAAAQAPv/AgACAAIAAAARAPv/AgADAAIAAAAOAPz/AgAAAAIAAAAPAPz/AgABAAIAAAAQAPz/AgACAAIAAAARAPz/AgADAAIAAAAOAP3/AgAAAAIAAAAPAP3/AgABAAIAAAAQAP3/AgACAAIAAAARAP3/AgADAAIAAAAOAP7/AgAAAAIAAAAPAP7/AgABAAIAAAAQAP7/AgACAAIAAAARAP7/AgADAAIAAAAOAP//AgAAAAIAAAAPAP//AgABAAIAAAAQAP//AgACAAIAAAARAP//AgADAAIAAAAOAAAAAgAAAAIAAAAPAAAAAgABAAIAAAAQAAAAAgACAAIAAAARAAAAAgADAAIAAAAOAAEAAgAAAAIAAAAPAAEAAgABAAIAAAAQAAEAAgACAAIAAAARAAEAAgADAAIAAAAOAAIAAgAAAAIAAAAPAAIAAgABAAIAAAAQAAIAAgACAAIAAAARAAIAAgADAAIAAAASAOL/AgAAAAIAAAATAOL/AgABAAIAAAAUAOL/AgACAAIAAAAVAOL/AgADAAIAAAASAOP/AgAAAAIAAAATAOP/AgABAAIAAAAUAOP/AgACAAIAAAAVAOP/AgADAAIAAAASAOT/AgAAAAIAAAATAOT/AgABAAIAAAAUAOT/AgACAAIAAAAVAOT/AgADAAIAAAASAOX/AgAAAAIAAAATAOX/AgABAAIAAAAUAOX/AgACAAIAAAAVAOX/AgADAAIAAAASAOb/AgAAAAIAAAATAOb/AgABAAIAAAAUAOb/AgACAAIAAAAVAOb/AgADAAIAAAASAOf/AgAAAAIAAAATAOf/AgABAAIAAAAUAOf/AgACAAIAAAAVAOf/AgADAAIAAAASAOj/AgAAAAIAAAATAOj/AgABAAIAAAAUAOj/AgACAAIAAAAVAOj/AgADAAIAAAASAOn/AgAAAAIAAAATAOn/AgABAAIAAAAUAOn/AgACAAIAAAAVAOn/AgADAAIAAAASAOr/AgAAAAIAAAATAOr/AgABAAIAAAAUAOr/AgACAAIAAAAVAOr/AgADAAIAAAASAOv/AgAAAAIAAAATAOv/AgABAAIAAAAUAOv/AgACAAIAAAAVAOv/AgADAAIAAAASAOz/AgAAAAIAAAATAOz/AgABAAIAAAAUAOz/AgACAAIAAAAVAOz/AgADAAIAAAASAO3/AgAAAAIAAAATAO3/AgABAAIAAAAUAO3/AgACAAIAAAAVAO3/AgADAAIAAAASAO7/AgAAAAIAAAATAO7/AgABAAIAAAAUAO7/AgACAAIAAAAVAO7/AgADAAIAAAASAO//AgAAAAIAAAATAO//AgABAAIAAAAUAO//AgACAAIAAAAVAO//AgADAAIAAAASAPD/AgAAAAIAAAATAPD/AgABAAIAAAAUAPD/AgACAAIAAAAVAPD/AgADAAIAAAASAPH/AgAAAAIAAAATAPH/AgABAAIAAAAUAPH/AgACAAIAAAAVAPH/AgADAAIAAAASAPL/AgAAAAIAAAATAPL/AgABAAIAAAAUAPL/AgACAAIAAAAVAPL/AgADAAIAAAASAPP/AgAAAAIAAAATAPP/AgABAAIAAAAUAPP/AgACAAIAAAAVAPP/AgADAAIAAAASAPT/AgAAAAIAAAATAPT/AgABAAIAAAAUAPT/AgACAAIAAAAVAPT/AgADAAIAAAASAPX/AgAAAAIAAAATAPX/AgABAAIAAAAUAPX/AgACAAIAAAAVAPX/AgADAAIAAAASAPb/AgAAAAIAAAATAPb/AgABAAIAAAAUAPb/AgACAAIAAAAVAPb/AgADAAIAAAASAPf/AgAAAAIAAAATAPf/AgABAAIAAAAUAPf/AgACAAIAAAAVAPf/AgADAAIAAAASAPj/AgAAAAIAAAATAPj/AgABAAIAAAAUAPj/AgACAAIAAAAVAPj/AgADAAIAAAASAPn/AgAAAAIAAAATAPn/AgABAAIAAAAUAPn/AgACAAIAAAAVAPn/AgADAAIAAAASAPr/AgAAAAIAAAATAPr/AgABAAIAAAAUAPr/AgACAAIAAAAVAPr/AgADAAIAAAASAPv/AgAAAAIAAAATAPv/AgABAAIAAAAUAPv/AgACAAIAAAAVAPv/AgADAAIAAAASAPz/AgAAAAIAAAATAPz/AgABAAIAAAAUAPz/AgACAAIAAAAVAPz/AgADAAIAAAASAP3/AgAAAAIAAAATAP3/AgABAAIAAAAUAP3/AgACAAIAAAAVAP3/AgADAAIAAAASAP7/AgAAAAIAAAATAP7/AgABAAIAAAAUAP7/AgACAAIAAAAVAP7/AgADAAIAAAASAP//AgAAAAIAAAATAP//AgABAAIAAAAUAP//AgACAAIAAAAVAP//AgADAAIAAAASAAAAAgAAAAIAAAATAAAAAgABAAIAAAAUAAAAAgACAAIAAAAVAAAAAgADAAIAAAASAAEAAgAAAAIAAAATAAEAAgABAAIAAAAUAAEAAgACAAIAAAAVAAEAAgADAAIAAAASAAIAAgAAAAIAAAATAAIAAgABAAIAAAAUAAIAAgACAAIAAAAVAAIAAgADAAIAAAAWAOL/AgAAAAIAAAAXAOL/AgABAAIAAAAWAOP/AgAAAAIAAAAXAOP/AgABAAIAAAAWAOT/AgAAAAIAAAAXAOT/AgABAAIAAAAWAOX/AgAAAAIAAAAXAOX/AgABAAIAAAAWAOb/AgAAAAIAAAAXAOb/AgABAAIAAAAWAOf/AgAAAAIAAAAXAOf/AgABAAIAAAAWAOj/AgAAAAIAAAAXAOj/AgABAAIAAAAWAOn/AgAAAAIAAAAXAOn/AgABAAIAAAAWAOr/AgAAAAIAAAAXAOr/AgABAAIAAAAWAOv/AgAAAAIAAAAXAOv/AgABAAIAAAAWAOz/AgAAAAIAAAAXAOz/AgABAAIAAAAWAO3/AgAAAAIAAAAXAO3/AgABAAIAAAAWAO7/AgAAAAIAAAAXAO7/AgABAAIAAAAWAO//AgAAAAIAAAAXAO//AgABAAIAAAAWAPD/AgAAAAIAAAAXAPD/AgABAAIAAAAWAPH/AgAAAAIAAAAXAPH/AgABAAIAAAAWAPL/AgAAAAIAAAAXAPL/AgABAAIAAAAWAPP/AgAAAAIAAAAXAPP/AgABAAIAAAAWAPT/AgAAAAIAAAAXAPT/AgABAAIAAAAWAPX/AgAAAAIAAAAXAPX/AgABAAIAAAAWAPb/AgAAAAIAAAAXAPb/AgABAAIAAAAWAPf/AgAAAAIAAAAXAPf/AgABAAIAAAAWAPj/AgAAAAIAAAAXAPj/AgABAAIAAAAWAPn/AgAAAAIAAAAXAPn/AgABAAIAAAAWAPr/AgAAAAIAAAAXAPr/AgABAAIAAAAWAPv/AgAAAAIAAAAXAPv/AgABAAIAAAAWAPz/AgAAAAIAAAAXAPz/AgABAAIAAAAWAP3/AgAAAAIAAAAXAP3/AgABAAIAAAAWAP7/AgAAAAIAAAAXAP7/AgABAAIAAAAWAP//AgAAAAIAAAAXAP//AgABAAIAAAAWAAAAAgAAAAIAAAAXAAAAAgABAAIAAAAWAAEAAgAAAAIAAAAXAAEAAgABAAIAAAAWAAIAAgAAAAIAAAAXAAIAAgABAAIAAADf/+L/BQAAAAAAAAA=")
-
-[node name="L1_Details" parent="WorldRoot/BattleTestArena" index="1"]
-tile_map_data = PackedByteArray("AADy/+D/BQAAAAAAAAAXAOD/BQAAAAAAAAAMAOD/BQAAAAAAAAD9/+D/BQAAAAAAAAA=")
-
-[node name="EnemySpawner" type="Node2D" parent="WorldRoot/BattleTestArena"]
-script = ExtResource("18_nfivy")
-enemy_scene = ExtResource("16_cvmbd")
-max_alive = 3
-respawn_delay_sec = 30.0
-spawn_parent = NodePath("Marker2D")
-spawn_points = Array[NodePath]([NodePath("Marker2D2"), NodePath("Marker2D3")])
-
-[node name="Marker2D" type="Marker2D" parent="WorldRoot/BattleTestArena/EnemySpawner"]
-position = Vector2(272, -392)
-
-[node name="Marker2D2" type="Marker2D" parent="WorldRoot/BattleTestArena/EnemySpawner"]
-position = Vector2(-144, -416)
-
-[node name="Marker2D3" type="Marker2D" parent="WorldRoot/BattleTestArena/EnemySpawner"]
-position = Vector2(80, -200)
-
-[node name="Levelpop" type="CanvasLayer" parent="."]
-script = ExtResource("17_ft6cd")
-text = "Level UP!"
-color = Color(0.26142663, 0.74286306, 0.72026473, 1)
-
-[editable path="PartyRoot/TestP1"]
-[editable path="PartyRoot/Rosali"]
-[editable path="WorldRoot/BattleTestArena"]
+[editable path="PartyRoot/Player1"]
+[editable path="HUDLayer/TabbedMenu"]

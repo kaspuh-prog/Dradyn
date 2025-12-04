@@ -1,0 +1,32 @@
+[gd_scene load_steps=2 format=3 uid="uid://6lfuqfrn3pl7"]
+
+[ext_resource type="Script" uid="uid://s6wvn686jy65" path="res://scenes/PreGame/TitleScreen.gd" id="1_xierh"]
+
+[node name="TitleScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_xierh")
+game_scene_path = "uid://c8ty6h5dtvshr"
+new_game_button_path = NodePath("VBoxContainer/NewGameButton")
+continue_button_path = NodePath("VBoxContainer/ContinueButton")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+alignment = 1
+
+[node name="NewGameButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "New Game
+"
+
+[node name="ContinueButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Continue"
+
+[node name="OptionsButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="QuitButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2

@@ -1,0 +1,56 @@
+[gd_resource type="SpriteFrames" load_steps=6 format=3 uid="uid://cd8fulmiecy46"]
+
+[ext_resource type="Texture2D" uid="uid://byrf3xobm3hu6" path="res://assets/sprites/characters/Player1Sleep.png" id="1_5ilxb"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5ilxb"]
+atlas = ExtResource("1_5ilxb")
+region = Rect2(60, 0, 20, 38)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s3s2j"]
+atlas = ExtResource("1_5ilxb")
+region = Rect2(0, 0, 20, 38)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7lpjw"]
+atlas = ExtResource("1_5ilxb")
+region = Rect2(20, 0, 20, 38)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hisak"]
+atlas = ExtResource("1_5ilxb")
+region = Rect2(40, 0, 20, 38)
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5ilxb")
+}],
+"loop": true,
+"name": &"emptybed",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_s3s2j")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7lpjw")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hisak")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7lpjw")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hisak")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7lpjw")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hisak")
+}],
+"loop": true,
+"name": &"sleep",
+"speed": 6.0
+}]

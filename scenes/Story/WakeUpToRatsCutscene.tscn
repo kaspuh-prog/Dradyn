@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://bsf8nevexloto"]
+
+[ext_resource type="Script" uid="uid://c2b5hbdjwqqau" path="res://scripts/story/SimpleCutscene.gd" id="1_bxhpd"]
+[ext_resource type="PackedScene" uid="uid://coil8siiotaun" path="res://scenes/ui/DialogueBox.tscn" id="2_fe4va"]
+
+[node name="WakeUpToRatsCutscene" type="Node"]
+script = ExtResource("1_bxhpd")
+dialogue_box_scene = ExtResource("2_fe4va")
+speaker_name = "House Mother"

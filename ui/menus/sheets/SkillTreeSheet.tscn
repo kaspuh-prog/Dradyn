@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3 uid="res://ui/menus/sheets/SkillTreeSheet.tscn"]
+
+[ext_resource type="Script" path="res://ui/menus/sheets/SkillTreeSheet.gd" id="1"]
+
+[node name="SkillTreeSheet" type="Control"]
+script = ExtResource("1")
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="Label" type="Label" parent="."]
+text = "Skill Tree (unlock abilities → hotbar) — placeholder"
+horizontal_alignment = 1
+vertical_alignment = 1

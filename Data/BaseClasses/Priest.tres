@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="ClassDefinition" load_steps=3 format=3 uid="uid://cy5i2pdkhsm0u"]
+
+[ext_resource type="Script" uid="uid://bw2bhebcfgp1u" path="res://Data/KeyFloatPair.gd" id="1_iuubx"]
+[ext_resource type="Script" uid="uid://b7ipjii2rumgu" path="res://scripts/resources/ClassDefinition.gd" id="2_ku4pb"]
+
+[resource]
+script = ExtResource("2_ku4pb")
+class_title = "Priest"
+description = "Healer Base Class"
+mp_source = "wis"
+mp_weight_INT = 0.0
+mp_weight_WIS = 1.5
+gr_STR = 0.2
+gr_DEX = 0.5
+gr_STA = 0.5
+gr_INT = 0.2
+gr_WIS = 0.7
+gr_CHA = 0.5
+gr_LCK = 0.5
+grv_HP = 2.0
+grv_MP = 0.5
+allowed_point_targets = PackedStringArray()
+allowed_equipment_classes = PackedStringArray("cloth")
+skilltree_base_dir = "res://Data/Abilities/Defs/Classes/Priest"
+section0_name = "Path of Life"
+section1_name = "Path of Light"
+section2_name = "Boons"
+section3_name = "Guldah's Wisdom"
+section0_dir = "res://Data/Abilities/Defs/Classes/Priest/Path of Life/"
+section1_dir = "res://Data/Abilities/Defs/Classes/Priest/Path of Light/"
+section2_dir = "res://Data/Abilities/Defs/Classes/Priest/Boons/"
+section3_dir = "res://Data/Abilities/Defs/Classes/Priest/Guldah's Wisdom/"
+metadata/_custom_type_script = "uid://b7ipjii2rumgu"

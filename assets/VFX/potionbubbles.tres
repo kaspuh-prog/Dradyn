@@ -1,0 +1,60 @@
+[gd_resource type="SpriteFrames" load_steps=9 format=3 uid="uid://csam7ii73kgin"]
+
+[ext_resource type="Texture2D" uid="uid://dv0w5rofhmptb" path="res://assets/VFX/potionbubbles.png" id="1_f877n"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gmgnq"]
+atlas = ExtResource("1_f877n")
+region = Rect2(0, 0, 96, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_50iqe"]
+atlas = ExtResource("1_f877n")
+region = Rect2(96, 0, 96, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4ur6w"]
+atlas = ExtResource("1_f877n")
+region = Rect2(192, 0, 96, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_loy86"]
+atlas = ExtResource("1_f877n")
+region = Rect2(288, 0, 96, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_10c1x"]
+atlas = ExtResource("1_f877n")
+region = Rect2(384, 0, 96, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5lw3h"]
+atlas = ExtResource("1_f877n")
+region = Rect2(0, 88, 96, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8ognq"]
+atlas = ExtResource("1_f877n")
+region = Rect2(96, 88, 96, 88)
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gmgnq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_50iqe")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4ur6w")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_loy86")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_10c1x")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5lw3h")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8ognq")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]

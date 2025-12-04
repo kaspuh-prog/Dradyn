@@ -11,14 +11,27 @@ config_version=5
 [application]
 
 config/name="Dradyn Starter 4.5"
-run/main_scene="res://scenes/Main.tscn"
+run/main_scene="uid://6lfuqfrn3pl7"
 config/features=PackedStringArray("4.5")
 
 [autoload]
 
-Party="*res://scripts/resources/PartyManager.gd"
 SceneMgr="*res://AutoLoads/SceneManager.gd"
-DebugStats="*res://scripts/DebugStatDump.gd"
+DebugStats="res://scripts/DebugStatDump.gd"
+Party="*res://AutoLoads/PartyManager.gd"
+Suite="*res://AutoLoads/AbilitySuiteConfig.gd"
+AbilitySys="*res://AutoLoads/AbilitySystem.gd"
+TargetingSys="*res://AutoLoads/TargetingSystem.gd"
+InventorySys="*res://AutoLoads/InventorySystem.gd"
+InteractionSys="*res://AutoLoads/InteractionSystem.gd"
+DebugStairs="res://scripts/DebugStairProbe.gd"
+Transition="*res://AutoLoads/TransitionLayer.gd"
+DayandNight="*res://AutoLoads/DayNight.gd"
+AbilityExec="*res://AutoLoads/AbilityExecutor.gd"
+HotbarSys="*res://AutoLoads/HotbarSystem.gd"
+VFXBridge="*res://AutoLoads/VFXBridgeScript.gd"
+SaveSys="*res://AutoLoads/SaveSystem.gd"
+StoryStateSys="*res://AutoLoads/StoryStateSystem.gd"
 
 [display]
 
@@ -26,15 +39,24 @@ window/size/viewport_width=480
 window/size/viewport_height=270
 window/stretch/mode="canvas_items"
 
+[dradyn]
+
+suite/enabled=true
+
 [editor]
 
 movie_writer/video_quality=1.0
 movie_writer/movie_file="D:/GoDot Dradyn/dradyn_prototype/test.avi"
 
+[editor_plugins]
+
+enabled=PackedStringArray()
+
 [file_customization]
 
 folder_colors={
 "res://assets/": "gray",
+"res://assets/VFX/": "orange",
 "res://assets/audio/": "pink",
 "res://assets/sprites/": "yellow",
 "res://assets/tilesets/": "green",
@@ -89,6 +111,51 @@ sprint={
 attack={
 "deadzone": 0.2,
 "events": [null, Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":69,"key_label":0,"unicode":101,"location":0,"echo":false,"script":null)
+]
+}
+ui_inventory={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":73,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+]
+}
+ui_page_right={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194332,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+]
+}
+ui_page_left={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194333,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+]
+}
+ui_use_consume_1={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":49,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+]
+}
+ui_use_consume_2={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":50,"key_label":0,"unicode":50,"location":0,"echo":false,"script":null)
+]
+}
+interact={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":69,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+]
+}
+dn_force_day={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194342,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+]
+}
+dn_force_night={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194343,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+]
+}
+debug_save_slot_1={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194317,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
 ]
 }
 

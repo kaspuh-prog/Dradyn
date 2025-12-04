@@ -1,0 +1,23 @@
+[gd_scene load_steps=4 format=3 uid="uid://cswuxirry0dug"]
+
+[ext_resource type="Script" uid="uid://bv18itau6couf" path="res://scenes/Projectiles/Projectile.gd" id="1_1glnl"]
+[ext_resource type="SpriteFrames" uid="uid://duloeo6s2nm7o" path="res://assets/sprites/projectiles/BoltofLightProjectile.tres" id="2_57dce"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_kpyxa"]
+radius = 4.1231055
+
+[node name="BoltofLight(Enemy)" type="Area2D"]
+collision_layer = 3
+collision_mask = 4
+script = ExtResource("1_1glnl")
+hit_groups = ["PartyMembers"]
+damage_type = "Light"
+ignore_group = "Enemies"
+
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+sprite_frames = ExtResource("2_57dce")
+animation = &"fly"
+frame_progress = 0.14970906
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_kpyxa")

@@ -1,0 +1,20 @@
+[gd_scene load_steps=4 format=3 uid="uid://eap8c84fyjiq"]
+
+[ext_resource type="Script" uid="uid://bv18itau6couf" path="res://scenes/Projectiles/Projectile.gd" id="1_ecxct"]
+[ext_resource type="SpriteFrames" uid="uid://duloeo6s2nm7o" path="res://assets/sprites/projectiles/BoltofLightProjectile.tres" id="1_sqd8k"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_kpyxa"]
+radius = 4.1231055
+
+[node name="BoltofLight" type="Area2D"]
+collision_mask = 3
+script = ExtResource("1_ecxct")
+damage_type = "Light"
+
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+sprite_frames = ExtResource("1_sqd8k")
+animation = &"fly"
+frame_progress = 0.14970906
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_kpyxa")

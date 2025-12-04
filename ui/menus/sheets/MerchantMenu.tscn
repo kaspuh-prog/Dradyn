@@ -1,0 +1,288 @@
+[gd_scene load_steps=12 format=3 uid="uid://cxiv3nb2t55vl"]
+
+[ext_resource type="Script" uid="uid://bo1rit4m80f3s" path="res://ui/menus/sheets/MerchantMenu.gd" id="1_o5d6r"]
+[ext_resource type="Texture2D" uid="uid://b6r0xmrt1867w" path="res://ui/styles/MenuBG.png" id="1_q5363"]
+[ext_resource type="Texture2D" uid="uid://c5er3mc2muoyp" path="res://ui/styles/tabs/InventoryTabNotUnlocked.png" id="2_77ilv"]
+[ext_resource type="Texture2D" uid="uid://n1ygottvcrco" path="res://ui/styles/MerchantDescriptionBG.png" id="3_ct3h2"]
+[ext_resource type="Texture2D" uid="uid://dt7muvl5le6ar" path="res://ui/styles/uparrow.png" id="4_f6e8i"]
+[ext_resource type="Script" uid="uid://cwtcd6vaonfxy" path="res://ui/menus/sheets/MerchantGridView.gd" id="4_nr7f6"]
+[ext_resource type="Texture2D" uid="uid://b27rwwym0dw7q" path="res://ui/styles/downarrow.png" id="5_o5d6r"]
+[ext_resource type="Texture2D" uid="uid://myctoenul8ch" path="res://ui/styles/merchantitemqty.png" id="6_nr7f6"]
+[ext_resource type="Texture2D" uid="uid://c7swswl757yc2" path="res://ui/styles/SlotNotUnlocked.png" id="6_op75y"]
+[ext_resource type="FontFile" uid="uid://cpfjwf504s6no" path="res://assets/fonts/KellsFLF.ttf" id="7_ct3h2"]
+[ext_resource type="Texture2D" uid="uid://6q5vcngx3v1v" path="res://ui/styles/GoldCountField.png" id="8_f6e8i"]
+
+[node name="MerchantMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -480.0
+offset_bottom = -270.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_o5d6r")
+
+[node name="BG" type="NinePatchRect" parent="."]
+z_index = -10
+z_as_relative = false
+custom_minimum_size = Vector2(224, 224)
+layout_mode = 0
+offset_right = 224.0
+offset_bottom = 224.0
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("1_q5363")
+patch_margin_left = 48
+patch_margin_top = 48
+patch_margin_right = 48
+patch_margin_bottom = 48
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+
+[node name="TabsRow" type="Control" parent="BG"]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 112.0
+offset_top = 16.0
+offset_right = 208.0
+offset_bottom = 32.0
+
+[node name="Tab_Buy" type="TextureButton" parent="BG/TabsRow"]
+layout_mode = 1
+anchors_preset = -1
+offset_right = 32.0
+offset_bottom = 16.0
+texture_normal = ExtResource("2_77ilv")
+
+[node name="Buy_Label" type="Label" parent="BG/TabsRow/Tab_Buy"]
+layout_mode = 1
+anchors_preset = -1
+offset_right = 32.0
+offset_bottom = 16.0
+theme_override_fonts/font = ExtResource("7_ct3h2")
+theme_override_font_sizes/font_size = 8
+text = "Buy"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Tab_Sell" type="TextureButton" parent="BG/TabsRow"]
+layout_mode = 1
+anchors_preset = -1
+offset_left = 32.0
+offset_right = 64.0
+offset_bottom = 16.0
+texture_normal = ExtResource("2_77ilv")
+
+[node name="Sell_Label" type="Label" parent="BG/TabsRow/Tab_Sell"]
+layout_mode = 1
+anchors_preset = -1
+offset_right = 32.0
+offset_bottom = 16.0
+theme_override_fonts/font = ExtResource("7_ct3h2")
+theme_override_font_sizes/font_size = 8
+text = "Sell"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Tab_Extra" type="TextureButton" parent="BG/TabsRow"]
+layout_mode = 1
+anchors_preset = -1
+offset_left = 64.0
+offset_right = 96.0
+offset_bottom = 16.0
+texture_normal = ExtResource("2_77ilv")
+
+[node name="Extra_Label" type="Label" parent="BG/TabsRow/Tab_Extra"]
+layout_mode = 1
+anchors_preset = -1
+offset_right = 32.0
+offset_bottom = 16.0
+theme_override_fonts/font = ExtResource("7_ct3h2")
+theme_override_font_sizes/font_size = 8
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MerchantGrid" type="Control" parent="BG"]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 16.0
+offset_top = 32.0
+offset_right = 112.0
+offset_bottom = 192.0
+script = ExtResource("4_nr7f6")
+tex_slot_empty = ExtResource("6_op75y")
+
+[node name="DescriptionPane" type="Control" parent="BG"]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 112.0
+offset_top = 32.0
+offset_right = 208.0
+offset_bottom = 160.0
+
+[node name="DescBG" type="TextureRect" parent="BG/DescriptionPane"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+texture = ExtResource("3_ct3h2")
+
+[node name="ItemName" type="Label" parent="BG/DescriptionPane"]
+layout_mode = 1
+anchors_preset = -1
+offset_left = 6.0
+offset_top = 5.0
+offset_right = 92.0
+offset_bottom = 8.0
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_constants/line_spacing = 1
+theme_override_font_sizes/font_size = 5
+vertical_alignment = 1
+
+[node name="StockQty" type="Label" parent="BG/DescriptionPane"]
+layout_mode = 0
+offset_left = 65.0
+offset_top = 5.0
+offset_right = 75.0
+offset_bottom = 13.0
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_font_sizes/font_size = 5
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="ItemDescription" type="RichTextLabel" parent="BG/DescriptionPane"]
+layout_mode = 1
+anchors_preset = -1
+offset_left = 6.0
+offset_top = 18.0
+offset_right = 92.0
+offset_bottom = 90.0
+theme_override_colors/default_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_font_sizes/normal_font_size = 5
+
+[node name="PurchasePrompt" type="Label" parent="BG/DescriptionPane"]
+layout_mode = 1
+anchors_preset = -1
+offset_left = 6.0
+offset_top = 102.0
+offset_right = 92.0
+offset_bottom = 122.0
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_font_sizes/font_size = 5
+
+[node name="BottomControls" type="Control" parent="BG"]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 112.0
+offset_top = 160.0
+offset_right = 207.0
+offset_bottom = 191.0
+
+[node name="QtyUp" type="TextureButton" parent="BG/BottomControls"]
+layout_mode = 1
+anchors_preset = -1
+offset_right = 15.0
+offset_bottom = 15.0
+texture_normal = ExtResource("4_f6e8i")
+
+[node name="QtyDown" type="TextureButton" parent="BG/BottomControls"]
+layout_mode = 1
+anchors_preset = -1
+offset_top = 16.0
+offset_right = 15.0
+offset_bottom = 31.0
+texture_normal = ExtResource("5_o5d6r")
+
+[node name="QtyField" type="TextureRect" parent="BG/BottomControls"]
+layout_mode = 1
+anchors_preset = -1
+offset_left = 16.0
+offset_top = 8.0
+offset_right = 31.0
+offset_bottom = 15.0
+texture = ExtResource("6_nr7f6")
+
+[node name="QtyLabel" type="Label" parent="BG/BottomControls/QtyField"]
+layout_mode = 0
+offset_left = 8.0
+offset_top = -0.5
+offset_right = 12.0
+offset_bottom = 8.5
+theme_override_font_sizes/font_size = 5
+text = "1"
+
+[node name="ConfirmButton" type="TextureButton" parent="BG/BottomControls"]
+layout_mode = 1
+anchors_preset = -1
+offset_left = 32.0
+offset_right = 64.0
+offset_bottom = 15.0
+texture_normal = ExtResource("2_77ilv")
+
+[node name="ConfirmLabel" type="Label" parent="BG/BottomControls/ConfirmButton"]
+layout_mode = 0
+offset_left = -4.0
+offset_top = -4.0
+offset_right = 36.0
+offset_bottom = 19.0
+theme_override_fonts/font = ExtResource("7_ct3h2")
+theme_override_font_sizes/font_size = 7
+text = "Confirm"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+
+[node name="CancelButton" type="TextureButton" parent="BG/BottomControls"]
+layout_mode = 1
+anchors_preset = -1
+offset_left = 64.0
+offset_right = 64.0
+offset_bottom = 15.0
+texture_normal = ExtResource("2_77ilv")
+
+[node name="ConfirmLabel" type="Label" parent="BG/BottomControls/CancelButton"]
+layout_mode = 0
+offset_left = -4.0
+offset_top = -4.0
+offset_right = 36.0
+offset_bottom = 19.0
+theme_override_fonts/font = ExtResource("7_ct3h2")
+theme_override_font_sizes/font_size = 7
+text = "Cancel"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+
+[node name="CurrencyBar" type="TextureRect" parent="BG"]
+layout_mode = 1
+anchors_preset = -1
+offset_left = 168.0
+offset_top = 200.0
+offset_right = 198.0
+offset_bottom = 206.0
+texture = ExtResource("8_f6e8i")
+
+[node name="GoldLabel" type="Label" parent="BG/CurrencyBar"]
+layout_mode = 0
+offset_left = 9.0
+offset_right = 49.0
+offset_bottom = 23.0
+theme_override_font_sizes/font_size = 5
+text = "1
+"
+
+[node name="MenuLabel" type="Label" parent="BG"]
+layout_mode = 1
+anchors_preset = -1
+offset_left = 28.0
+offset_top = 14.0
+offset_right = 106.0
+offset_bottom = 28.0
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.41568628)
+theme_override_constants/line_spacing = 2
+theme_override_constants/shadow_offset_x = 0
+theme_override_constants/shadow_offset_y = 0
+theme_override_fonts/font = ExtResource("7_ct3h2")
+horizontal_alignment = 1
+vertical_alignment = 1

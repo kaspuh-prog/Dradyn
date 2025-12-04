@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3 uid="uid://d276ynkuqbwbq"]
+
+[ext_resource type="Script" uid="uid://dyj0l2pcdql7b" path="res://scenes/WorldAreas/InteractableDoor.gd" id="1_q2bwi"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_oa23h"]
+size = Vector2(30, 46)
+
+[node name="InteractableDoor" type="Area2D" groups=["interactable"]]
+script = ExtResource("1_q2bwi")
+target_scene_path = "res://scenes/WorldAreas/Orphanage_CommonRoom.tscn"
+entry_tag = "southdoor"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(1, 0)
+shape = SubResource("RectangleShape2D_oa23h")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]

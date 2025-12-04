@@ -1,0 +1,6 @@
+[gd_resource type="Resource" script_class="LootEntry" load_steps=2 format=3 uid="uid://dwpuhqm8vc0yq"]
+
+[ext_resource type="Script" uid="uid://bj3tpnw12ybt7" path="res://world/loot/LootEntry.gd" id="1_3ry5k"]
+
+[resource]
+script = ExtResource("1_3ry5k")

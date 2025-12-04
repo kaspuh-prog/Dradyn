@@ -1,0 +1,26 @@
+[gd_scene load_steps=2 format=3 uid="res://ui/menus/sheets/StatsSheet.tscn"]
+
+[ext_resource type="Script" path="res://ui/menus/sheets/StatsSheet.gd" id="1"]
+
+[node name="StatsSheet" type="Control"]
+script = ExtResource("1")
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="VBox" type="VBoxContainer" parent="."]
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="VBox"]
+text = "Character Stats (stub)"
+horizontal_alignment = 1
+
+[node name="Points" type="Label" parent="VBox"]
+name = "Points"
+text = "Unspent Points: 0"
+
+[node name="StatsList" type="GridContainer" parent="VBox"]
+name = "StatsList"
+columns = 2

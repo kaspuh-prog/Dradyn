@@ -1,0 +1,133 @@
+[gd_scene load_steps=16 format=3 uid="uid://dye7xt7wi0rjh"]
+
+[ext_resource type="Script" uid="uid://c4x3tqlpfs380" path="res://scenes/Actors/NPCs/NonCombatNPC.gd" id="1_t1kxl"]
+[ext_resource type="Texture2D" uid="uid://cttbd75uh54gs" path="res://assets/sprites/NPCs/OrphanBoy.png" id="2_btvif"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_boo78"]
+atlas = ExtResource("2_btvif")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_f733h"]
+atlas = ExtResource("2_btvif")
+region = Rect2(64, 128, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wfib8"]
+atlas = ExtResource("2_btvif")
+region = Rect2(64, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j1nic"]
+atlas = ExtResource("2_btvif")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_700l7"]
+atlas = ExtResource("2_btvif")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vww71"]
+atlas = ExtResource("2_btvif")
+region = Rect2(128, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_n8io4"]
+atlas = ExtResource("2_btvif")
+region = Rect2(0, 128, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t2ixs"]
+atlas = ExtResource("2_btvif")
+region = Rect2(128, 128, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ofna2"]
+atlas = ExtResource("2_btvif")
+region = Rect2(64, 128, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_w3rca"]
+atlas = ExtResource("2_btvif")
+region = Rect2(0, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1ayrb"]
+atlas = ExtResource("2_btvif")
+region = Rect2(64, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wsras"]
+atlas = ExtResource("2_btvif")
+region = Rect2(128, 64, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_oru4c"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_boo78")
+}],
+"loop": true,
+"name": &"idle_down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_f733h")
+}],
+"loop": true,
+"name": &"idle_side",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wfib8")
+}],
+"loop": true,
+"name": &"idle_up",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j1nic")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_700l7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vww71")
+}],
+"loop": true,
+"name": &"walk_down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_n8io4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t2ixs")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ofna2")
+}],
+"loop": true,
+"name": &"walk_side",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_w3rca")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1ayrb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wsras")
+}],
+"loop": true,
+"name": &"walk_up",
+"speed": 5.0
+}]
+
+[node name="OrphanBoy" type="Node2D"]
+script = ExtResource("1_t1kxl")
+npc_name = "Orphan Boy"
+metadata/_custom_type_script = "uid://c4x3tqlpfs380"
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+light_mask = 2
+position = Vector2(0, -8)
+sprite_frames = SubResource("SpriteFrames_oru4c")
+animation = &"idle_down"
+offset = Vector2(0, -8)
