@@ -218,6 +218,9 @@ func show_text_for_node(node2d: Node2D, text: String, color: Color = levelup_tex
 func show_status_applied_ex(actor: Node, status_id: StringName, opts: Dictionary) -> void:
 	if actor == null:
 		return
+	if status_id == StringName("dead"):
+		# Death has dedicated presentation elsewhere; avoid duplicate banner text.
+		return
 	var anchor: Node2D = _guess_anchor(actor)
 	if anchor == null:
 		return
@@ -229,7 +232,12 @@ func show_status_applied_ex(actor: Node, status_id: StringName, opts: Dictionary
 		var v_col: Variant = opts["color"]
 		if typeof(v_col) == TYPE_COLOR:
 			col = v_col
-
+	# StatusConditions intentionally passes a transparent sentinel for statuses
+	# that don't have an explicit tint. Fall back to this layer's default palette
+	# so banners stay visible (e.g., "slowed").
+	if col.a <= 0.0:
+		col = _status_default_color(status_id)
+		
 	var absolute_scale: float = base_scale * STATUS_BANNER_DEFAULT_SCALE_MULT
 	if opts.has("scale"):
 		var v_sc: Variant = opts["scale"]

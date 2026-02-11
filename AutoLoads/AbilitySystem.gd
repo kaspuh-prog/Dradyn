@@ -499,35 +499,79 @@ func _start_cooldown(user_key: String, ability_id: String, duration_ms: int, use
 	map[ability_id] = until
 	emit_signal("cooldown_started", user, ability_id, duration_ms, until)
 
+func _attack_speed_multiplier_for_user(user: Object) -> float:
+	if user == null:
+		return 1.0
+
+	# Preferred: actor API can expose a stat-aware multiplier directly.
+	if user.has_method("get_attack_speed_multiplier"):
+		var mul_any: Variant = user.call("get_attack_speed_multiplier")
+		if typeof(mul_any) == TYPE_FLOAT or typeof(mul_any) == TYPE_INT:
+			var m0: float = float(mul_any)
+			if m0 > 0.0:
+				return clampf(m0, 0.05, 3.0)
+
+	# Common path: actor owns a StatsComponent child with this method.
+	if user is Node:
+		var n: Node = user as Node
+		var stats: Node = null
+		if n.has_method("get_stats"):
+			var st_any: Variant = n.call("get_stats")
+			if st_any is Node:
+				stats = st_any as Node
+		if stats == null and n.has_node("StatsComponent"):
+			stats = n.get_node("StatsComponent")
+		if stats != null and stats.has_method("get_attack_speed_multiplier"):
+			var mul2_any: Variant = stats.call("get_attack_speed_multiplier")
+			if typeof(mul2_any) == TYPE_FLOAT or typeof(mul2_any) == TYPE_INT:
+				var m1: float = float(mul2_any)
+				if m1 > 0.0:
+					return clampf(m1, 0.05, 3.0)
+
+	return 1.0
+
+
 func _gcd_for_def(def: Resource, user: Object, context: Dictionary) -> int:
+	var base_ms: int = default_gcd_ms
 	if def != null and def.has_method("get"):
 		var v: Variant = def.get("gcd_sec")
 		if typeof(v) == TYPE_FLOAT or typeof(v) == TYPE_INT:
 			var sec_f: float = float(v)
 			if sec_f > 0.0:
-				return int(roundi(sec_f * 1000.0))
+				base_ms = int(roundi(sec_f * 1000.0))
 	if context.has("gcd"):
 		var sec_ctx: Variant = context["gcd"]
 		if typeof(sec_ctx) == TYPE_FLOAT or typeof(sec_ctx) == TYPE_INT:
 			var sec_ctx_f: float = float(sec_ctx)
 			if sec_ctx_f > 0.0:
-				return int(roundi(sec_ctx_f * 1000.0))
-	return default_gcd_ms
+				base_ms = int(roundi(sec_ctx_f * 1000.0))
+
+	var speed_mul: float = _attack_speed_multiplier_for_user(user)
+	var scaled_ms: int = int(roundi(float(base_ms) / maxf(speed_mul, 0.05)))
+	if scaled_ms < 0:
+		return 0
+	return scaled_ms
 
 func _cooldown_for_def(def: Resource, user: Object, context: Dictionary) -> int:
+	var base_ms: int = default_cooldown_ms
 	if def != null and def.has_method("get"):
 		var v: Variant = def.get("cooldown_sec")
 		if typeof(v) == TYPE_FLOAT or typeof(v) == TYPE_INT:
 			var sec_f: float = float(v)
 			if sec_f > 0.0:
-				return int(roundi(sec_f * 1000.0))
+				base_ms = int(roundi(sec_f * 1000.0))
 	if context.has("cooldown"):
 		var sec_ctx: Variant = context["cooldown"]
 		if typeof(sec_ctx) == TYPE_FLOAT or typeof(sec_ctx) == TYPE_INT:
 			var sec_ctx_f: float = float(sec_ctx)
 			if sec_ctx_f > 0.0:
-				return int(roundi(sec_ctx_f * 1000.0))
-	return default_cooldown_ms
+				base_ms = int(roundi(sec_ctx_f * 1000.0))
+
+	var speed_mul: float = _attack_speed_multiplier_for_user(user)
+	var scaled_ms: int = int(roundi(float(base_ms) / maxf(speed_mul, 0.05)))
+	if scaled_ms < 0:
+		return 0
+	return scaled_ms
 
 # ----------------------------------------------------------------------------- #
 # Utils

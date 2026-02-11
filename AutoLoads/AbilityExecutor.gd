@@ -38,6 +38,7 @@ const DEF_MELEE_SWING_THICKNESS_PX: float = 12.0
 const DEF_MELEE_LOCK_MS: int = 400
 const DEF_MELEE_VARIANCE_PCT: float = 0.10
 const MELEE_DEBUG: bool = true
+const STATUS_DEBUG: bool = true
 
 var melee_default_range_px: float = DEF_MELEE_RANGE_PX
 var melee_default_arc_deg: float = DEF_MELEE_ARC_DEG
@@ -1978,6 +1979,8 @@ func _maybe_apply_statuses(_user: Node, def: Resource, target: Node) -> bool:
 		return false
 	if _is_effect_target_dead(target):
 		return false
+		
+		
 
 	var arr_any: Variant = def.get("applies_status")
 	if typeof(arr_any) != TYPE_ARRAY:
@@ -2011,9 +2014,75 @@ func _maybe_apply_statuses(_user: Node, def: Resource, target: Node) -> bool:
 				"source": _user,
 				"payload": payload
 			}
+
+			if STATUS_DEBUG:
+				# Log BEFORE applying, using the real StatusConditions API from the project.
+				var pre_has: bool = false
+				var pre_is_slowed: bool = false
+				var pre_attack_mul: float = 1.0
+				if sc.has_method("has"):
+					var v_has: Variant = sc.call("has", sid)
+					if typeof(v_has) == TYPE_BOOL:
+						pre_has = bool(v_has)
+				if sc.has_method("is_slowed"):
+					var v_sl: Variant = sc.call("is_slowed")
+					if typeof(v_sl) == TYPE_BOOL:
+						pre_is_slowed = bool(v_sl)
+				if sc.has_method("get_attack_speed_multiplier"):
+					var v_mul: Variant = sc.call("get_attack_speed_multiplier")
+					if typeof(v_mul) == TYPE_FLOAT or typeof(v_mul) == TYPE_INT:
+						pre_attack_mul = float(v_mul)
+
+				var abil_id_dbg: String = _get_string(def, "ability_id")
+				var caster_dbg: String = ""
+				if _user != null and is_instance_valid(_user):
+					caster_dbg = _user.name
+				print(
+					"[STATUSDBG] pre",
+					" ability=", abil_id_dbg,
+					" caster=", caster_dbg,
+					" target=", target.name,
+					" sid=", String(sid),
+					" roll=", roll,
+					" chance=", chance,
+					" pre_has=", pre_has,
+					" pre_is_slowed=", pre_is_slowed,
+					" pre_attack_mul=", pre_attack_mul,
+					" dur=", dur,
+					" stacks=", stacks,
+					" payload=", payload
+				)
+
 			if sc.has_method("apply"):
 				sc.call("apply", sid, opts)
 				any_applied = true
+
+				if STATUS_DEBUG:
+					# Log AFTER applying.
+					var post_has: bool = false
+					var post_is_slowed: bool = false
+					var post_attack_mul: float = 1.0
+					if sc.has_method("has"):
+						var v2_has: Variant = sc.call("has", sid)
+						if typeof(v2_has) == TYPE_BOOL:
+							post_has = bool(v2_has)
+					if sc.has_method("is_slowed"):
+						var v2_sl: Variant = sc.call("is_slowed")
+						if typeof(v2_sl) == TYPE_BOOL:
+							post_is_slowed = bool(v2_sl)
+					if sc.has_method("get_attack_speed_multiplier"):
+						var v2_mul: Variant = sc.call("get_attack_speed_multiplier")
+						if typeof(v2_mul) == TYPE_FLOAT or typeof(v2_mul) == TYPE_INT:
+							post_attack_mul = float(v2_mul)
+
+					print(
+						"[STATUSDBG] post",
+						" target=", target.name,
+						" sid=", String(sid),
+						" post_has=", post_has,
+						" post_is_slowed=", post_is_slowed,
+						" post_attack_mul=", post_attack_mul
+					)
 	return any_applied
 
 
