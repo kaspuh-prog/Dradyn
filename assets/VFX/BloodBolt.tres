@@ -1,0 +1,39 @@
+[gd_resource type="SpriteFrames" load_steps=6 format=3 uid="uid://caitklnworhap"]
+
+[ext_resource type="Texture2D" uid="uid://dfq76nkf6k001" path="res://assets/VFX/BloodBolt.png" id="1_e4h5n"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_e4h5n"]
+atlas = ExtResource("1_e4h5n")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_odjyv"]
+atlas = ExtResource("1_e4h5n")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sseft"]
+atlas = ExtResource("1_e4h5n")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_b5rvv"]
+atlas = ExtResource("1_e4h5n")
+region = Rect2(96, 0, 32, 32)
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_e4h5n")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_odjyv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sseft")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_b5rvv")
+}],
+"loop": true,
+"name": &"fly",
+"speed": 8.0
+}]

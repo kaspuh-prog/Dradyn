@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=3 format=3 uid="uid://chttyv6jl6uvk"]
+
+[ext_resource type="Texture2D" uid="uid://ch07kp6nbwm8o" path="res://assets/sprites/items/potions/AntiPoison.png" id="1_et5lb"]
+[ext_resource type="Script" uid="uid://2mjbmehwxafs" path="res://Data/items/equipment/ItemDef.gd" id="1_y0ji5"]
+
+[resource]
+script = ExtResource("1_y0ji5")
+id = &"AntiPoison"
+display_name = "Anti-poison"
+description = "This will clean your insides right up!"
+icon = ExtResource("1_et5lb")
+base_gold_value = 12
+use_ability_id = "CurePoison"

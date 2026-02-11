@@ -1,18 +1,21 @@
-[gd_resource type="Resource" script_class="AbilityDef" load_steps=6 format=3 uid="uid://dp0ulo4shwusw"]
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=8 format=3 uid="uid://dp0ulo4shwusw"]
 
 [ext_resource type="Script" uid="uid://u63t4oseank1" path="res://scenes/Actors/status/StatusApplySpec.gd" id="1_cok72"]
 [ext_resource type="Script" uid="uid://byobol8rhb4cs" path="res://scripts/stats/StatModifier.gd" id="2_t8tdc"]
 [ext_resource type="Script" uid="uid://dsj3lq6kwixdp" path="res://Data/Abilities/AbilityDef.gd" id="3_1e4bt"]
 [ext_resource type="Texture2D" uid="uid://dec4igw4v4x8j" path="res://assets/sprites/abilityicons/ReinforcedByFaith.png" id="3_t8tdc"]
-[ext_resource type="Resource" uid="uid://dgne5gqswvj8e" path="res://Data/Abilities/Defs/BuffStatDefs/ReinforcedbyFaithDefStat.tres" id="3_uvou1"]
+[ext_resource type="Resource" uid="uid://b02nmee0pxhpu" path="res://Data/StatModifiers/Defense25.tres" id="3_uvou1"]
+[ext_resource type="Script" uid="uid://c87lf672qvjv1" path="res://Data/Abilities/AbilitySfxCue.gd" id="6_uvou1"]
+[ext_resource type="Resource" uid="uid://nl6ackpauuy6" path="res://Data/Abilities/AbilitySFXCues/ReinforcedByFaith.tres" id="7_y0dkv"]
 
 [resource]
 script = ExtResource("3_1e4bt")
 ability_id = "ReinforcedByFaith"
 display_name = "Reinforced By Faith"
 icon = ExtResource("3_t8tdc")
-description = "Guldah's most devout followers can invoke her blessing in the form of defense. Boosts target's defense stat. "
+description = "Guldah's most devout followers can invoke her blessing in the form of defense. Boosts target's defense stat."
 unlock_cost = 0
+section_index = 2
 ability_type = "BUFF"
 target_rule = "ALLY_PARTY"
 mp_cost = 40.0
@@ -20,9 +23,15 @@ gcd_sec = 1.0
 scale_stat = "WIS"
 cast_anim = "projectile1"
 vfx_hint = "ReinforcedByFaith"
+sfx_cues = Array[ExtResource("6_uvou1")]([ExtResource("7_y0dkv")])
 duration_sec = 1800.0
+melee_hit_frames = null
 buff_mods = Array[ExtResource("2_t8tdc")]([ExtResource("3_uvou1")])
-cure_status_ids = null
-cure_modifier_sources = null
-cure_stacking_keys = null
-metadata/_custom_type_script = "uid://dsj3lq6kwixdp"
+passive_gate_equipment_classes = null
+passive_gate_item_ids = null
+passive_proc_section_indices = null
+passive_proc_ability_types = null
+passive_proc_ability_ids = null
+cure_status_ids = PackedStringArray()
+cure_modifier_sources = PackedStringArray()
+cure_stacking_keys = PackedStringArray()

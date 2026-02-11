@@ -2,11 +2,11 @@
 
 [ext_resource type="Texture2D" uid="uid://dovjepjj086r5" path="res://assets/sprites/projectiles/BoltofLightProjectile.png" id="1_4ybds"]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_w5s3a"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_4ybds"]
 atlas = ExtResource("1_4ybds")
 region = Rect2(0, 0, 32, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_iaf88"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_w5s3a"]
 atlas = ExtResource("1_4ybds")
 region = Rect2(32, 0, 32, 32)
 
@@ -14,10 +14,10 @@ region = Rect2(32, 0, 32, 32)
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_w5s3a")
+"texture": SubResource("AtlasTexture_4ybds")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_iaf88")
+"texture": SubResource("AtlasTexture_w5s3a")
 }],
 "loop": true,
 "name": &"fly",

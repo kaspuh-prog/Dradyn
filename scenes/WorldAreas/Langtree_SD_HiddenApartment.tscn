@@ -1,0 +1,144 @@
+[gd_scene load_steps=12 format=3 uid="uid://d3qysrh6u4ewj"]
+
+[ext_resource type="Script" uid="uid://bm1dpu20h5tgk" path="res://scripts/AreaTemplate.gd" id="1_w8o5r"]
+[ext_resource type="TileSet" uid="uid://ce704ljctriud" path="res://assets/tilesets/Main.tres" id="2_daxcw"]
+[ext_resource type="Script" uid="uid://c3v3pby11hsgf" path="res://scenes/WorldAreas/TileTorchLights.gd" id="3_o05tn"]
+[ext_resource type="Script" uid="uid://cjnlnc13qv4i4" path="res://scenes/lighting/LightingController.gd" id="4_fwtg6"]
+[ext_resource type="Script" uid="uid://b60ucdsusu26g" path="res://scenes/lighting/WindowBeams2D.gd" id="5_mt4wm"]
+[ext_resource type="Texture2D" uid="uid://bfdipqlq7iy8q" path="res://assets/lighting/lightcookie.png" id="6_yu8en"]
+[ext_resource type="Script" uid="uid://cebew03wacnla" path="res://scenes/WorldAreas/AreaLootProvider.gd" id="7_bguy0"]
+[ext_resource type="PackedScene" uid="uid://cir0u84wdxg38" path="res://scenes/InteractableChest.tscn" id="8_y1tg5"]
+[ext_resource type="Script" uid="uid://dyj0l2pcdql7b" path="res://scenes/WorldAreas/InteractableDoor.gd" id="9_ajtfu"]
+[ext_resource type="SpriteFrames" uid="uid://dhjh2y050t1va" path="res://assets/sprites/Doors/ExteriorGreenDoor.tres" id="10_hwip2"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_bcmc2"]
+size = Vector2(30, 46)
+
+[node name="LangtreeSlumsApartments" type="Node2D"]
+script = ExtResource("1_w8o5r")
+metadata/_custom_type_script = "uid://bm1dpu20h5tgk"
+
+[node name="L0_Ground" type="TileMapLayer" parent="."]
+z_index = -10
+tile_set = ExtResource("2_daxcw")
+
+[node name="L1_Details" type="TileMapLayer" parent="."]
+z_index = -5
+
+[node name="L2_Colliders" type="TileMapLayer" parent="."]
+z_index = -1
+
+[node name="L3_Overhangs" type="TileMapLayer" parent="."]
+z_index = 10
+
+[node name="EntryPoints" type="Node2D" parent="."]
+position = Vector2(26, -18)
+
+[node name="default" type="Node2D" parent="EntryPoints"]
+
+[node name="TorchLights" type="Node2D" parent="."]
+script = ExtResource("3_o05tn")
+target_layer_path = NodePath("../L1_Details")
+torch_source_ids = Array[int]([5])
+light_radius_pixels = 85
+light_energy_base = 0.75
+use_shadows = true
+flicker_speed_hz = 5.0
+
+[node name="LightingController" type="Node" parent="."]
+script = ExtResource("4_fwtg6")
+torch_tiles_path = NodePath("../L1_Details")
+torch_lit_source_id = 5
+torch_unlit_source_id = 2
+torch_unlit_atlas = Vector2i(2, 1)
+window_tiles_path = NodePath("../L1_Details")
+window_day_source_id = 3
+window_day_atlas = Vector2i(4, 14)
+window_night_source_id = 3
+window_night_atlas = Vector2i(3, 14)
+fireplace_tiles_path = NodePath("../L1_Details")
+fireplace_lit_source_id = 10
+fireplace_lit_atlas = Vector2i(0, 3)
+fireplace_unlit_source_id = 10
+fireplace_unlit_atlas = Vector2i(0, 2)
+torch_lights_node_path = NodePath("../TorchLights")
+
+[node name="WindowBeams" type="Node2D" parent="."]
+script = ExtResource("5_mt4wm")
+force_high_energy_debug = true
+window_layer_path = NodePath("../L1_Details")
+collider_layer_path = NodePath("../L2_Colliders")
+beam_max_tiles = 2
+anchor_fraction_along_length = 0.36
+start_offset_px = -0.5
+light_texture = ExtResource("6_yu8en")
+light_color = Color(1, 0.9607843, 0.8509804, 0.32156864)
+light_energy_day = 5.33
+light_energy_dawn_dusk = 5.28
+beam_base_width_px = 26.0
+beam_length_per_tile_px = 20.0
+cookie_angle_offset_deg = -90.0
+shadow_color = Color(0, 0, 0, 0.6862745)
+window_glow_energy = 2.0
+window_glow_radius_px = 8.0
+window_glow_color = Color(1, 0.9490196, 0.8, 0.23137255)
+window_glow_inset_px = -6.0
+
+[node name="AreaLootProvider" type="Node" parent="."]
+script = ExtResource("7_bguy0")
+chest_scene = ExtResource("8_y1tg5")
+
+[node name="LockedApartmentDoor1" type="Area2D" parent="."]
+position = Vector2(32, 135)
+script = ExtResource("9_ajtfu")
+target_scene_path = "res://scenes/WorldAreas/Langtree_SlumsDistrict.tscn"
+entry_tag = "fromapartments"
+animated_sprite_path = NodePath("AnimatedSprite2D")
+key_item_id = &"ApartmentKey"
+consume_key_on_unlock = true
+lockpick_required_dex = 12
+debug_lock_ui = true
+metadata/_custom_type_script = "uid://dyj0l2pcdql7b"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LockedApartmentDoor1"]
+shape = SubResource("RectangleShape2D_bcmc2")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="LockedApartmentDoor1"]
+sprite_frames = ExtResource("10_hwip2")
+animation = &"open"
+
+[node name="LockedApartmentDoor2" type="Area2D" parent="."]
+position = Vector2(-208, 40)
+script = ExtResource("9_ajtfu")
+animated_sprite_path = NodePath("AnimatedSprite2D")
+is_locked = true
+key_item_id = &"ApartmentKey"
+consume_key_on_unlock = true
+lockpick_required_dex = 12
+debug_lock_ui = true
+metadata/_custom_type_script = "uid://dyj0l2pcdql7b"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LockedApartmentDoor2"]
+shape = SubResource("RectangleShape2D_bcmc2")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="LockedApartmentDoor2"]
+sprite_frames = ExtResource("10_hwip2")
+animation = &"open"
+
+[node name="LockedApartmentDoor3" type="Area2D" parent="."]
+position = Vector2(-305, 40)
+script = ExtResource("9_ajtfu")
+animated_sprite_path = NodePath("AnimatedSprite2D")
+is_locked = true
+key_item_id = &"ApartmentKey"
+consume_key_on_unlock = true
+lockpick_required_dex = 18
+debug_lock_ui = true
+metadata/_custom_type_script = "uid://dyj0l2pcdql7b"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LockedApartmentDoor3"]
+shape = SubResource("RectangleShape2D_bcmc2")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="LockedApartmentDoor3"]
+sprite_frames = ExtResource("10_hwip2")
+animation = &"open"

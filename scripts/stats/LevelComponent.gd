@@ -48,11 +48,37 @@ func _post_ready_finalize() -> void:
 	await get_tree().process_frame
 	_force_refill_and_emit()
 
-	# Initialize SKILL points pool to proper cumulative amount for current level.
-	# For fresh characters at level 1 this becomes 1; for loaded saves, this ensures consistency.
+	# IMPORTANT (save-load safety):
+	# This method runs deferred. If Boot/Load code already restored skill-point values,
+	# we must NOT overwrite them here.
 	var cumulative_skill: int = skill_points_cumulative_for(level)
-	unspent_skill_points = cumulative_skill
-	total_skill_points_awarded = cumulative_skill
+
+	var is_fresh: bool = false
+	if total_skill_points_awarded == 0 and unspent_skill_points == 0:
+		is_fresh = true
+
+	if is_fresh:
+		# Brand new character initialization.
+		unspent_skill_points = cumulative_skill
+		total_skill_points_awarded = cumulative_skill
+	else:
+		# Loaded character (or externally initialized). Repair partial states only.
+		if total_skill_points_awarded == 0:
+			# If loader only restored unspent_skill_points, infer the awarded pool.
+			total_skill_points_awarded = cumulative_skill
+
+		if unspent_skill_points < 0:
+			unspent_skill_points = 0
+
+		if unspent_skill_points > total_skill_points_awarded:
+			unspent_skill_points = total_skill_points_awarded
+
+		# Ensure awarded pool isn't accidentally lower than what this level implies.
+		if total_skill_points_awarded < cumulative_skill:
+			total_skill_points_awarded = cumulative_skill
+			if unspent_skill_points > total_skill_points_awarded:
+				unspent_skill_points = total_skill_points_awarded
+
 	emit_signal("skill_points_changed", unspent_skill_points, total_skill_points_awarded)
 
 # -------------------------------------------------------------------
@@ -181,7 +207,7 @@ func grant_skill_points(count: int) -> void:
 # -------------------------------------------------------------------
 func _resolve_levelup_anchor() -> Node2D:
 	if levelup_anchor != NodePath() and has_node(levelup_anchor):
-		var n := get_node(levelup_anchor)
+		var n: Node = get_node(levelup_anchor)
 		if n is Node2D:
 			return n as Node2D
 	var p: Node = self
@@ -258,7 +284,7 @@ func _on_level_up() -> void:
 		emit_signal("skill_points_changed", unspent_skill_points, total_skill_points_awarded)
 
 	# Show 'Level Up!' popup via DamageNumber system
-	var anchor := _resolve_levelup_anchor()
+	var anchor: Node2D = _resolve_levelup_anchor()
 	if anchor != null:
 		get_tree().call_group("LevelUpPopups", "show_for_node", anchor, level)
 	else:
@@ -272,8 +298,8 @@ func _reconcile_all_vitals() -> void:
 
 	# HP
 	if stats_component.has_method("max_hp") and "current_hp" in stats_component:
-		var cur := float(stats_component.get("current_hp"))
-		var cap := float(stats_component.call("max_hp"))
+		var cur: float = float(stats_component.get("current_hp"))
+		var cap: float = float(stats_component.call("max_hp"))
 		if cur > cap:
 			stats_component.set("current_hp", cap)
 			if stats_component.has_signal("hp_changed"):
@@ -281,8 +307,8 @@ func _reconcile_all_vitals() -> void:
 
 	# MP
 	if stats_component.has_method("max_mp") and "current_mp" in stats_component:
-		var curm := float(stats_component.get("current_mp"))
-		var capm := float(stats_component.call("max_mp"))
+		var curm: float = float(stats_component.get("current_mp"))
+		var capm: float = float(stats_component.call("max_mp"))
 		if curm > capm:
 			stats_component.set("current_mp", capm)
 			if stats_component.has_signal("mp_changed"):
@@ -290,8 +316,8 @@ func _reconcile_all_vitals() -> void:
 
 	# END
 	if stats_component.has_method("max_end") and "current_end" in stats_component:
-		var cure := float(stats_component.get("current_end"))
-		var cape := float(stats_component.call("max_end"))
+		var cure: float = float(stats_component.get("current_end"))
+		var cape: float = float(stats_component.call("max_end"))
 		if cure > cape:
 			stats_component.set("current_end", cape)
 			if stats_component.has_signal("end_changed"):
@@ -302,17 +328,17 @@ func _refill_all_vitals_to_max() -> void:
 		return
 
 	if stats_component.has_method("max_hp") and "current_hp" in stats_component and stats_component.has_method("change_hp"):
-		var dh := float(stats_component.call("max_hp")) - float(stats_component.get("current_hp"))
+		var dh: float = float(stats_component.call("max_hp")) - float(stats_component.get("current_hp"))
 		if dh > 0.0:
 			stats_component.call("change_hp", dh)
 
 	if stats_component.has_method("max_mp") and "current_mp" in stats_component and stats_component.has_method("change_mp"):
-		var dm := float(stats_component.call("max_mp")) - float(stats_component.get("current_mp"))
+		var dm: float = float(stats_component.call("max_mp")) - float(stats_component.get("current_mp"))
 		if dm > 0.0:
 			stats_component.call("change_mp", dm)
 
 	if stats_component.has_method("max_end") and "current_end" in stats_component and stats_component.has_method("change_end"):
-		var de := float(stats_component.call("max_end")) - float(stats_component.get("current_end"))
+		var de: float = float(stats_component.call("max_end")) - float(stats_component.get("current_end"))
 		if de > 0.0:
 			stats_component.call("change_end", de)
 

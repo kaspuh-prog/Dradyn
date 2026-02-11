@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=8 format=3 uid="uid://b51fwv3fjl1is"]
+
+[ext_resource type="Script" uid="uid://u63t4oseank1" path="res://scenes/Actors/status/StatusApplySpec.gd" id="1_wcslh"]
+[ext_resource type="Script" uid="uid://byobol8rhb4cs" path="res://scripts/stats/StatModifier.gd" id="2_c4sjt"]
+[ext_resource type="Texture2D" uid="uid://drwfwpqc8g6py" path="res://assets/sprites/abilityicons/BloodBolt.png" id="3_c4sjt"]
+[ext_resource type="Script" uid="uid://dsj3lq6kwixdp" path="res://Data/Abilities/AbilityDef.gd" id="3_soelk"]
+[ext_resource type="Script" uid="uid://c87lf672qvjv1" path="res://Data/Abilities/AbilitySfxCue.gd" id="4_bc4t6"]
+[ext_resource type="PackedScene" uid="uid://c5ul12lwtcko3" path="res://scenes/Projectiles/BloodBolt.tscn" id="4_soelk"]
+[ext_resource type="Resource" uid="uid://db7et2jhlrhf4" path="res://Data/Abilities/AbilitySFXCues/ArcaBolt.tres" id="7_bc4t6"]
+
+[resource]
+script = ExtResource("3_soelk")
+ability_id = "BloodBolt"
+display_name = "Blood Bolt"
+icon = ExtResource("3_c4sjt")
+description = "Blood out, blood in... "
+ability_type = "PROJECTILE"
+requires_target = false
+mp_cost = 15.0
+cooldown_sec = 1.5
+cast_anim = "cast2"
+sfx_cues = Array[ExtResource("4_bc4t6")]([ExtResource("7_bc4t6")])
+projectile_scene = ExtResource("4_soelk")
+projectile_hit_groups = null
+melee_hit_frames = null
+passive_gate_equipment_classes = null
+passive_gate_item_ids = null
+passive_proc_section_indices = null
+passive_proc_ability_types = null
+passive_proc_ability_ids = null
+cure_status_ids = null
+cure_modifier_sources = null
+cure_stacking_keys = null
+metadata/_custom_type_script = "uid://dsj3lq6kwixdp"

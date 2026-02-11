@@ -48,6 +48,14 @@ func get_interact_radius() -> float:
 @export var trainer_id: StringName = &""
 ## Quest giver identifier (for your quest system)
 @export var quest_giver_id: StringName = &""
+## Merchant subtype identifier (e.g. "general", "alchemy", "blacksmith")
+@export var merchant_id: StringName = &"general"
+
+# ---------- Quest routing ----------
+@export_group("Quest Routing")
+## If true, and QuestSys says a quest interaction is currently applicable for this NPC,
+## the NPC will emit quest_requested instead of its default npc_role signal.
+@export var quest_can_override_role: bool = true
 
 # ---------- Flavor dialogue ----------
 @export_group("Flavor Dialogue")
@@ -56,22 +64,28 @@ func get_interact_radius() -> float:
 
 # ---------- Internals ----------
 var _sprite: CanvasItem = null
+var _anim_sprite: AnimatedSprite2D = null
 var _orig_modulate: Color = Color(1.0, 1.0, 1.0, 1.0)
 var _orig_modulate_set: bool = false
 var _talk_index: int = 0
+
 
 func _ready() -> void:
 	if auto_register_group and not is_in_group("interactable"):
 		add_to_group("interactable")
 
 	if sprite_path != NodePath():
-		_sprite = get_node_or_null(sprite_path) as CanvasItem
+		var node: Node = get_node_or_null(sprite_path)
+		_sprite = node as CanvasItem
+		_anim_sprite = node as AnimatedSprite2D
 	else:
 		_sprite = null
+		_anim_sprite = null
 
 	if _sprite != null and not _orig_modulate_set:
 		_orig_modulate = _sprite.modulate
 		_orig_modulate_set = true
+
 
 func _face_actor(actor: Node) -> void:
 	if _sprite == null:
@@ -85,7 +99,7 @@ func _face_actor(actor: Node) -> void:
 	if dir.length() < 0.001:
 		return
 
-	var anim: AnimatedSprite2D = _sprite as AnimatedSprite2D
+	var anim: AnimatedSprite2D = _anim_sprite
 	if anim != null:
 		var abs_x: float = absf(dir.x)
 		var abs_y: float = absf(dir.y)
@@ -111,8 +125,19 @@ func _face_actor(actor: Node) -> void:
 		else:
 			sprite2d.flip_h = false
 
+
 func interact(actor: Node) -> void:
 	_face_actor(actor)
+
+	# If this NPC's sprite has a script with set_interacting(bool), use it
+	# (e.g. AlchemyWitchAnimator on an AnimatedSprite2D that stirs/ idles).
+	if _anim_sprite != null and _anim_sprite.has_method("set_interacting"):
+		_anim_sprite.call("set_interacting", true)
+
+	# Quest override: route to quest only when QuestSys says it's applicable right now.
+	if _should_route_to_quest(actor):
+		emit_signal("quest_requested", self, actor, quest_giver_id)
+		return
 
 	match npc_role:
 		"merchant":
@@ -159,6 +184,7 @@ func get_interact_prompt() -> String:
 		_:
 			return "Talk"
 
+
 func set_interact_highlight(on: bool) -> void:
 	if _sprite == null:
 		return
@@ -170,6 +196,7 @@ func set_interact_highlight(on: bool) -> void:
 		_sprite.modulate = highlight_modulate
 	else:
 		_sprite.modulate = _orig_modulate
+
 
 func _next_talk_line() -> String:
 	if talk_lines.is_empty():
@@ -190,3 +217,32 @@ func _next_talk_line() -> String:
 			_talk_index = 0
 
 	return line
+
+
+func reset_interaction_animation() -> void:
+	# Helper so external systems (e.g. MerchantController) can tell the NPC
+	# to revert any special interaction animation (e.g. witch back to brewing).
+	if _anim_sprite != null and _anim_sprite.has_method("set_interacting"):
+		_anim_sprite.call("set_interacting", false)
+
+
+# -------------------------------------------------
+# Quest routing helper
+# -------------------------------------------------
+func _should_route_to_quest(actor: Node) -> bool:
+	if not quest_can_override_role:
+		return false
+	if quest_giver_id == &"":
+		return false
+
+	var quest_sys: Node = get_node_or_null("/root/QuestSys")
+	if quest_sys == null:
+		return false
+	if not quest_sys.has_method("should_route_to_quest"):
+		return false
+
+	var result: Variant = quest_sys.call("should_route_to_quest", self, actor, quest_giver_id)
+	if result is bool:
+		return bool(result)
+
+	return false

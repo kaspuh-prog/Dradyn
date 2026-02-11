@@ -1,0 +1,29 @@
+[gd_scene load_steps=5 format=3 uid="uid://dk5nsmpbby2qt"]
+
+[ext_resource type="Script" uid="uid://c4x3tqlpfs380" path="res://scenes/Actors/NPCs/NonCombatNPC.gd" id="1_ny158"]
+[ext_resource type="Texture2D" uid="uid://dy687606f0il1" path="res://assets/sprites/NPCs/PinkBouncer.png" id="2_cxp5y"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gr0yd"]
+atlas = ExtResource("2_cxp5y")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_0wj3k"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gr0yd")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[node name="PinkBouncer" type="Node2D"]
+script = ExtResource("1_ny158")
+npc_name = "Bouncer"
+sprite_path = NodePath("AnimatedSprite2D")
+talk_lines = PackedStringArray("Members only.", "Beat it kid.", "Money talks.")
+metadata/_custom_type_script = "uid://c4x3tqlpfs380"
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_0wj3k")

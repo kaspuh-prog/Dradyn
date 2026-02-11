@@ -21,6 +21,10 @@ var slot_positions: PackedVector2Array = PackedVector2Array([
 @export var hover_color: Color = Color(1, 1, 1, 0.35)
 @export var hover_border: int = 1
 
+@export var cooldown_dim_color: Color = Color(0.35, 0.35, 0.35, 1.0)
+@export var cooldown_start_angle_deg: float = -90.0 # 12 o'clock
+@export var cooldown_clockwise: bool = true
+
 @export var debug_logs: bool = true
 
 class Entry:
@@ -31,6 +35,13 @@ var _slots: Array[Control] = []
 var _data: Array[Entry] = []
 
 var _hover_index: int = -1
+
+# slot_index -> {"ability_id": String, "duration_ms": int, "until_msec": int}
+var _cooldowns_by_slot: Dictionary = {}
+
+var _controlled_user: Node = null
+var _ability_sys: Node = null
+var _party: Node = null
 
 func _dbg(msg: String) -> void:
 	if debug_logs:
@@ -44,31 +55,163 @@ func _ready() -> void:
 	_ensure_slots_defined()
 	_build_bg()
 	_build_slots()
+
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	set_process(true)
 	set_process_unhandled_input(true)
 
+	_bind_runtime_signals()
+
 	_dbg("ready; slots=" + str(slot_positions.size()))
+
+func _exit_tree() -> void:
+	_unbind_runtime_signals()
+
+func _bind_runtime_signals() -> void:
+	_ability_sys = get_node_or_null("/root/AbilitySys")
+	if _ability_sys != null and _ability_sys.has_signal("cooldown_started"):
+		var cb_cd: Callable = Callable(self, "_on_ability_cooldown_started")
+		if not _ability_sys.is_connected("cooldown_started", cb_cd):
+			_ability_sys.connect("cooldown_started", cb_cd)
+
+	_party = get_node_or_null("/root/Party")
+	if _party != null and _party.has_signal("controlled_changed"):
+		var cb_ctrl: Callable = Callable(self, "_on_party_controlled_changed")
+		if not _party.is_connected("controlled_changed", cb_ctrl):
+			_party.connect("controlled_changed", cb_ctrl)
+
+	# Cache current controlled immediately.
+	if _party != null and _party.has_method("get_controlled"):
+		var cur: Variant = _party.call("get_controlled")
+		if cur is Node:
+			_controlled_user = cur as Node
+		else:
+			_controlled_user = null
+
+func _unbind_runtime_signals() -> void:
+	if _ability_sys != null:
+		var cb_cd: Callable = Callable(self, "_on_ability_cooldown_started")
+		if _ability_sys.has_signal("cooldown_started") and _ability_sys.is_connected("cooldown_started", cb_cd):
+			_ability_sys.disconnect("cooldown_started", cb_cd)
+	_ability_sys = null
+
+	if _party != null:
+		var cb_ctrl: Callable = Callable(self, "_on_party_controlled_changed")
+		if _party.has_signal("controlled_changed") and _party.is_connected("controlled_changed", cb_ctrl):
+			_party.disconnect("controlled_changed", cb_ctrl)
+	_party = null
+
+func _on_party_controlled_changed(current: Node) -> void:
+	_controlled_user = current
+	_clear_all_cooldown_visuals()
+
+func _on_ability_cooldown_started(user: Node, ability_id: String, duration_ms: int, until_msec: int) -> void:
+	# Only show cooldowns for the currently controlled character.
+	if _controlled_user != null:
+		if user != _controlled_user:
+			return
+
+	if ability_id == "":
+		return
+
+	# Apply to every slot that matches this ability_id.
+	var i: int = 0
+	while i < _data.size():
+		var e: Entry = _data[i]
+		if e.entry_type == "ability" and e.entry_id == ability_id:
+			var info: Dictionary = {
+				"ability_id": ability_id,
+				"duration_ms": duration_ms,
+				"until_msec": until_msec
+			}
+			_cooldowns_by_slot[i] = info
+			# Immediate visual update (so you see it right as you cast).
+			_update_slot_cooldown_visual(i, info)
+		i += 1
+
+func _clear_all_cooldown_visuals() -> void:
+	_cooldowns_by_slot.clear()
+	var i: int = 0
+	while i < _slots.size():
+		_reset_cooldown_visual(i)
+		i += 1
+
+func _update_slot_cooldown_visual(slot_index: int, info: Dictionary) -> void:
+	var dur: int = int(info.get("duration_ms", 0))
+	var until: int = int(info.get("until_msec", 0))
+
+	if dur <= 0:
+		set_slot_cooldown_ready_ratio(slot_index, 1.0)
+		return
+
+	var now: int = Time.get_ticks_msec()
+	var remaining: int = until - now
+	if remaining <= 0:
+		set_slot_cooldown_ready_ratio(slot_index, 1.0)
+		return
+
+	var ready_ratio: float = 1.0 - (float(remaining) / float(dur))
+	ready_ratio = clamp(ready_ratio, 0.0, 1.0)
+	set_slot_cooldown_ready_ratio(slot_index, ready_ratio)
 
 func _ensure_slots_defined() -> void:
 	# If the scene accidentally overrides slot_positions to empty, synthesize a 2x4 grid.
 	if slot_positions.size() > 0:
 		return
-	var cols: int = 4
-	var rows: int = 2
-	var y: int = 0
-	var out := PackedVector2Array()
-	while y < rows:
-		var x: int = 0
-		while x < cols:
-			out.append(Vector2(float(x * slot_size.x), float(y * slot_size.y)))
-			x += 1
-		y += 1
-	slot_positions = out
-	_dbg("slot_positions was empty; synthesized " + str(slot_positions.size()) + " coords")
 
-func _process(_dt: float) -> void:
-	pass
+	slot_positions = PackedVector2Array([
+		Vector2(0, 0), Vector2(16, 0), Vector2(32, 0), Vector2(48, 0),
+		Vector2(0, 16), Vector2(16, 16), Vector2(32, 16), Vector2(48, 16)
+	])
+
+func _process(_delta: float) -> void:
+	if _cooldowns_by_slot.is_empty():
+		return
+
+	var now: int = Time.get_ticks_msec()
+	var keys: Array = _cooldowns_by_slot.keys()
+	var k_i: int = 0
+	while k_i < keys.size():
+		var slot_any: Variant = keys[k_i]
+		var slot_index: int = int(slot_any)
+
+		# Slot no longer valid.
+		if slot_index < 0 or slot_index >= _data.size():
+			_cooldowns_by_slot.erase(slot_any)
+			k_i += 1
+			continue
+
+		# Slot content changed away from this ability.
+		var info: Dictionary = _cooldowns_by_slot[slot_any]
+		var expected_id: String = String(info.get("ability_id", ""))
+		var e: Entry = _data[slot_index]
+		if e.entry_type != "ability" or e.entry_id != expected_id:
+			_reset_cooldown_visual(slot_index)
+			_cooldowns_by_slot.erase(slot_any)
+			k_i += 1
+			continue
+
+		var dur: int = int(info.get("duration_ms", 0))
+		var until: int = int(info.get("until_msec", 0))
+
+		if dur <= 0:
+			set_slot_cooldown_ready_ratio(slot_index, 1.0)
+			_cooldowns_by_slot.erase(slot_any)
+			k_i += 1
+			continue
+
+		var remaining: int = until - now
+		if remaining <= 0:
+			set_slot_cooldown_ready_ratio(slot_index, 1.0)
+			_cooldowns_by_slot.erase(slot_any)
+			k_i += 1
+			continue
+
+		var ready_ratio: float = 1.0 - (float(remaining) / float(dur))
+		ready_ratio = clamp(ready_ratio, 0.0, 1.0)
+		set_slot_cooldown_ready_ratio(slot_index, ready_ratio)
+
+		k_i += 1
 
 func _build_bg() -> void:
 	var bg: TextureRect
@@ -114,6 +257,27 @@ func _build_slots() -> void:
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		slot.add_child(icon)
 
+		# Cooldown radial reveal overlay (hidden by default).
+		var cd := TextureProgressBar.new()
+		cd.name = "Cooldown"
+		cd.size = Vector2(float(slot_size.x), float(slot_size.y))
+		cd.position = Vector2.ZERO
+		cd.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cd.min_value = 0.0
+		cd.max_value = 100.0
+		cd.value = cd.max_value
+		cd.visible = false
+		cd.texture_progress = icon_placeholder
+		cd.texture_under = null
+		cd.texture_over = null
+		if cooldown_clockwise:
+			cd.fill_mode = TextureProgressBar.FILL_CLOCKWISE
+		else:
+			cd.fill_mode = TextureProgressBar.FILL_COUNTER_CLOCKWISE
+		cd.radial_initial_angle = cooldown_start_angle_deg
+		cd.radial_fill_degrees = 360.0
+		slot.add_child(cd)
+
 		if i < hotkey_labels.size():
 			var key := Label.new()
 			key.name = "Key"
@@ -128,29 +292,32 @@ func _build_slots() -> void:
 		_slots.append(slot)
 		var e := Entry.new()
 		_data.append(e)
+
 		i += 1
-	_dbg("_build_slots complete; total=" + str(_slots.size()))
 
 func _clear_runtime_slots() -> void:
-	var s: int = 0
-	while s < _slots.size():
-		if is_instance_valid(_slots[s]):
-			_slots[s].queue_free()
-		s += 1
+	var i: int = get_child_count() - 1
+	while i >= 0:
+		var c: Node = get_child(i)
+		if c != null and c.name.begins_with("Slot"):
+			remove_child(c)
+			c.queue_free()
+		i -= 1
 	_slots.clear()
 	_data.clear()
 
 func _gui_input(event: InputEvent) -> void:
-	var mb := event as InputEventMouseButton
-	if mb == null:
-		return
-	if mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
-		var local_pos: Vector2 = get_local_mouse_position()
-		var idx: int = _slot_at(local_pos)
-		if idx >= 0:
-			_dbg("RMB clear slot=" + str(idx))
-			_clear(idx)
-			accept_event()
+	if event is InputEventMouseButton:
+		var mb := event as InputEventMouseButton
+		if mb == null:
+			return
+		if mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
+			var local_pos: Vector2 = get_local_mouse_position()
+			var idx: int = _slot_at(local_pos)
+			if idx >= 0:
+				_dbg("RMB clear slot=" + str(idx))
+				_clear(idx)
+				accept_event()
 
 # -----------------------------
 # Drag & Drop (Godot 4 style)
@@ -177,76 +344,65 @@ func can_drop_data(pos: Vector2, data: Variant) -> bool:
 
 func drop_data(pos: Vector2, data: Variant) -> void:
 	var idx: int = _slot_at(pos)
-	_dbg("drop_data: pos=" + str(pos) + " idx=" + str(idx) + " data_type=" + str(typeof(data)))
+	_dbg("drop_data: pos=" + str(pos) + " idx=" + str(idx))
 	if idx < 0:
-		_dbg("drop_data: no slot under pointer")
 		_clear_hover()
 		return
 
 	var parsed: Dictionary = _parse_payload(data)
 	var ok: bool = parsed.get("ok", false)
+	if not ok:
+		_dbg("drop_data: payload not ok; ignoring")
+		_clear_hover()
+		return
+
 	var kind: String = String(parsed.get("kind", ""))
 	var id: String = String(parsed.get("id", ""))
 
-	_dbg("drop_data: parsed ok=" + str(ok) + " kind=" + kind + " id=" + id)
-	if not ok:
+	if kind == "" or id == "":
+		_dbg("drop_data: empty kind/id; ignoring")
 		_clear_hover()
 		return
 
 	_assign(idx, kind, id)
 	_clear_hover()
 
-# Unified payload parser – returns {"ok": bool, "kind": String, "id": String}
 func _parse_payload(data: Variant) -> Dictionary:
-	var result := {
-		"ok": false,
-		"kind": "",
-		"id": ""
-	}
+	# Expected shapes:
+	# 1) {"drag_type":"ability","ability_id":"..."}
+	# 2) {"type":"ability","id":"..."}
+	# 3) {"ability_id":"..."} plain
+	# 4) {"ability":"..."} fallback
+	var result: Dictionary = {"ok": false, "kind": "", "id": ""}
 
 	if typeof(data) != TYPE_DICTIONARY:
-		_dbg("parse: not a dictionary; type=" + str(typeof(data)))
+		_dbg("parse: data not dict")
 		return result
 
-	var d: Dictionary = data
-	_dbg("parse: keys=" + str(d.keys()))
+	var d: Dictionary = data as Dictionary
 
-	# Normalize possible wrappers first
-	var core: Dictionary = d
-	if d.has("data") and typeof(d["data"]) == TYPE_DICTIONARY:
-		core = d["data"]
-		_dbg("parse: using d['data'] wrapper; keys=" + str(core.keys()))
-	elif d.has("payload") and typeof(d["payload"]) == TYPE_DICTIONARY:
-		core = d["payload"]
-		_dbg("parse: using d['payload'] wrapper; keys=" + str(core.keys()))
-
-	# Accept a few shapes:
-	# 1) {"drag_type":"ability","ability_id":"..."}
-	if core.has("drag_type") and String(core["drag_type"]) == "ability" and core.has("ability_id"):
-		result["ok"] = String(core["ability_id"]) != ""
+	if d.has("drag_type") and String(d.get("drag_type", "")) == "ability":
+		result["ok"] = true
 		result["kind"] = "ability"
-		result["id"] = String(core["ability_id"])
+		result["id"] = String(d.get("ability_id", ""))
 		return result
 
-	# 2) {"type":"ability","id":"..."}
-	if core.has("type") and String(core["type"]) == "ability" and core.has("id"):
-		result["ok"] = String(core["id"]) != ""
+	if d.has("type") and String(d.get("type", "")) == "ability":
+		result["ok"] = true
 		result["kind"] = "ability"
-		result["id"] = String(core["id"])
+		result["id"] = String(d.get("id", ""))
 		return result
 
-	# 3) {"ability_id":"..."} plain
-	if core.has("ability_id"):
-		result["ok"] = String(core["ability_id"]) != ""
+	if d.has("ability_id"):
+		result["ok"] = true
 		result["kind"] = "ability"
-		result["id"] = String(core["ability_id"])
+		result["id"] = String(d.get("ability_id", ""))
 		return result
 
-	# 4) {"ability":"..."} fallback
-	if core.has("ability"):
-		result["ok"] = String(core["ability"]) != ""
+	if d.has("ability"):
+		result["ok"] = true
 		result["kind"] = "ability"
-		result["id"] = String(core["ability"])
+		result["id"] = String(d.get("ability", ""))
 		return result
 
 	_dbg("parse: no recognized keys")
@@ -272,6 +428,8 @@ func _assign(idx: int, kind: String, id: String) -> void:
 	_data[idx].entry_type = kind
 	_data[idx].entry_id = id
 	_refresh_icon(idx)
+	_reset_cooldown_visual(idx)
+	_cooldowns_by_slot.erase(idx)
 	slot_assigned.emit(idx, kind, id)
 
 func _clear(idx: int) -> void:
@@ -280,6 +438,8 @@ func _clear(idx: int) -> void:
 	_dbg("clear: idx=" + str(idx))
 	_data[idx] = Entry.new()
 	_refresh_icon(idx)
+	_reset_cooldown_visual(idx)
+	_cooldowns_by_slot.erase(idx)
 	slot_cleared.emit(idx)
 
 func _refresh_icon(idx: int) -> void:
@@ -295,7 +455,42 @@ func _refresh_icon(idx: int) -> void:
 			var t_any: Variant = ability_sys.call("get_ability_icon", e.entry_id)
 			if t_any is Texture2D:
 				tex = t_any as Texture2D
+
+	var cd := s.get_node_or_null("Cooldown") as TextureProgressBar
+	if cd != null:
+		cd.texture_progress = tex
+
 	icon.texture = tex
+
+func _reset_cooldown_visual(idx: int) -> void:
+	if idx < 0 or idx >= _slots.size():
+		return
+	var s: Control = _slots[idx]
+	var icon := s.get_node("Icon") as TextureRect
+	icon.modulate = Color(1, 1, 1, 1)
+	var cd := s.get_node_or_null("Cooldown") as TextureProgressBar
+	if cd != null:
+		cd.visible = false
+		cd.value = cd.max_value
+
+## Public API for cooldown sweep (0.0 = just started cooldown, 1.0 = ready).
+func set_slot_cooldown_ready_ratio(slot_index: int, ready_ratio: float) -> void:
+	if slot_index < 0 or slot_index >= _slots.size():
+		return
+	var s: Control = _slots[slot_index]
+	var icon := s.get_node("Icon") as TextureRect
+	var cd := s.get_node_or_null("Cooldown") as TextureProgressBar
+	if cd == null:
+		return
+
+	var r: float = clamp(ready_ratio, 0.0, 1.0)
+	if r >= 1.0:
+		_reset_cooldown_visual(slot_index)
+		return
+
+	cd.visible = true
+	cd.value = r * cd.max_value
+	icon.modulate = cooldown_dim_color
 
 func _draw() -> void:
 	if _hover_index < 0:
@@ -310,7 +505,6 @@ func _draw() -> void:
 		i += 1
 
 func _slot_at(local_pos: Vector2) -> int:
-	# local_pos is Hotbar-local.
 	var i: int = 0
 	while i < _slots.size():
 		var s: Control = _slots[i]
@@ -328,46 +522,25 @@ func try_assign_drag(data: Dictionary) -> void:
 	_dbg("try_assign_drag (fallback) data_keys=" + (str(data.keys()) if typeof(data) == TYPE_DICTIONARY else "<non-dict>"))
 	if typeof(data) != TYPE_DICTIONARY:
 		return
-
-	var parsed: Dictionary = _parse_payload(data)
-	var ok: bool = parsed.get("ok", false)
-	var id: String = String(parsed.get("id", ""))
-	if not ok or id == "":
+	var kind: String = String(data.get("kind", data.get("type", "")))
+	var id: String = String(data.get("id", data.get("ability_id", "")))
+	if kind == "" or id == "":
 		return
+	var idx: int = _slot_at(get_local_mouse_position())
+	if idx < 0:
+		return
+	_assign(idx, kind, id)
 
-	# Slot to first empty slot
-	var idx: int = 0
-	while idx < _data.size():
-		if _data[idx].entry_type == "" or _data[idx].entry_id == "":
-			_assign(idx, "ability", id)
-			return
-		idx += 1
-
-	# Or replace slot 0 if full
-	_assign(0, "ability", id)
-
-# -------------------------------------------------------------------
-# Screen-space wrappers for HotbarDropCatcher
-# -------------------------------------------------------------------
-func can_drop_payload_at_screen_pos(screen_pos: Vector2, data: Variant) -> bool:
+func can_drop_payload_at_screen_pos(screen_pos: Vector2, payload: Variant) -> bool:
 	var inv: Transform2D = get_global_transform_with_canvas().affine_inverse()
 	var local_pos: Vector2 = inv * screen_pos
-	_dbg("catcher->hotbar can_drop: screen_pos=" + str(screen_pos) + " -> local_pos=" + str(local_pos))
-	return can_drop_data(local_pos, data)
+	return can_drop_data(local_pos, payload)
 
-func try_assign_at_screen_pos(screen_pos: Vector2, data: Variant) -> void:
+func try_assign_at_screen_pos(screen_pos: Vector2, payload: Variant) -> void:
 	var inv: Transform2D = get_global_transform_with_canvas().affine_inverse()
 	var local_pos: Vector2 = inv * screen_pos
-	_dbg("catcher->hotbar drop: screen_pos=" + str(screen_pos) + " -> local_pos=" + str(local_pos))
-	if can_drop_data(local_pos, data):
-		drop_data(local_pos, data)
-	else:
-		if typeof(data) == TYPE_DICTIONARY:
-			try_assign_drag(data)
+	drop_data(local_pos, payload)
 
-# -------------------------------------------------------------------
-# Hotkey & RMB (unhandled safety net)
-# -------------------------------------------------------------------
 func _unhandled_input(event: InputEvent) -> void:
 	# 1) Right-click clear as a fallback if something ate the GUI event upstream
 	var mb := event as InputEventMouseButton
@@ -412,7 +585,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _activate_slot(index: int) -> void:
 	if index < 0 or index >= _data.size():
 		return
-	var e := _data[index]
+	var e: Entry = _data[index]
 	if e.entry_type == "" or e.entry_id == "":
 		return
 

@@ -5,6 +5,16 @@ class_name AnimationBridge
 @export var sprite_path: NodePath = NodePath("../AnimatedSprite2D")
 @export var supports_side_anims: bool = true
 
+# --- Footsteps (centralized; walk* only; NO interval gating) ---
+@export_group("Footsteps")
+@export var enable_footsteps: bool = true
+@export var footstep_anim_prefix: String = "walk"
+@export var footstep_frames: Array[int] = [1, 5]
+@export var footstep_min_speed: float = 10.0
+@export var footstep_volume_db: float = -10.0
+@export var footstep_use_distance_gate: bool = true
+@export var footstep_min_distance_px: float = 8.0
+
 # Default action prefixes (can be overridden per-call or at runtime)
 @export var default_attack_prefix: String = "attack1"
 @export var default_cast_prefix: String = "cast1"
@@ -64,6 +74,10 @@ var _has_side_split: bool = false
 var _has_vertical: bool = false
 
 var _action_lock_until_msec: int = 0
+
+# Footstep runtime state
+var _footstep_last_pos: Vector2 = Vector2.ZERO
+var _footstep_was_moving: bool = false
 
 # Action prefix registry (runtime-tweakable; keys: "attack","cast","buff","projectile")
 var _prefix: Dictionary = {
@@ -163,7 +177,20 @@ func set_movement(dir: Vector2, moving: bool) -> void:
 	else:
 		use_dir = _last_dir
 
+	# NEW: detect actual movement from the body, not just the flag.
+	var movement_epsilon: float = 0.05
+	var actual_speed: float = 0.0
+	if _actor_body != null:
+		actual_speed = _actor_body.velocity.length()
+
 	var moving_eff: bool = moving
+
+	# If the body is really moving, force locomotion animations to be considered "moving",
+	# even if an action (attack / cast) recently locked the animator.
+	if actual_speed > movement_epsilon:
+		moving_eff = true
+
+	# Existing dead-walk visuals: only kick in if not already moving and actor is dead.
 	if not moving_eff and allow_dead_walk_visuals and dead_now:
 		var speed_mag: float = 0.0
 		if _actor_body != null:
@@ -183,8 +210,12 @@ func set_movement(dir: Vector2, moving: bool) -> void:
 		elif use_dir.length() >= dead_walk_dir_threshold:
 			moving_eff = true
 
+	# Action lock normally prevents movement anims (so attacks/casts play fully),
+	# but if the body is actually moving, we allow walking to override the lock
+	# to prevent "gliding while attacking".
 	if Time.get_ticks_msec() < _action_lock_until_msec:
-		if not (dead_now and moving_eff):
+		var is_actually_moving: bool = actual_speed > movement_epsilon
+		if not is_actually_moving and not (dead_now and moving_eff):
 			return
 
 	var target: String = ""
@@ -334,7 +365,22 @@ func _apply_horizontal_flip(dir: Vector2, chosen_anim: String) -> void:
 		should_flip = false
 	else:
 		if supports_side_anims and _has_side_single and auto_flip_for_side_single:
-			if chosen_anim == anim_walk_side or chosen_anim == anim_idle_side or chosen_anim == "walk_side_dead" or chosen_anim == "idle_side_dead":
+			# PATCH: flip for ANY "*_side" action anim too (attack/cast/buff/projectile).
+			var is_side_anim: bool = false
+			if chosen_anim == anim_walk_side or chosen_anim == anim_idle_side:
+				is_side_anim = true
+			elif chosen_anim == "walk_side_dead" or chosen_anim == "idle_side_dead":
+				is_side_anim = true
+			elif chosen_anim.ends_with("_side"):
+				is_side_anim = true
+			elif chosen_anim.ends_with("_side_dead"):
+				is_side_anim = true
+			elif chosen_anim.find("_side_") != -1:
+				is_side_anim = true
+			elif chosen_anim.find("_side_dead") != -1:
+				is_side_anim = true
+
+			if is_side_anim:
 				should_flip = true
 
 	if should_flip:
@@ -434,7 +480,7 @@ func _is_dead() -> bool:
 # Generic action resolvers (NEW)
 # ----------------------------------------------------------------------------- #
 func play_attack_with_prefix(prefix: String, aim_dir: Vector2, hit_frame: int, on_hit: Callable) -> void:
-	_play_action_internal("attack", prefix, aim_dir, hit_frame, on_hit, 0.35)
+	_play_action_internal("attack", prefix, aim_dir, hit_frame, on_hit, 0.9)
 
 func play_cast_with_prefix(prefix: String, cast_time_sec: float) -> void:
 	_play_lock_only("cast", prefix, cast_time_sec)
@@ -457,6 +503,13 @@ func _play_action_internal(kind: String, prefix: String, aim_dir: Vector2, hit_f
 	var anim_name: String = _resolve_anim_for_prefix(use_prefix, aim_dir)
 	if anim_name == "":
 		return
+
+	# PATCH: seed facing + apply flip for side-only sets on actions too.
+	var dir_for_flip: Vector2 = _last_dir
+	if aim_dir.length() > 0.001:
+		dir_for_flip = aim_dir.normalized()
+		_last_dir = dir_for_flip
+	_apply_horizontal_flip(dir_for_flip, anim_name)
 
 	_pending_hit_frame = hit_frame
 	_pending_hit_callable = on_hit
@@ -492,6 +545,9 @@ func _play_lock_only(kind: String, prefix: String, lock_sec: float) -> void:
 		lock_target = _actor_node
 	if lock_target != null and lock_target.has_method("lock_action"):
 		lock_target.call("lock_action", lock_sec)
+
+	# PATCH: apply flip for lock-only actions too.
+	_apply_horizontal_flip(aim, anim_name)
 
 	_sprite.play(anim_name)
 
@@ -581,18 +637,76 @@ func play_hit_react() -> void:
 		_sprite.play("hit")
 
 # ----------------------------------------------------------------------------- #
-# Hit-frame + lock lifecycle (unchanged)
+# Hit-frame + footsteps + lock lifecycle
 # ----------------------------------------------------------------------------- #
 func _on_sprite_frame_changed() -> void:
 	if _sprite == null:
 		return
-	if _pending_hit_frame < 0:
+
+	# Hit-frame callback
+	if _pending_hit_frame >= 0:
+		if _sprite.frame == _pending_hit_frame:
+			if _pending_hit_callable.is_valid():
+				_pending_hit_callable.call()
+			_pending_hit_frame = -1
+			_pending_hit_callable = Callable()
+
+	# Footsteps (walk* only)
+	_maybe_play_footstep()
+
+func _maybe_play_footstep() -> void:
+	if not enable_footsteps:
 		return
-	if _sprite.frame == _pending_hit_frame:
-		if _pending_hit_callable.is_valid():
-			_pending_hit_callable.call()
-		_pending_hit_frame = -1
-		_pending_hit_callable = Callable()
+	if _sprite == null:
+		return
+	if _actor_body == null:
+		return
+	if _is_dead():
+		return
+
+	var anim_prefix: String = footstep_anim_prefix
+	if anim_prefix == "":
+		anim_prefix = "walk"
+
+	var anim_name: String = _sprite.animation
+	if not anim_name.begins_with(anim_prefix):
+		_footstep_was_moving = false
+		return
+
+	var speed_len: float = _actor_body.velocity.length()
+	if speed_len < footstep_min_speed:
+		_footstep_was_moving = false
+		return
+
+	# Reset distance baseline when movement starts
+	if not _footstep_was_moving:
+		_footstep_was_moving = true
+		_footstep_last_pos = _actor_body.global_position
+
+	var frame_index: int = _sprite.frame
+
+	# Frame gate (optional)
+	if footstep_frames.is_empty():
+		_try_play_footstep()
+		return
+
+	if frame_index in footstep_frames:
+		_try_play_footstep()
+
+func _try_play_footstep() -> void:
+	if _actor_body == null:
+		return
+
+	if footstep_use_distance_gate:
+		var dist_px: float = _actor_body.global_position.distance_to(_footstep_last_pos)
+		if dist_px < footstep_min_distance_px:
+			return
+
+	var pos: Vector2 = _actor_body.global_position
+	var event_any: StringName = AudioSys.get_footstep_event_at(pos)
+	AudioSys.play_sfx_event(event_any, pos, footstep_volume_db)
+
+	_footstep_last_pos = pos
 
 func _on_sprite_anim_finished() -> void:
 	_pending_hit_frame = -1

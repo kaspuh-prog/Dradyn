@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://dkd0vhclsvv0k"
+
+[deps]
+
+files=["res://Data/Loot/LootEntries.entry.translation", "res://Data/Loot/LootEntries.item.translation", "res://Data/Loot/LootEntries.weight.translation", "res://Data/Loot/LootEntries.percent.translation", "res://Data/Loot/LootEntries.min.translation", "res://Data/Loot/LootEntries.max.translation"]
+
+source_file="res://Data/Loot/LootEntries.csv"
+dest_files=["res://Data/Loot/LootEntries.entry.translation", "res://Data/Loot/LootEntries.item.translation", "res://Data/Loot/LootEntries.weight.translation", "res://Data/Loot/LootEntries.percent.translation", "res://Data/Loot/LootEntries.min.translation", "res://Data/Loot/LootEntries.max.translation"]
+
+[params]
+
+compress=true
+delimiter=0

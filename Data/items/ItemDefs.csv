@@ -1,0 +1,6 @@
+id,display_name,description,item_type,equipment_class,base_gold_value,stack_max,equip_slot,restore_hp,restore_mp,restore_end,use_ability_id,weapon_weight,icon_id,stat_modifier_ids
+WoodenSword,Wooden Sword,"A wooden blade crafted by a former orphan for ""cellar duty.""",equipment,sword,5,99,mainhand,,,,,2,WoodenSword,Attack5
+TatteredLeatherVest,Tattered Leather Vest,Is this made of rat hides?,equipment,leather,5,99,chest,,,,,,armor_012,Defense5
+AntiPoison,Anti-poison,This will clean your insides right up!,consumable,,12,99,,,,,CurePoison,,AntiPoison,
+RatTail,Rat Tail,Maybe you can use it as a strap?,reagent,,4,99,,,,,,,RatTail,
+MinorDraughtofLife,Minor Draught of Life,Just a wee bit o' healin!,consumable,,10,99,,30,,,,,MinorDraughtofLife,

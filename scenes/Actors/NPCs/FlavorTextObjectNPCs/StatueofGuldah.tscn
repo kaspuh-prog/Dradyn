@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3 uid="uid://xi612fejk0hs"]
+
+[ext_resource type="Script" uid="uid://lxuv02mx2meb" path="res://scenes/SavePoint.gd" id="1_r1v0e"]
+[ext_resource type="Texture2D" uid="uid://5q351ey6x1k3" path="res://assets/tilesets/GuldahStatue.png" id="2_r1v0e"]
+
+[node name="StatueofGuldah" type="Node2D"]
+script = ExtResource("1_r1v0e")
+interact_radius = 36.0
+interact_prompt = "Pray"
+sprite_node_path = NodePath("Statue")
+
+[node name="Statue" type="Sprite2D" parent="."]
+texture = ExtResource("2_r1v0e")

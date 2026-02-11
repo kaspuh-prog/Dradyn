@@ -1,0 +1,19 @@
+[gd_scene load_steps=4 format=3 uid="uid://dq0giejtxlp5g"]
+
+[ext_resource type="Script" uid="uid://bv18itau6couf" path="res://scenes/Projectiles/Projectile.gd" id="1_ptb03"]
+[ext_resource type="SpriteFrames" uid="uid://q81vknqmojuy" path="res://assets/sprites/projectiles/ArcaBoltProjectile.tres" id="2_47s8l"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_n68tw"]
+radius = 6.0827627
+
+[node name="ArcaBolt" type="Area2D"]
+collision_mask = 3
+script = ExtResource("1_ptb03")
+metadata/_custom_type_script = "uid://bv18itau6couf"
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_n68tw")
+
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+sprite_frames = ExtResource("2_47s8l")
+animation = &"fly"

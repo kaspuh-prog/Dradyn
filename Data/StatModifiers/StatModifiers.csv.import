@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://bdrwwtuuynl1j"
+
+[deps]
+
+files=["res://Data/StatModifiers/StatModifiers.stat.translation", "res://Data/StatModifiers/StatModifiers.add.translation", "res://Data/StatModifiers/StatModifiers.mul.translation", "res://Data/StatModifiers/StatModifiers.duration.translation", "res://Data/StatModifiers/StatModifiers.source.translation", "res://Data/StatModifiers/StatModifiers.apply.translation", "res://Data/StatModifiers/StatModifiers.override.translation", "res://Data/StatModifiers/StatModifiers.stacking.translation", "res://Data/StatModifiers/StatModifiers.max.translation", "res://Data/StatModifiers/StatModifiers.refresh.translation", "res://Data/StatModifiers/StatModifiers.source.translation"]
+
+source_file="res://Data/StatModifiers/StatModifiers.csv"
+dest_files=["res://Data/StatModifiers/StatModifiers.stat.translation", "res://Data/StatModifiers/StatModifiers.add.translation", "res://Data/StatModifiers/StatModifiers.mul.translation", "res://Data/StatModifiers/StatModifiers.duration.translation", "res://Data/StatModifiers/StatModifiers.source.translation", "res://Data/StatModifiers/StatModifiers.apply.translation", "res://Data/StatModifiers/StatModifiers.override.translation", "res://Data/StatModifiers/StatModifiers.stacking.translation", "res://Data/StatModifiers/StatModifiers.max.translation", "res://Data/StatModifiers/StatModifiers.refresh.translation", "res://Data/StatModifiers/StatModifiers.source.translation"]
+
+[params]
+
+compress=true
+delimiter=0

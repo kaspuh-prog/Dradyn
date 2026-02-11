@@ -244,7 +244,6 @@ size = Vector2(15, 20.5)
 [node name="EnemyRat" type="CharacterBody2D" groups=["Enemies"]]
 script = ExtResource("1_ixhbv")
 enemy_name = "Cellar Rat"
-anim_attack_prefix = "attack1"
 death_vfx_frames = ExtResource("2_ph7pc")
 death_vfx_lifetime_sec = 0.6
 
@@ -254,7 +253,6 @@ sprite_frames = SubResource("SpriteFrames_cw2d6")
 animation = &"attack1_up"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0, 1.75)
 shape = SubResource("1")
 
 [node name="StatsComponent" type="Node" parent="."]
@@ -268,7 +266,6 @@ metadata/_custom_type_script = "uid://scndil1j0hdu"
 [node name="GiveXPonDeath" type="Node" parent="."]
 script = ExtResource("7_mofcf")
 xp_reward = 10
-debug_prints = true
 
 [node name="EnemyAbilityAI" type="Node" parent="."]
 script = ExtResource("8_gwmop")
@@ -297,6 +294,7 @@ status_path = NodePath("../StatusConditions")
 animator_path = NodePath("../AnimatedSprite2D")
 tint_strength = 1.0
 tint_fade_time = 1.0
+debug_prints = false
 
 [node name="StatusConditions" type="Node" parent="."]
 script = ExtResource("13_bykrx")
@@ -304,4 +302,4 @@ stats_path = NodePath("../StatsComponent")
 
 [node name="KnownAbilities" type="Node" parent="."]
 script = ExtResource("14_mofcf")
-known_abilities = ["attack"]
+known_abilities = ["Biteattack"]

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="StatModifier" load_steps=2 format=3 uid="uid://b716pnddtn18"]
+
+[ext_resource type="Script" uid="uid://byobol8rhb4cs" path="res://scripts/stats/StatModifier.gd" id="1_sx1bh"]
+
+[resource]
+script = ExtResource("1_sx1bh")
+stat_name = &"BaseAttackDelay"
+mul_value = 0.952381
+source_id = "FALSE"
+override_value = 1.0
+stacking_key = &"FALSE"

@@ -5,16 +5,12 @@ class_name EnemyAbilityAI
 @export var think_hz: float = 6.0
 @export var min_retry_ms: int = 150
 
-# Fallback basic attack (only used if no MELEE ability is available in KnownAbilities)
-@export var fallback_attack_id: String = "attack"
-@export var use_gcd_for_fallback_attack: bool = false
-
 # Melee heuristics like Companion
 @export var default_melee_range_px: float = 56.0
 @export var default_arc_deg: float = 70.0
 
 # INVERTED groups (from an enemy AI’s POV)
-@export var enemy_groups: PackedStringArray = ["PartyMembers"]       # things we damage
+@export var enemy_groups: PackedStringArray = ["PartyMembers"]       # things we damage (kept for compatibility but not used for offense)
 @export var ally_groups: PackedStringArray = ["Enemies", "Enemy"]    # things we heal/rez
 
 # Tunables (mirrors Companion defaults)
@@ -31,14 +27,20 @@ var _active: bool = true
 
 var _actor_root: Node2D = null
 var _owner_body: Node2D = null
+var _enemy_base: EnemyBase = null
 
 var _kac: Node = null                            # KnownAbilitiesComponent (or compatible)
-var _known_ids: PackedStringArray = []
+var _known_ids: PackedStringArray = PackedStringArray()
 var _type_cache: Dictionary = {}                 # ability_id -> UPPER type string cache
+
+var _combat_role: String = "UNKNOWN"
+
 
 func _ready() -> void:
 	_actor_root = _resolve_actor_root()
 	_owner_body = _actor_root
+	_enemy_base = _resolve_enemy_base()
+
 	_kac = _resolve_known_abilities()
 	_sync_known_abilities_from_component()
 	_connect_kac_signals()
@@ -49,6 +51,7 @@ func _ready() -> void:
 	if asys == null:
 		push_warning("[EnemyAbilityAI] Ability system not found at /root/AbilitySys or /root/AbilitySystem.")
 
+
 func set_active(active: bool) -> void:
 	_active = active
 	set_process(_active)
@@ -57,6 +60,7 @@ func set_active(active: bool) -> void:
 		if _actor_root != null and is_instance_valid(_actor_root):
 			who = _actor_root.name
 		print_rich("[EAI] set_active(", active, ") for ", who)
+
 
 func _process(delta: float) -> void:
 	if not _active:
@@ -72,6 +76,7 @@ func _process(delta: float) -> void:
 	if _think_accum >= interval:
 		_think_accum = 0.0
 		_think()
+
 
 func _think() -> void:
 	# Late-resolve KAC in case scene spawns it later
@@ -145,13 +150,16 @@ func _think() -> void:
 		print_rich("[EAI] cast user=", who, " ability=", ability_id, " ok=", ok, " target=", tn, " ctx=", ctx, " known=", _known_ids)
 
 	if ok:
+		# Let EnemyBase handle future movement; we only ensure the body is not sliding
 		_halt_motion()
+		# Offensive/heal ability has been sent through; EnemyBase + animation bridges
+		# will respect is_action_locked and handle facing.
 	else:
-		# If melee-ish but failed (CD/GCD/etc.), try to close the gap a bit
-		if _is_melee_like(ability_id):
-			_try_gap_close_for_melee_attack()
+		# No more gap-closing here. EnemyBase owns movement & spacing.
+		pass
 
-# ---------------- Choosing abilities (mirrors Companion) ---------------- #
+
+# ---------------- Choosing abilities (mirrors Companion, now driven by EnemyBase target) ---------------- #
 
 func _choose_best_ability() -> Dictionary:
 	_sync_known_abilities_from_component()
@@ -163,8 +171,6 @@ func _choose_best_ability() -> Dictionary:
 	var lowest_ally: Node2D = _find_lowest_hp_ally(heal_threshold_ratio)
 	var dead_ally: Node2D = _find_dead_ally()
 	var enemy: Node2D = _current_enemy_target()
-	if enemy == null or not is_instance_valid(enemy):
-		enemy = _pick_enemy_target(max_target_radius_px)
 
 	# Bucket known abilities by type (via AbilitySystem/AbilityDef just like Companion)
 	var revive_ids: Array[String] = []
@@ -195,6 +201,9 @@ func _choose_best_ability() -> Dictionary:
 				pass
 		i += 1
 
+	# Update combat role for debugging / future weighting
+	_update_combat_role(melee_ids, ranged_ids, heal_ids)
+
 	# 1) REVIVE
 	if dead_ally != null and is_instance_valid(dead_ally) and revive_ids.size() > 0:
 		var id_revive: String = revive_ids[0]
@@ -207,8 +216,12 @@ func _choose_best_ability() -> Dictionary:
 		if _can_cast(id_heal):
 			return {"ability_id": id_heal, "context": {"target": lowest_ally}}
 
+	# If there is no offensive target, stop here after support checks.
+	if enemy == null or not is_instance_valid(enemy):
+		return {}
+
 	# 3A) Ranged-first if far (casters or mixed kits)
-	if enemy != null and is_instance_valid(enemy) and prefer_ranged_outside_melee and ranged_ids.size() > 0:
+	if prefer_ranged_outside_melee and ranged_ids.size() > 0:
 		var far_from_melee: bool = true
 		if _owner_body != null and is_instance_valid(_owner_body):
 			var d2: float = (enemy.global_position - _owner_body.global_position).length_squared()
@@ -224,7 +237,7 @@ func _choose_best_ability() -> Dictionary:
 				j += 1
 
 	# 3B) Melee if close (or if pursuing melee) – now per-ability range
-	if pursue_melee and enemy != null and is_instance_valid(enemy) and melee_ids.size() > 0:
+	if pursue_melee and melee_ids.size() > 0:
 		var any_close: bool = false
 		var m: int = 0
 		while m < melee_ids.size():
@@ -235,41 +248,16 @@ func _choose_best_ability() -> Dictionary:
 				if _can_cast(mid):
 					return {"ability_id": mid, "context": {"target": enemy, "aim_dir": _aim_towards(enemy)}}
 			m += 1
-		if not any_close:
-			_try_gap_close_for_melee_attack()
+		# If no melee ability is in range, EnemyBase will continue to move us; we just wait.
 
-		# 4) Any remaining enemy damage (ranged)
-	if enemy != null and is_instance_valid(enemy) and ranged_ids.size() > 0:
+	# 4) Any remaining enemy damage (ranged)
+	if ranged_ids.size() > 0:
 		var k: int = 0
 		while k < ranged_ids.size():
 			var rd: String = ranged_ids[k]
 			if _can_cast(rd):
 				return {"ability_id": rd, "context": {"target": enemy, "aim_dir": _aim_towards(enemy)}}
 			k += 1
-
-	# 5) As a last resort, try fallback attack — BUT:
-	#    - Only use it for kits that do NOT already have a MELEE ability.
-	#    - If the fallback itself is MELEE, still respect melee range.
-	if enemy != null and is_instance_valid(enemy) and fallback_attack_id != "":
-		var fb_type: String = _ability_type_for(fallback_attack_id)
-
-		# If we *already* have explicit MELEE abilities, do NOT spam the fallback.
-		if fb_type == "MELEE":
-			if melee_ids.size() == 0:
-				var fb_range: float = _melee_range_for(fallback_attack_id)
-				if _in_melee_range(enemy, fb_range) and _can_cast(fallback_attack_id):
-					return {
-						"ability_id": fallback_attack_id,
-						"context": {"target": enemy, "aim_dir": _aim_towards(enemy)}
-					}
-		else:
-			# Non-melee fallback (e.g., simple projectile) can still be used when there’s no
-			# better ranged option, without extra range gating here.
-			if ranged_ids.size() == 0 and _can_cast(fallback_attack_id):
-				return {
-					"ability_id": fallback_attack_id,
-					"context": {"target": enemy, "aim_dir": _aim_towards(enemy)}
-				}
 
 	return {}
 
@@ -299,6 +287,7 @@ func _ability_type_for(ability_id: String) -> String:
 	_type_cache[ability_id] = t
 	return t
 
+
 func _melee_range_for(ability_id: String) -> float:
 	if ability_id == "":
 		return default_melee_range_px
@@ -315,6 +304,7 @@ func _melee_range_for(ability_id: String) -> float:
 						return f
 	return default_melee_range_px
 
+
 func _can_cast(ability_id: String) -> bool:
 	var asys: Node = _ability_system()
 	if asys == null:
@@ -325,27 +315,37 @@ func _can_cast(ability_id: String) -> bool:
 			return bool(ok_any)
 	return true
 
+
 func _is_melee_like(ability_id: String) -> bool:
 	return _ability_type_for(ability_id) == "MELEE" or ability_id == "attack"
+
+
+func _update_combat_role(melee_ids: Array[String], ranged_ids: Array[String], heal_ids: Array[String]) -> void:
+	var role: String = "UNKNOWN"
+	if melee_ids.size() > 0 and ranged_ids.size() > 0:
+		role = "HYBRID"
+	elif ranged_ids.size() > 0 and melee_ids.size() == 0:
+		role = "RANGED"
+	elif melee_ids.size() > 0 and ranged_ids.size() == 0:
+		role = "MELEE"
+	elif melee_ids.is_empty() and ranged_ids.is_empty() and heal_ids.size() > 0:
+		role = "SUPPORT"
+	else:
+		# Fallback so enemies with weird kits still behave roughly like melee
+		role = "MELEE"
+	_combat_role = role
+
 
 # ---------------- Motion helpers --------------------------- #
 
 func _halt_motion() -> void:
 	if _owner_body == null or not is_instance_valid(_owner_body):
 		return
-	if _owner_body.has_method("set_move_dir"):
-		_owner_body.call("set_move_dir", Vector2.ZERO)
+	# EnemyBase owns active movement; we only ensure there is no stray sliding.
 	if _owner_body is CharacterBody2D:
 		var cb: CharacterBody2D = _owner_body as CharacterBody2D
 		cb.velocity = Vector2.ZERO
 
-func _try_gap_close_for_melee_attack() -> void:
-	if _owner_body == null or not is_instance_valid(_owner_body):
-		return
-	var enemy: Node2D = _current_enemy_target()
-	if enemy == null or not is_instance_valid(enemy):
-		return
-	_close_gap_towards(enemy)
 
 # ---------------- KnownAbilities (mirrors Companion) -------- #
 
@@ -377,12 +377,14 @@ func _resolve_known_abilities() -> Node:
 				q.append(c)
 	return null
 
+
 func _connect_kac_signals() -> void:
 	if _kac == null or not is_instance_valid(_kac):
 		return
 	if _kac.has_signal("abilities_changed"):
 		if not _kac.is_connected("abilities_changed", Callable(self, "_on_kac_abilities_changed")):
 			_kac.connect("abilities_changed", Callable(self, "_on_kac_abilities_changed"))
+
 
 func _on_kac_abilities_changed(current: PackedStringArray) -> void:
 	_known_ids = current.duplicate()
@@ -399,12 +401,14 @@ func _on_kac_abilities_changed(current: PackedStringArray) -> void:
 	if debug_enemy_ai:
 		print_rich("[EAI] abilities_changed -> ", _known_ids)
 
+
 func _sync_known_abilities_from_component() -> void:
 	if _kac != null and is_instance_valid(_kac):
 		if "known_abilities" in _kac:
 			var any_arr: Variant = _kac.get("known_abilities")
 			if typeof(any_arr) == TYPE_PACKED_STRING_ARRAY:
 				_known_ids = (any_arr as PackedStringArray).duplicate()
+
 
 # ---------------- Allies / Enemies / Targets ---------------- #
 
@@ -435,6 +439,7 @@ func _find_lowest_hp_ally(threshold_ratio: float) -> Node2D:
 		i += 1
 	return best
 
+
 func _find_dead_ally() -> Node2D:
 	var tree: SceneTree = get_tree()
 	if tree == null:
@@ -454,44 +459,13 @@ func _find_dead_ally() -> Node2D:
 		i += 1
 	return null
 
-func _current_enemy_target() -> Node2D:
-	return _pick_enemy_target(max_target_radius_px)
 
-func _pick_enemy_target(max_radius_px: float) -> Node2D:
-	var tree: SceneTree = get_tree()
-	if tree == null:
-		return null
-	var me: Node2D = _owner_body
-	if me == null or not is_instance_valid(me):
-		return null
-	var best: Node2D = null
-	var best_d2: float = max_radius_px * max_radius_px
-	var i: int = 0
-	while i < enemy_groups.size():
-		var g: String = enemy_groups[i]
-		var nodes: Array = tree.get_nodes_in_group(g)
-		var j: int = 0
-		while j < nodes.size():
-			var n: Node = nodes[j]
-			if n is Node2D and is_instance_valid(n):
-				var n2d: Node2D = n as Node2D
-				# require damage-addressable and alive, and not an ally
-				if _node_in_any_group(n2d, ally_groups):
-					j += 1
-					continue
-				if not _is_damage_addressable(n2d):
-					j += 1
-					continue
-				if _target_is_dead(n2d):
-					j += 1
-					continue
-				var d2: float = (n2d.global_position - me.global_position).length_squared()
-				if d2 < best_d2:
-					best_d2 = d2
-					best = n2d
-			j += 1
-		i += 1
-	return best
+func _current_enemy_target() -> Node2D:
+	# Single source of truth: EnemyBase decides who we care about offensively.
+	if _enemy_base != null and is_instance_valid(_enemy_base):
+		return _enemy_base.get_primary_target()
+	return null
+
 
 # ---------------- Common helpers (mirrors Companion) ---------------- #
 
@@ -501,6 +475,20 @@ func _resolve_actor_root() -> Node2D:
 	if self.get_parent() is Node2D:
 		return self.get_parent() as Node2D
 	return null
+
+
+func _resolve_enemy_base() -> EnemyBase:
+	if _actor_root != null and is_instance_valid(_actor_root):
+		if _actor_root is EnemyBase:
+			return _actor_root as EnemyBase
+		var parent: Node = _actor_root.get_parent()
+		if parent is EnemyBase:
+			return parent as EnemyBase
+		var found: Node = _actor_root.find_child("EnemyBase", true, false)
+		if found is EnemyBase:
+			return found as EnemyBase
+	return null
+
 
 func _ability_system() -> Node:
 	# Mirror CompanionAbilityAI: try AbilitySys, then AbilitySystem
@@ -512,6 +500,7 @@ func _ability_system() -> Node:
 		return n
 	return root.get_node_or_null("AbilitySystem")
 
+
 func _aim_towards_target_in_ctx(ctx: Dictionary) -> Vector2:
 	if ctx.has("target"):
 		var t_any: Variant = ctx["target"]
@@ -520,6 +509,7 @@ func _aim_towards_target_in_ctx(ctx: Dictionary) -> Vector2:
 			return _aim_towards(t)
 	return Vector2.DOWN
 
+
 func _aim_towards(t: Node2D) -> Vector2:
 	if t == null or _owner_body == null:
 		return Vector2.DOWN
@@ -527,6 +517,7 @@ func _aim_towards(t: Node2D) -> Vector2:
 	if diff.length() > 0.001:
 		return diff.normalized()
 	return Vector2.DOWN
+
 
 func _movement_blocked() -> bool:
 	if _owner_body == null or not is_instance_valid(_owner_body):
@@ -542,18 +533,13 @@ func _movement_blocked() -> bool:
 
 	return false
 
+
 func _in_melee_range(targ: Node2D, range_px: float) -> bool:
 	if _owner_body == null or not is_instance_valid(_owner_body) or targ == null or not is_instance_valid(targ):
 		return false
 	var d2: float = (targ.global_position - _owner_body.global_position).length_squared()
 	return d2 <= (range_px * range_px)
 
-func _close_gap_towards(targ: Node2D) -> void:
-	if _owner_body == null or not is_instance_valid(_owner_body) or targ == null or not is_instance_valid(targ):
-		return
-	if _owner_body.has_method("set_move_dir"):
-		var dir: Vector2 = _aim_towards(targ)
-		_owner_body.call("set_move_dir", dir)
 
 # ---------- DEAD / HP helpers (UPDATED to honor StatusConditions) ---------- #
 
@@ -605,6 +591,7 @@ func _target_is_dead(n: Node2D) -> bool:
 
 	return false
 
+
 func _hp_ratio_for(n: Node2D) -> float:
 	var root: Node = n
 	if root == null or not is_instance_valid(root):
@@ -627,6 +614,7 @@ func _hp_ratio_for(n: Node2D) -> float:
 			return ch / mh
 	return 1.0
 
+
 func _node_in_any_group(n: Node2D, groups: PackedStringArray) -> bool:
 	if n == null or not is_instance_valid(n):
 		return false
@@ -637,6 +625,7 @@ func _node_in_any_group(n: Node2D, groups: PackedStringArray) -> bool:
 		i += 1
 	return false
 
+
 func _is_dead() -> bool:
 	var root: Node2D = _actor_root
 	if root == null or not is_instance_valid(root):
@@ -644,7 +633,8 @@ func _is_dead() -> bool:
 	# Reuse the same logic we use for targets – StatusConditions first
 	return _target_is_dead(root)
 
-# ---------- NEW: Damage-addressable checks (skip ghosts/stat-less) ---------- #
+
+# ---------- NEW: Damage-addressable lookup (currently unused but kept for future support logic) ---------- #
 
 func _find_stats_component(root: Node) -> Node:
 	if root == null:
@@ -659,12 +649,3 @@ func _find_stats_component(root: Node) -> Node:
 	if root.has_method("apply_damage_packet"):
 		return root
 	return null
-
-func _is_damage_addressable(n: Node2D) -> bool:
-	var r: Node = n
-	if r == null or not is_instance_valid(r):
-		return false
-	var st: Node = _find_stats_component(r)
-	if st == null:
-		return false
-	return true

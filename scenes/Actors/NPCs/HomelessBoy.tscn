@@ -1,0 +1,142 @@
+[gd_scene load_steps=18 format=3 uid="uid://bhoukyrnvemjw"]
+
+[ext_resource type="Script" uid="uid://c4x3tqlpfs380" path="res://scenes/Actors/NPCs/NonCombatNPC.gd" id="1_7hlra"]
+[ext_resource type="Texture2D" uid="uid://bx0q4sk3c6q3u" path="res://assets/sprites/NPCs/HomelessBoy_slums.png" id="2_cynkm"]
+[ext_resource type="Script" uid="uid://ce8vldxe20q1k" path="res://scenes/Actors/NPCs/NPCWander2D.gd" id="3_4afjh"]
+[ext_resource type="Script" uid="uid://dseyxpw7thnq6" path="res://Actors/AnimationBridge.gd" id="4_44qi5"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_cynkm"]
+atlas = ExtResource("2_cynkm")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4afjh"]
+atlas = ExtResource("2_cynkm")
+region = Rect2(64, 128, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_44qi5"]
+atlas = ExtResource("2_cynkm")
+region = Rect2(64, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_w3fug"]
+atlas = ExtResource("2_cynkm")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_blieq"]
+atlas = ExtResource("2_cynkm")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_d28x4"]
+atlas = ExtResource("2_cynkm")
+region = Rect2(128, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_awxwq"]
+atlas = ExtResource("2_cynkm")
+region = Rect2(0, 128, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t44mp"]
+atlas = ExtResource("2_cynkm")
+region = Rect2(64, 128, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_c3jes"]
+atlas = ExtResource("2_cynkm")
+region = Rect2(128, 128, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_23esf"]
+atlas = ExtResource("2_cynkm")
+region = Rect2(0, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_15fpl"]
+atlas = ExtResource("2_cynkm")
+region = Rect2(64, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5cqfb"]
+atlas = ExtResource("2_cynkm")
+region = Rect2(128, 64, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_shay0"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_cynkm")
+}],
+"loop": true,
+"name": &"idle_down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4afjh")
+}],
+"loop": true,
+"name": &"idle_side",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_44qi5")
+}],
+"loop": true,
+"name": &"idle_up",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_w3fug")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_blieq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_d28x4")
+}],
+"loop": true,
+"name": &"walk_down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_awxwq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t44mp")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_c3jes")
+}],
+"loop": true,
+"name": &"walk_side",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_23esf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_15fpl")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5cqfb")
+}],
+"loop": true,
+"name": &"walk_up",
+"speed": 5.0
+}]
+
+[node name="HomelessBoy" type="Node2D"]
+script = ExtResource("1_7hlra")
+npc_name = "Homeless Child"
+sprite_path = NodePath("AnimatedSprite2D")
+talk_lines = PackedStringArray("It\'s not so bad... but there\'s not much to do.", "I miss my cat friends! I don\'t know where they\'ve gotten off to.")
+metadata/_custom_type_script = "uid://c4x3tqlpfs380"
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -8)
+sprite_frames = SubResource("SpriteFrames_shay0")
+animation = &"walk_side"
+offset = Vector2(0, -8)
+
+[node name="Wander" type="Node" parent="."]
+script = ExtResource("3_4afjh")
+
+[node name="AnimationBridge" type="Node" parent="."]
+script = ExtResource("4_44qi5")

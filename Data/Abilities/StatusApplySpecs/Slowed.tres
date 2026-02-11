@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="StatusApplySpec" load_steps=2 format=3 uid="uid://bg8dh0uk2oab6"]
+
+[ext_resource type="Script" uid="uid://u63t4oseank1" path="res://scenes/Actors/status/StatusApplySpec.gd" id="1_0uydu"]
+
+[resource]
+script = ExtResource("1_0uydu")
+status_id = &"slowed"
+chance = 0.5
+duration_sec = 30.0
+magnitude = 0.4
+metadata/_custom_type_script = "uid://u63t4oseank1"

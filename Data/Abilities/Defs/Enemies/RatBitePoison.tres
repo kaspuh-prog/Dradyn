@@ -5,8 +5,8 @@
 [resource]
 script = ExtResource("1_rrndg")
 status_id = &"poisoned"
-chance = 0.8
-duration_sec = 30.0
-color = Color(0.54168147, 0.08608142, 0.5777381, 0.96862745)
-magnitude = 1.0
+chance = 0.6
+duration_sec = 20.0
+color = Color(0.6784314, 0.14901961, 0.7176471, 1)
+magnitude = 5.0
 metadata/_custom_type_script = "uid://u63t4oseank1"

@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="StatModifier" load_steps=2 format=3 uid="uid://b8cxll45cct4a"]
+
+[ext_resource type="Script" uid="uid://byobol8rhb4cs" path="res://scripts/stats/StatModifier.gd" id="1_aj4sq"]
+
+[resource]
+script = ExtResource("1_aj4sq")
+stat_name = &"MPRegen"
+add_value = 1.0
+metadata/_custom_type_script = "uid://byobol8rhb4cs"

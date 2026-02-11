@@ -1,0 +1,211 @@
+[gd_scene load_steps=16 format=3 uid="uid://cp18jnf1porcq"]
+
+[ext_resource type="Script" uid="uid://ttryacylbnwg" path="res://scenes/ui/LockpickMinigame.gd" id="1_fc5ad"]
+[ext_resource type="Texture2D" uid="uid://b6r0xmrt1867w" path="res://ui/styles/MenuBG.png" id="1_r355n"]
+[ext_resource type="Texture2D" uid="uid://by0t8egujtwkc" path="res://ui/styles/lockbody.png" id="2_bjwdm"]
+[ext_resource type="Texture2D" uid="uid://1kbps6mmdb1w" path="res://ui/styles/lockpick.png" id="3_fc5ad"]
+[ext_resource type="FontFile" uid="uid://cpfjwf504s6no" path="res://assets/fonts/KellsFLF.ttf" id="3_occjl"]
+[ext_resource type="PackedScene" uid="uid://cig012jfgqfcj" path="res://scenes/ui/LockpickLane.tscn" id="4_bjwdm"]
+[ext_resource type="FontFile" uid="uid://b6fk4o6k6dmrn" path="res://assets/fonts/Raleway-SemiBold.ttf" id="4_vi4qp"]
+[ext_resource type="AudioStream" uid="uid://dlb7f1he1qmg8" path="res://assets/audio/sfx/lockclick.mp3" id="6_p7cfw"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fc5ad"]
+atlas = ExtResource("2_bjwdm")
+region = Rect2(0, 0, 144, 192)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p7cfw"]
+atlas = ExtResource("2_bjwdm")
+region = Rect2(432, 0, 144, 192)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_occjl"]
+atlas = ExtResource("2_bjwdm")
+region = Rect2(0, 0, 144, 192)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vi4qp"]
+atlas = ExtResource("2_bjwdm")
+region = Rect2(144, 0, 144, 192)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_so1f1"]
+atlas = ExtResource("2_bjwdm")
+region = Rect2(288, 0, 144, 192)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8q7p0"]
+atlas = ExtResource("2_bjwdm")
+region = Rect2(432, 0, 144, 192)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_u7pn0"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fc5ad")
+}],
+"loop": false,
+"name": &"Locked",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_p7cfw")
+}],
+"loop": false,
+"name": &"Unlocked",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_occjl")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vi4qp")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_so1f1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8q7p0")
+}],
+"loop": false,
+"name": &"Unlocking",
+"speed": 6.0
+}]
+
+[node name="LockpickMinigameUi" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_fc5ad")
+
+[node name="Dimmer" type="ColorRect" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+color = Color(0, 0, 0, 0.40784314)
+
+[node name="Panel" type="Control" parent="."]
+anchors_preset = 0
+offset_right = 272.0
+offset_bottom = 224.0
+
+[node name="WindowBG" type="NinePatchRect" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_r355n")
+patch_margin_left = 48
+patch_margin_top = 48
+patch_margin_right = 48
+patch_margin_bottom = 48
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+
+[node name="Pickthelock" type="Label" parent="Panel/WindowBG"]
+layout_mode = 0
+offset_left = 17.0
+offset_top = 17.0
+offset_right = 139.0
+offset_bottom = 52.0
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_constants/outline_size = 0
+theme_override_fonts/font = ExtResource("3_occjl")
+theme_override_font_sizes/font_size = 18
+text = "Pick the lock!"
+
+[node name="Label" type="Label" parent="Panel/WindowBG"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 41.0
+offset_right = 199.0
+offset_bottom = 70.0
+theme_override_colors/font_color = Color(0.2509804, 0.13333334, 0.10980392, 1)
+theme_override_fonts/font = ExtResource("4_vi4qp")
+theme_override_font_sizes/font_size = 8
+text = "press enter to slide the pick into each
+tumbler."
+
+[node name="LockViewport" type="Control" parent="Panel"]
+anchors_preset = 0
+offset_left = 10.0
+offset_top = 13.0
+offset_right = 282.0
+offset_bottom = 237.0
+
+[node name="LockBody" type="AnimatedSprite2D" parent="Panel/LockViewport"]
+position = Vector2(182, 112)
+sprite_frames = SubResource("SpriteFrames_u7pn0")
+animation = &"Unlocking"
+
+[node name="HoleAnchor" type="Control" parent="Panel/LockViewport"]
+anchors_preset = 0
+offset_left = 112.0
+offset_top = 152.0
+offset_right = 113.0
+offset_bottom = 153.0
+
+[node name="Pick" type="TextureRect" parent="Panel/LockViewport"]
+z_index = 3
+layout_mode = 0
+offset_left = 6.0
+offset_top = 148.0
+offset_right = 108.0
+offset_bottom = 164.0
+texture = ExtResource("3_fc5ad")
+stretch_mode = 2
+
+[node name="Picktip" type="Control" parent="Panel/LockViewport/Pick"]
+anchors_preset = 0
+offset_left = 100.0
+offset_top = 4.0
+offset_right = 101.0
+offset_bottom = 5.0
+
+[node name="LanesRoot" type="Control" parent="Panel/LockViewport"]
+anchors_preset = 0
+offset_left = 130.0
+offset_top = 120.0
+offset_right = 202.0
+offset_bottom = 184.0
+
+[node name="Lane0" parent="Panel/LockViewport/LanesRoot" instance=ExtResource("4_bjwdm")]
+layout_mode = 0
+offset_right = 12.0
+offset_bottom = 64.0
+
+[node name="Lane1" parent="Panel/LockViewport/LanesRoot" instance=ExtResource("4_bjwdm")]
+layout_mode = 0
+offset_left = 13.0
+offset_right = 25.0
+offset_bottom = 64.0
+
+[node name="Lane2" parent="Panel/LockViewport/LanesRoot" instance=ExtResource("4_bjwdm")]
+layout_mode = 0
+offset_left = 26.0
+offset_right = 38.0
+offset_bottom = 64.0
+
+[node name="Lane3" parent="Panel/LockViewport/LanesRoot" instance=ExtResource("4_bjwdm")]
+layout_mode = 0
+offset_left = 39.0
+offset_right = 51.0
+offset_bottom = 64.0
+
+[node name="Lane4" parent="Panel/LockViewport/LanesRoot" instance=ExtResource("4_bjwdm")]
+layout_mode = 0
+offset_left = 52.0
+offset_right = 64.0
+offset_bottom = 64.0
+
+[node name="Lane5" parent="Panel/LockViewport/LanesRoot" instance=ExtResource("4_bjwdm")]
+layout_mode = 0
+offset_left = 65.0
+offset_right = 77.0
+offset_bottom = 64.0
+
+[node name="UnlockClick" type="AudioStreamPlayer" parent="Panel/LockViewport"]
+stream = ExtResource("6_p7cfw")
+volume_db = 2.213

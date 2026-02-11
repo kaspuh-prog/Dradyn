@@ -1,0 +1,33 @@
+[gd_scene load_steps=5 format=3 uid="uid://b0p0ycagcvfyf"]
+
+[ext_resource type="Script" uid="uid://c4x3tqlpfs380" path="res://scenes/Actors/NPCs/NonCombatNPC.gd" id="1_vl2v7"]
+[ext_resource type="Texture2D" uid="uid://eyo2qeq56dcr" path="res://assets/sprites/NPCs/ArcaLightGuard.png" id="2_t6464"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qwmpc"]
+atlas = ExtResource("2_t6464")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_db860"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qwmpc")
+}],
+"loop": true,
+"name": &"idle_down",
+"speed": 5.0
+}]
+
+[node name="ArcaLightGuard" type="Node2D"]
+script = ExtResource("1_vl2v7")
+npc_name = "PyroKnight"
+merchant_id = &""
+talk_lines = PackedStringArray("The Factory is closed.", "Seriously, Scram.")
+metadata/_custom_type_script = "uid://c4x3tqlpfs380"
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+light_mask = 2
+position = Vector2(0, -8)
+sprite_frames = SubResource("SpriteFrames_db860")
+animation = &"idle_down"
+offset = Vector2(0, -8)

@@ -1,0 +1,64 @@
+[gd_scene load_steps=10 format=3 uid="uid://dvp5f4xewk6au"]
+
+[ext_resource type="Script" uid="uid://c4x3tqlpfs380" path="res://scenes/Actors/NPCs/NonCombatNPC.gd" id="1_np6gs"]
+[ext_resource type="Texture2D" uid="uid://bcv3w2f0w7xoy" path="res://assets/sprites/NPCs/MerchantWoman1.png" id="2_u5j0b"]
+[ext_resource type="Script" uid="uid://c13jg4aew4lp1" path="res://scenes/Actors/NPCs/QuestGiverConfig.gd" id="3_ijyaw"]
+[ext_resource type="Script" uid="uid://dqo3si8cg6o3n" path="res://Data/Quests/QuestDef.gd" id="4_ijyaw"]
+[ext_resource type="Resource" uid="uid://cl46xauh71ijs" path="res://Data/Quests/CulltheRats.tres" id="5_drvh1"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_33obq"]
+atlas = ExtResource("2_u5j0b")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yyvio"]
+atlas = ExtResource("2_u5j0b")
+region = Rect2(64, 384, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6s31v"]
+atlas = ExtResource("2_u5j0b")
+region = Rect2(0, 64, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_mm51j"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_33obq")
+}],
+"loop": true,
+"name": &"idle_down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yyvio")
+}],
+"loop": true,
+"name": &"idle_side",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6s31v")
+}],
+"loop": true,
+"name": &"idle_up",
+"speed": 5.0
+}]
+
+[node name="HouseMother" type="Node2D"]
+script = ExtResource("1_np6gs")
+npc_name = "House Mother"
+inn_is_free = true
+npc_role = "inn"
+sprite_path = NodePath("AnimatedSprite2D")
+highlight_modulate = Color(0.17738183, 1.2618872, 0.70521474, 1)
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -8)
+sprite_frames = SubResource("SpriteFrames_mm51j")
+animation = &"idle_down"
+offset = Vector2(0, -8)
+
+[node name="QuestGiverConfig" type="Node" parent="."]
+script = ExtResource("3_ijyaw")
+quests = Array[ExtResource("4_ijyaw")]([ExtResource("5_drvh1")])

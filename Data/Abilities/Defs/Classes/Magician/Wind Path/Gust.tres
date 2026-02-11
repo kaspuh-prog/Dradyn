@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=7 format=3 uid="uid://403jvyr00lbb"]
+
+[ext_resource type="Script" uid="uid://u63t4oseank1" path="res://scenes/Actors/status/StatusApplySpec.gd" id="1_y8w2b"]
+[ext_resource type="Script" uid="uid://byobol8rhb4cs" path="res://scripts/stats/StatModifier.gd" id="2_ec7xb"]
+[ext_resource type="Texture2D" uid="uid://bkcg2b78tpqiy" path="res://assets/sprites/abilityicons/Gust.png" id="3_gsc15"]
+[ext_resource type="Script" uid="uid://dsj3lq6kwixdp" path="res://Data/Abilities/AbilityDef.gd" id="4_dy16h"]
+[ext_resource type="Script" uid="uid://c87lf672qvjv1" path="res://Data/Abilities/AbilitySfxCue.gd" id="5_gsc15"]
+[ext_resource type="Resource" uid="uid://b63cyqrb51thf" path="res://Data/Abilities/AbilitySFXCues/Gust.tres" id="6_dy16h"]
+
+[resource]
+script = ExtResource("4_dy16h")
+ability_id = "Gust"
+display_name = "Gust"
+icon = ExtResource("3_gsc15")
+description = "Not just simple cantrips, no... The Wind mages controlled the very gales. It starts bending a gust to one's whims."
+section_index = 3
+ability_type = "DAMAGE_SPELL"
+target_rule = "ENEMY_SINGLE"
+mp_cost = 14.0
+gcd_sec = 1.0
+cooldown_sec = 2.0
+power = 21.0
+scale_stat = "INT"
+cast_anim = "cast1"
+vfx_hint = "Gust"
+sfx_cues = Array[ExtResource("5_gsc15")]([ExtResource("6_dy16h")])
+knockback_speed_px_s = 120.0
+knockback_duration_s = 0.12
+melee_hit_frames = null
+passive_gate_equipment_classes = null
+passive_gate_item_ids = null
+passive_proc_section_indices = null
+passive_proc_ability_types = null
+passive_proc_ability_ids = null
+cure_status_ids = PackedStringArray()
+cure_modifier_sources = PackedStringArray()
+cure_stacking_keys = PackedStringArray()

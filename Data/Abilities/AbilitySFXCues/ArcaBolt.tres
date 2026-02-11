@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="AbilitySfxCue" load_steps=2 format=3 uid="uid://db7et2jhlrhf4"]
+
+[ext_resource type="Script" uid="uid://c87lf672qvjv1" path="res://Data/Abilities/AbilitySfxCue.gd" id="1_2b0ow"]
+
+[resource]
+script = ExtResource("1_2b0ow")
+event = &"ArcaBolt"
+volume_db = -10.0
+metadata/_custom_type_script = "uid://c87lf672qvjv1"

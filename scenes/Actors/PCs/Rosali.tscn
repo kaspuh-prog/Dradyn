@@ -5,9 +5,9 @@
 [ext_resource type="Texture2D" uid="uid://bihd68ux2lfsw" path="res://assets/sprites/characters/Rosali Movement Sprite Sheet layout.png" id="2_xsg83"]
 [ext_resource type="Texture2D" uid="uid://3ovnaxqnkm7w" path="res://assets/sprites/characters/Rosaliwalkdead.png" id="3_cinfm"]
 [ext_resource type="Texture2D" uid="uid://di07ah0c6am5u" path="res://assets/sprites/characters/Rosalicast2.png" id="3_p48xc"]
-[ext_resource type="AudioStream" uid="uid://dtgs8hm2cwwxh" path="res://assets/audio/sfx/grass/grassy-footstep3.wav" id="4_kydu7"]
+[ext_resource type="AudioStream" uid="uid://dtgs8hm2cwwxh" path="res://assets/audio/sfx/grass/grass_footstep3.wav" id="4_kydu7"]
 [ext_resource type="Script" uid="uid://b77n5fh85lvtw" path="res://scenes/Actors/status/AnimatedSpriteStatusShim.gd" id="4_yph3j"]
-[ext_resource type="AudioStream" uid="uid://dnxdxonett0a1" path="res://assets/audio/sfx/grass/grassy-footstep4.wav" id="5_610j4"]
+[ext_resource type="AudioStream" uid="uid://dnxdxonett0a1" path="res://assets/audio/sfx/grass/grass_footstep4.wav" id="5_610j4"]
 [ext_resource type="Texture2D" uid="uid://co53lwfei1bly" path="res://assets/sprites/characters/Rosaliprojectile1.png" id="5_fagub"]
 [ext_resource type="Script" uid="uid://scndil1j0hdu" path="res://scripts/stats/StatsComponent.gd" id="6_4prkl"]
 [ext_resource type="Script" uid="uid://bqtthbimi2o3t" path="res://scripts/resources/CompanionFollow.gd" id="7_utrl0"]
@@ -1153,7 +1153,7 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="1"]
-size = Vector2(13.5, 17)
+size = Vector2(13.5, 12.5)
 
 [sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_6eyey"]
 streams_count = 2
@@ -1164,9 +1164,8 @@ stream_1/stream = ExtResource("5_610j4")
 script = ExtResource("1_88p8o")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-light_mask = 2
 sprite_frames = SubResource("SpriteFrames_cw2d6")
-animation = &"cast2_down"
+animation = &"walk_up"
 script = ExtResource("4_yph3j")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
@@ -1186,6 +1185,8 @@ metadata/_custom_type_script = "uid://scndil1j0hdu"
 [node name="CompanionFollow" type="Node2D" parent="."]
 position = Vector2(0, 4)
 script = ExtResource("7_utrl0")
+engage_enabled = false
+healer_mode = true
 status_path = NodePath("../StatusConditions")
 
 [node name="LevelComponent" type="Node" parent="."]
@@ -1195,6 +1196,7 @@ class_def = ExtResource("9_xsg83")
 
 [node name="AnimationBridge" type="Node" parent="."]
 script = ExtResource("11_xsg83")
+footstep_frames = Array[int]([0, 3])
 
 [node name="CompanionAbilityAI" type="Node" parent="."]
 script = ExtResource("12_cinfm")
@@ -1207,6 +1209,7 @@ stats_path = NodePath("../StatsComponent")
 script = ExtResource("15_yph3j")
 status_path = NodePath("../StatusConditions")
 animator_path = NodePath("../AnimatedSprite2D")
+debug_prints = false
 
 [node name="KnownAbilitiesComponent" type="Node" parent="."]
 script = ExtResource("17_vvrc1")

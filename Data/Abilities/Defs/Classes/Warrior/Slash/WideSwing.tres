@@ -1,26 +1,35 @@
-[gd_resource type="Resource" script_class="AbilityDef" load_steps=5 format=3 uid="uid://pmb3ts8acfc4"]
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=6 format=3 uid="uid://pmb3ts8acfc4"]
 
 [ext_resource type="Script" uid="uid://u63t4oseank1" path="res://scenes/Actors/status/StatusApplySpec.gd" id="1_hbax8"]
 [ext_resource type="Script" uid="uid://byobol8rhb4cs" path="res://scripts/stats/StatModifier.gd" id="2_u300r"]
 [ext_resource type="Texture2D" uid="uid://cx31lmgghsjd8" path="res://assets/sprites/abilityicons/WideSwing.png" id="3_u300r"]
 [ext_resource type="Script" uid="uid://dsj3lq6kwixdp" path="res://Data/Abilities/AbilityDef.gd" id="3_v0t6k"]
+[ext_resource type="Script" uid="uid://c87lf672qvjv1" path="res://Data/Abilities/AbilitySfxCue.gd" id="5_v0t6k"]
 
 [resource]
 script = ExtResource("3_v0t6k")
 ability_id = "WideSwing"
 display_name = "Wide Swing"
 icon = ExtResource("3_u300r")
-description = "A mighty 180 degree swing striking all targets in it's Arc. "
+description = "A mighty 180 degree swing striking all targets in it's Arc."
 ability_type = "MELEE"
 requires_target = false
-cooldown_sec = 1.5
+target_rule = "ENEMY_SINGLE"
+cooldown_sec = 2.5
 power = 2.0
 scale_stat = "STR"
 cast_anim = "attack2"
+sfx_event = "swordswing.mp3"
 melee_range_px = 40.0
 melee_arc_deg = 180.0
 melee_forward_offset_px = 5.0
+melee_hit_frames = null
 melee_swing_thickness_px = 30.0
+passive_gate_equipment_classes = null
+passive_gate_item_ids = null
+passive_proc_section_indices = null
+passive_proc_ability_types = null
+passive_proc_ability_ids = null
 cure_status_ids = null
 cure_modifier_sources = null
 cure_stacking_keys = null

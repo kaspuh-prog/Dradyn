@@ -20,6 +20,9 @@ var _current_stock: int = 0
 var _unit_price: int = 0
 var _quantity: int = 1
 
+var _confirm_default_text: String = ""
+var _cancel_default_text: String = ""
+
 # -------------------------
 # Node refs (wired to your layout)
 # -------------------------
@@ -27,6 +30,7 @@ var _quantity: int = 1
 @onready var _tab_buy: BaseButton = $BG/TabsRow/Tab_Buy
 @onready var _tab_sell: BaseButton = $BG/TabsRow/Tab_Sell
 @onready var _tab_extra: BaseButton = $BG/TabsRow/Tab_Extra
+@onready var _extra_label: Label = $BG/TabsRow/Tab_Extra/Extra_Label
 
 @onready var _grid: MerchantGridView = $BG/MerchantGrid
 
@@ -40,6 +44,8 @@ var _quantity: int = 1
 @onready var _qty_label: Label = $BG/BottomControls/QtyField/QtyLabel
 @onready var _confirm_button: BaseButton = $BG/BottomControls/ConfirmButton
 @onready var _cancel_button: BaseButton = $BG/BottomControls/CancelButton
+@onready var _confirm_label: Label = $BG/BottomControls/ConfirmButton/ConfirmLabel
+@onready var _cancel_label: Label = $BG/BottomControls/CancelButton/ConfirmLabel
 
 @onready var _gold_label: Label = $BG/CurrencyBar/GoldLabel
 
@@ -48,7 +54,10 @@ func _ready() -> void:
 	_wire_tabs()
 	_wire_quantity_buttons()
 	_wire_confirm_cancel()
+	_configure_prompt_label()
+	_cache_default_button_texts()
 	_clear_ui()
+	_update_button_labels()
 
 
 # -------------------------
@@ -67,6 +76,7 @@ func get_current_item() -> ItemDef:
 func set_mode(mode: int) -> void:
 	_mode = mode
 	_update_tab_states()
+	_update_button_labels()
 	_update_prompt_text()
 	mode_changed.emit(_mode)
 
@@ -108,6 +118,18 @@ func set_gold_amount(amount: int) -> void:
 	if _gold_label != null:
 		_gold_label.text = str(amount) + "g"
 
+## SPECIAL / Alchemy helpers
+
+func set_special_prompt(text: String) -> void:
+	# Used by MerchantController in SPECIAL mode for the alchemy requirements text.
+	if _purchase_prompt != null:
+		_purchase_prompt.text = text
+
+func set_special_tab_label(text: String) -> void:
+	# Allows the controller to rename the 3rd tab (e.g. "Extra" -> "Alchemy").
+	if _extra_label != null:
+		_extra_label.text = text
+
 
 # -------------------------
 # Internal wiring
@@ -132,6 +154,31 @@ func _wire_confirm_cancel() -> void:
 		_confirm_button.pressed.connect(_on_confirm_pressed)
 	if _cancel_button != null:
 		_cancel_button.pressed.connect(_on_cancel_pressed)
+
+func _configure_prompt_label() -> void:
+	# Keep requirements/prompt text inside the DescBG and wrap nicely.
+	if _purchase_prompt != null:
+		_purchase_prompt.autowrap_mode = TextServer.AUTOWRAP_WORD
+		_purchase_prompt.clip_text = true
+
+func _cache_default_button_texts() -> void:
+	if _confirm_label != null:
+		_confirm_default_text = _confirm_label.text
+	if _cancel_label != null:
+		_cancel_default_text = _cancel_label.text
+
+func _update_button_labels() -> void:
+	if _confirm_label != null:
+		if _mode == Mode.SPECIAL:
+			_confirm_label.text = "Unlock"
+		else:
+			_confirm_label.text = _confirm_default_text
+
+	if _cancel_label != null:
+		if _mode == Mode.SPECIAL:
+			_cancel_label.text = "Exit"
+		else:
+			_cancel_label.text = _cancel_default_text
 
 
 # -------------------------
@@ -194,6 +241,11 @@ func _update_prompt_text() -> void:
 
 	if _current_item == null:
 		_purchase_prompt.text = ""
+		return
+
+	if _mode == Mode.SPECIAL:
+		# In SPECIAL mode (alchemy), the controller will push a custom multi-line
+		# requirements string via set_special_prompt(), so we do not overwrite it here.
 		return
 
 	var total_price: int = _unit_price * _quantity

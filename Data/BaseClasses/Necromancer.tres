@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ClassDefinition" load_steps=3 format=3 uid="uid://fvrt0od1kql3"]
+
+[ext_resource type="Script" uid="uid://bw2bhebcfgp1u" path="res://Data/KeyFloatPair.gd" id="1_l05xn"]
+[ext_resource type="Script" uid="uid://b7ipjii2rumgu" path="res://scripts/resources/ClassDefinition.gd" id="2_fijc1"]
+
+[resource]
+script = ExtResource("2_fijc1")
+class_title = "Necromancer"
+description = "There is magic in blood, magic in bone, magic in sickness, and magic in the very soul. The necromancer knows this, and through their arts shape both life and death. "
+gr_STA = 0.8
+gr_INT = 1.0
+allowed_point_targets = PackedStringArray()
+allowed_equipment_classes = null
+section0_name = "Book of the Dead"
+section1_name = "Book of Souls"
+section2_name = "Book of Blood"
+section3_name = "Rites & Rituals"
+section0_dir = "res://Data/Abilities/Defs/Classes/Necromancer/Book of the Dead/"
+section1_dir = "res://Data/Abilities/Defs/Classes/Necromancer/Book of Souls/"
+section2_dir = "res://Data/Abilities/Defs/Classes/Necromancer/Book of Blood/"
+section3_dir = "res://Data/Abilities/Defs/Classes/Necromancer/Rites & Rituals/"
+metadata/_custom_type_script = "uid://b7ipjii2rumgu"

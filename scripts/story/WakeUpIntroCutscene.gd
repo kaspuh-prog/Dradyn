@@ -31,9 +31,17 @@ class_name WakeUpIntroCutscene
 @export var default_player_name: String = "Child"
 @export var player_is_melee: bool = true
 
+@export_group("SFX")
+@export var door_knock_volume_db: float = -12.0
+@export var door_knock_bus_name: StringName = &"Master"
+
+# Set this to: res://assets/audio/sfx/DoorKnock.mp3
+@export_file("*.mp3", "*.ogg", "*.wav")
+var door_knock_stream_path: String = "res://assets/audio/sfx/DoorKnock.mp3"
+
 @export_group("Reward")
 @export_file("*.tres")
-var wooden_sword_item_path: String = "res://Data/items/weaponresources/WoodenSword.tres"
+var wooden_sword_item_path: String = "res://Data/items/equipment/WoodenSword.tres"
 
 var _dialogue: DialogueBox = null
 var _gate: StoryGate = null
@@ -47,12 +55,20 @@ var _sequence_running: bool = false
 var _waiting_for_choice: bool = false
 var _last_choice_id: StringName = StringName("")
 
+# Local, guaranteed SFX playback
+var _knock_player: AudioStreamPlayer = null
+var _knock_stream: AudioStream = null
+
 
 func _ready() -> void:
+	# If the tree is paused during cutscenes, we still want audio to play.
+	process_mode = Node.PROCESS_MODE_ALWAYS
+
 	visible = false
 
 	_instantiate_dialogue_box()
 	_cache_nodes()
+	_setup_knock_player()
 
 	if story_gate_path != NodePath(""):
 		_gate = get_node_or_null(story_gate_path) as StoryGate
@@ -88,7 +104,6 @@ func _instantiate_dialogue_box() -> void:
 		add_child(_dialogue)
 
 	_dialogue.visible = false
-
 	_dialogue.choice_selected.connect(_on_dialogue_choice_selected)
 	_dialogue.dialogue_closed.connect(_on_dialogue_closed)
 
@@ -101,6 +116,8 @@ func _cache_nodes() -> void:
 
 	if door_node_path != NodePath(""):
 		_door = get_node_or_null(door_node_path) as Node2D
+	else:
+		_door = null
 
 	if bed_sleep_sprite_path != NodePath(""):
 		var node: Node = get_node_or_null(bed_sleep_sprite_path)
@@ -122,6 +139,50 @@ func _find_animated_sprite(root: Node) -> AnimatedSprite2D:
 		i += 1
 
 	return null
+
+
+func _setup_knock_player() -> void:
+	if _knock_player == null:
+		_knock_player = AudioStreamPlayer.new()
+		_knock_player.name = "DoorKnockPlayer"
+		add_child(_knock_player)
+
+	# If the tree is paused, audio must still process.
+	_knock_player.process_mode = Node.PROCESS_MODE_ALWAYS
+
+	# TEMP: make it obviously audible for debugging.
+	_knock_player.volume_db = 0.0
+
+	# Force Master to eliminate bus routing issues.
+	_knock_player.bus = "Master"
+
+	# DEBUG: print Master bus state and force it audible.
+	var master_idx: int = AudioServer.get_bus_index("Master")
+	if master_idx >= 0:
+		var was_muted: bool = AudioServer.is_bus_mute(master_idx)
+		var was_vol: float = AudioServer.get_bus_volume_db(master_idx)
+		print("[WakeUpIntroCutscene] Master BEFORE: muted=", was_muted, " vol_db=", was_vol)
+
+		AudioServer.set_bus_mute(master_idx, false)
+
+		if AudioServer.get_bus_volume_db(master_idx) < -40.0:
+			AudioServer.set_bus_volume_db(master_idx, 0.0)
+
+		var now_muted: bool = AudioServer.is_bus_mute(master_idx)
+		var now_vol: float = AudioServer.get_bus_volume_db(master_idx)
+		print("[WakeUpIntroCutscene] Master AFTER:  muted=", now_muted, " vol_db=", now_vol)
+
+	_knock_stream = null
+	if door_knock_stream_path != "":
+		var res: Resource = ResourceLoader.load(door_knock_stream_path)
+		_knock_stream = res as AudioStream
+		if _knock_stream == null:
+			push_warning("[WakeUpIntroCutscene] Knock SFX path did not load as AudioStream: %s" % door_knock_stream_path)
+		else:
+			_knock_player.stream = _knock_stream
+			print("[WakeUpIntroCutscene] Knock stream loaded OK: ", door_knock_stream_path, " bus=", _knock_player.bus, " player_vol_db=", _knock_player.volume_db)
+	else:
+		push_warning("[WakeUpIntroCutscene] door_knock_stream_path is empty. Set it to your DoorKnock file to enable knock audio.")
 
 
 # -------------------------------------------------
@@ -173,10 +234,17 @@ func _maybe_start_cutscene() -> void:
 
 
 func _passes_story_gate() -> bool:
+	# Always respect the "already done" flag even if a StoryGate is assigned.
+	var story: StoryStateSystem = get_node_or_null("/root/StoryStateSys") as StoryStateSystem
+	if story != null:
+		if intro_done_flag_name != StringName("") and story.has_flag(intro_done_flag_name):
+			return false
+
+	# If we have a gate, require it too (but do NOT skip the flag check above).
 	if _gate != null:
 		return _gate.is_passing()
 
-	var story: StoryStateSystem = get_node_or_null("/root/StoryStateSys") as StoryStateSystem
+	# No gate: fall back to act/step checks.
 	if story == null:
 		return true
 
@@ -189,9 +257,6 @@ func _passes_story_gate() -> bool:
 	if default_required_step_id > 0 and step != default_required_step_id:
 		return false
 
-	if intro_done_flag_name != StringName("") and story.has_flag(intro_done_flag_name):
-		return false
-
 	return true
 
 
@@ -202,10 +267,17 @@ func _passes_story_gate() -> bool:
 func _run_sequence() -> void:
 	var player: Node2D = _get_player_node()
 
-	# 0) Start with player "in bed" via the sleep sprite.
+	# 0) Apply "enter" flags for the current story position (CSV-driven).
+	var story: StoryStateSystem = get_node_or_null("/root/StoryStateSys") as StoryStateSystem
+	if story != null:
+		story.enter_story_position(
+			story.get_current_act_id(),
+			story.get_current_step_id(),
+			story.get_current_part_id()
+		)
+
 	_enter_sleep_pose(player)
 
-	# 0.5) Snap to NIGHT, hold for a bit.
 	var day_node: DayNight = get_node_or_null("/root/DayandNight") as DayNight
 	if use_night_to_morning and day_node != null:
 		day_node.set_running(false)
@@ -216,7 +288,6 @@ func _run_sequence() -> void:
 		var sleep_timer: SceneTreeTimer = get_tree().create_timer(sleep_duration)
 		await sleep_timer.timeout
 
-	# 0.75) Snap to MORNING, hold for a bit.
 	if use_night_to_morning and day_node != null:
 		day_node.rest_until_dawn()
 	await get_tree().process_frame
@@ -228,31 +299,24 @@ func _run_sequence() -> void:
 	if use_night_to_morning and day_node != null:
 		day_node.set_running(true)
 
-	# 1) Stand the player up next to the bed.
 	_exit_sleep_pose(player)
 
-	# 2) House Mother knocks + shouts (off-screen).
 	await _play_knock_and_shout()
 
-	# 3) House Mother gives the rats quest.
 	var player_name: String = _get_player_name()
 	var hm_line: String = "%s, you're the oldest, so it falls to you to cull the rats in the cellar!" % player_name
 	await _show_line_and_wait("House Mother", hm_line)
 
-	# 3.5) Small pause before the orphan moves.
 	if orphan_enter_delay > 0.0:
 		var enter_timer: SceneTreeTimer = get_tree().create_timer(orphan_enter_delay)
 		await enter_timer.timeout
 
-	# 4) Orphan walks from behind the dressing screen toward the player.
 	if player != null:
 		await _move_orphan_toward_player(player)
 
-	# 5) Orphan gives the wooden sword.
 	await _show_line_and_wait("Orphan", "Here, Richard always used this before he aged out.")
 	_give_wooden_sword()
 
-	# 6) Player response / magic branch.
 	if player_is_melee:
 		await _show_line_and_wait(player_name, "Thanks, I will put it to good use.")
 	else:
@@ -264,13 +328,27 @@ func _run_sequence() -> void:
 		else:
 			await _show_line_and_wait(player_name, "Thank you.")
 
-	# 7) Story flags.
-	if _gate != null:
-		_gate.apply_after_effects()
+	if story != null:
+		story.complete_current_part()
+		_ensure_story_flags_for_rats_quest(story)
 	else:
-		_apply_default_story_after_effects()
+		if _gate != null:
+			_gate.apply_after_effects()
+		else:
+			_apply_default_story_after_effects()
 
 	_finish_sequence()
+
+
+func _ensure_story_flags_for_rats_quest(story: StoryStateSystem) -> void:
+	if story == null:
+		return
+
+	if intro_done_flag_name != StringName(""):
+		story.set_flag(intro_done_flag_name, true)
+
+	if rats_quest_flag_name != StringName(""):
+		story.set_flag(rats_quest_flag_name, true)
 
 
 func _finish_sequence() -> void:
@@ -301,10 +379,65 @@ func _exit_sleep_pose(player: Node2D) -> void:
 
 
 # -------------------------------------------------
-# Environment / movement
+# Knock + door shake
 # -------------------------------------------------
 
+func _play_knock_once() -> void:
+	_setup_knock_player()
+
+	if _knock_player == null:
+		push_warning("[WakeUpIntroCutscene] Knock player is null.")
+		return
+
+	if _knock_player.stream == null and _knock_stream != null:
+		_knock_player.stream = _knock_stream
+
+	if _knock_player.stream == null:
+		push_warning("[WakeUpIntroCutscene] Knock stream is null at play-time. Path='%s'" % door_knock_stream_path)
+		return
+
+	_knock_player.stream_paused = false
+	_knock_player.stop()
+	_knock_player.play()
+
+	print("[WakeUpIntroCutscene] Knock play() called. playing_now=", _knock_player.playing, " pos_now=", _knock_player.get_playback_position())
+	call_deferred("_debug_knock_mix_after_play")
+
+
+func _debug_knock_mix_after_play() -> void:
+	await get_tree().process_frame
+	await get_tree().create_timer(0.06).timeout
+
+	if _knock_player == null:
+		return
+
+	var bus_name: String = _knock_player.bus
+	var bus_idx: int = AudioServer.get_bus_index(bus_name)
+	var master_idx: int = AudioServer.get_bus_index("Master")
+
+	var playing_now: bool = _knock_player.playing
+	var pos_now: float = _knock_player.get_playback_position()
+
+	print("[WakeUpIntroCutscene] Knock after 60ms: playing=", playing_now, " pos=", pos_now, " bus=", bus_name)
+
+	if bus_idx >= 0:
+		var l: float = AudioServer.get_bus_peak_volume_left_db(bus_idx, 0)
+		var r: float = AudioServer.get_bus_peak_volume_right_db(bus_idx, 0)
+		print("[WakeUpIntroCutscene] Bus peaks (", bus_name, "): L=", l, " dB  R=", r, " dB")
+
+	if master_idx >= 0:
+		var ml: float = AudioServer.get_bus_peak_volume_left_db(master_idx, 0)
+		var mr: float = AudioServer.get_bus_peak_volume_right_db(master_idx, 0)
+		print("[WakeUpIntroCutscene] Master peaks: L=", ml, " dB  R=", mr, " dB")
+
+
 func _play_knock_and_shout() -> void:
+	print("[WakeUpIntroCutscene] _play_knock_and_shout: door_node_path=", door_node_path, " door_found=", _door != null)
+
+	# Play the knock sound ONCE (the file already contains 3 knocks).
+	_play_knock_once()
+
+	# If we have a door node, do the shake animation (visual only).
 	if _door != null:
 		var start_pos: Vector2 = _door.position
 		var knock_offset: float = 3.0
@@ -312,6 +445,7 @@ func _play_knock_and_shout() -> void:
 		var tween: Tween = create_tween()
 		tween.set_trans(Tween.TRANS_SINE)
 		tween.set_ease(Tween.EASE_IN_OUT)
+
 		tween.tween_property(_door, "position:x", start_pos.x + knock_offset, 0.08)
 		tween.tween_property(_door, "position:x", start_pos.x - knock_offset, 0.08)
 		tween.tween_property(_door, "position:x", start_pos.x, 0.06)
@@ -319,6 +453,11 @@ func _play_knock_and_shout() -> void:
 
 	await _show_line_and_wait("House Mother", "*BANG BANG BANG*")
 
+
+
+# -------------------------------------------------
+# Orphan movement
+# -------------------------------------------------
 
 func _move_orphan_toward_player(player: Node2D) -> void:
 	if _orphan == null:
@@ -365,10 +504,7 @@ func _play_orphan_walk_animation_toward(target: Node2D) -> void:
 
 	if abs_x >= abs_y:
 		_orphan_anim.play("walk_side")
-		if dir.x < 0.0:
-			_orphan_anim.flip_h = true
-		else:
-			_orphan_anim.flip_h = false
+		_orphan_anim.flip_h = dir.x < 0.0
 	else:
 		if dir.y > 0.0:
 			_orphan_anim.play("walk_down")
@@ -392,10 +528,7 @@ func _set_orphan_idle_facing_player(target: Node2D) -> void:
 
 	if abs_x >= abs_y:
 		_orphan_anim.play("idle_side")
-		if dir.x < 0.0:
-			_orphan_anim.flip_h = true
-		else:
-			_orphan_anim.flip_h = false
+		_orphan_anim.flip_h = dir.x < 0.0
 	else:
 		if dir.y > 0.0:
 			_orphan_anim.play("idle_down")
@@ -415,11 +548,8 @@ func _show_line_and_wait(speaker: String, text: String) -> void:
 	_waiting_for_choice = true
 	_last_choice_id = StringName("")
 
-	var choices: Array[String] = []
-	choices.append("▶")
-
-	var ids: Array[StringName] = []
-	ids.append(StringName("continue"))
+	var choices: Array[String] = ["▶"]
+	var ids: Array[StringName] = [StringName("continue")]
 
 	_dialogue.show_message(text, speaker, choices, ids)
 	await _dialogue.dialogue_closed
@@ -434,24 +564,23 @@ func _show_magic_choice(player_name: String) -> StringName:
 	_waiting_for_choice = true
 	_last_choice_id = StringName("")
 
-	var choices: Array[String] = []
-	choices.append("Thanks, I will use it.")
-	choices.append("Thanks, but I will stick to my magic.")
+	var choices: Array[String] = [
+		"Thanks, I will use it.",
+		"Thanks, but I will stick to my magic."
+	]
+	var ids: Array[StringName] = [
+		StringName("take_and_use"),
+		StringName("stick_to_magic")
+	]
 
-	var ids: Array[StringName] = []
-	ids.append(StringName("take_and_use"))
-	ids.append(StringName("stick_to_magic"))
-
-	var line_text: String = ""
-
-	_dialogue.show_message(line_text, player_name, choices, ids)
+	_dialogue.show_message("", player_name, choices, ids)
 	await _dialogue.dialogue_closed
 
 	_waiting_for_choice = false
 	return _last_choice_id
 
 
-func _on_dialogue_choice_selected(index: int, id: StringName) -> void:
+func _on_dialogue_choice_selected(_index: int, id: StringName) -> void:
 	_last_choice_id = id
 	if _dialogue != null:
 		_dialogue.close_dialogue()

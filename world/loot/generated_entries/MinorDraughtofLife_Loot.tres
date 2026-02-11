@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="LootEntry" load_steps=3 format=3 uid="uid://bfr6xdimqkqkt"]
+
+[ext_resource type="Resource" uid="uid://1b6nwvtpbjgr" path="res://Data/items/consumable/MinorDraughtofLife.tres" id="1_nmb8g"]
+[ext_resource type="Script" uid="uid://bj3tpnw12ybt7" path="res://world/loot/LootEntry.gd" id="2_f4866"]
+
+[resource]
+script = ExtResource("2_f4866")
+id = "MinorDraughtofLife_Loot"
+weight = 2.0
+percent_chance = 20.0
+item_def = ExtResource("1_nmb8g")

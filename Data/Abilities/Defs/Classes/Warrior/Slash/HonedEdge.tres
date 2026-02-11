@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=6 format=3 uid="uid://d1t222kfrbf85"]
+
+[ext_resource type="Script" uid="uid://u63t4oseank1" path="res://scenes/Actors/status/StatusApplySpec.gd" id="1_obnnx"]
+[ext_resource type="Script" uid="uid://byobol8rhb4cs" path="res://scripts/stats/StatModifier.gd" id="2_cdjsp"]
+[ext_resource type="Resource" uid="uid://besbt3juhahf2" path="res://Data/StatModifiers/Attack5(Honed edge).tres" id="3_v6aaa"]
+[ext_resource type="Texture2D" uid="uid://c15nwfw3quh2h" path="res://assets/sprites/abilityicons/HonedEdge.png" id="4_diqb5"]
+[ext_resource type="Script" uid="uid://dsj3lq6kwixdp" path="res://Data/Abilities/AbilityDef.gd" id="5_l74fs"]
+
+[resource]
+script = ExtResource("5_l74fs")
+ability_id = "HonedEdge"
+display_name = "Honed Edge"
+icon = ExtResource("4_diqb5")
+description = "While wielding a sword or axe in your mainhand, gain +5 Attack."
+ability_type = "PASSIVE"
+requires_target = false
+buff_mods = Array[ExtResource("2_cdjsp")]([ExtResource("3_v6aaa")])
+passive_gate_mode = "EQUIPPED_CLASS_IN_SLOT"
+passive_gate_equipment_classes = PackedStringArray("sword", "axe")
+passive_gate_item_ids = PackedStringArray()
+passive_proc_section_indices = PackedInt32Array()
+passive_proc_ability_types = PackedStringArray()
+passive_proc_ability_ids = PackedStringArray()
+cure_status_ids = PackedStringArray()
+cure_modifier_sources = PackedStringArray()
+cure_stacking_keys = PackedStringArray()

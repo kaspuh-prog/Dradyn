@@ -1,0 +1,39 @@
+[gd_resource type="SpriteFrames" load_steps=6 format=3 uid="uid://d106hq1x4la8n"]
+
+[ext_resource type="Texture2D" uid="uid://b116j3ya52ewy" path="res://assets/VFX/SummonSkelly.png" id="1_o6vxc"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gwf2u"]
+atlas = ExtResource("1_o6vxc")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3wae7"]
+atlas = ExtResource("1_o6vxc")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hho07"]
+atlas = ExtResource("1_o6vxc")
+region = Rect2(0, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6aads"]
+atlas = ExtResource("1_o6vxc")
+region = Rect2(64, 64, 64, 64)
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gwf2u")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3wae7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hho07")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6aads")
+}],
+"loop": false,
+"name": &"default",
+"speed": 6.0
+}]

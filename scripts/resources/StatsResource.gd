@@ -20,9 +20,7 @@ class_name StatsResource
 	"STA": 10.0,
 	"INT": 10.0,
 	"WIS": 10.0,
-	"CHA": 10.0,
 	"LCK": 10.0,
-	"AGI": 10.0,
 
 	# ---- Resistances (–0.9..0.9) ----
 	"SlashRes": 0.0, "PierceRes": 0.0, "BluntRes": 0.0,
@@ -30,6 +28,7 @@ class_name StatsResource
 	"MagicRes": 0.0, "LightRes": 0.0, "DarknessRes": 0.0, "PoisonRes": 0.0,
 
 	# ---- Chances (fractions 0..1) ----
+	"Accuracy": 0.0,
 	"CritChance": 0.0,
 	"CritHealChance": 0.0,
 	"BlockChance": 0.0,
@@ -66,7 +65,7 @@ func _migrate_legacy_keys() -> void:
 func _migrate_percent_to_fraction() -> void:
 	if base_stats == null:
 		return
-	var chance_keys: Array = ["CritChance", "CritHealChance", "BlockChance", "ParryChance", "Evasion"]
+	var chance_keys: Array = ["Accuracy", "CritChance", "CritHealChance", "BlockChance", "ParryChance", "Evasion"]
 	for k in chance_keys:
 		if base_stats.has(k):
 			var v = base_stats[k]
@@ -88,8 +87,8 @@ func _ensure_required_defaults() -> void:
 		"SlashRes": 0.0, "PierceRes": 0.0, "BluntRes": 0.0,
 		"FireRes": 0.0, "IceRes": 0.0, "WindRes": 0.0, "EarthRes": 0.0,
 		"MagicRes": 0.0, "LightRes": 0.0, "DarknessRes": 0.0, "PoisonRes": 0.0,
+		"Accuracy": 0.0,
 		"CritChance": 0.0, "CritHealChance": 0.0, "BlockChance": 0.0, "ParryChance": 0.0, "Evasion": 0.0, "BaseAttackDelay": 0.50, "WeaponWeight": 1.0,
-
 	}
 	for k in required.keys():
 		if not base_stats.has(k) or base_stats[k] == null:

@@ -77,6 +77,14 @@ signal ability_purchase_requested(ability_id: String, cost_points: int)
 @export var desc_inline_prefix: String = " — "
 @export var desc_inline_max_chars: int = 64
 
+# ----------------------------
+# UI SFX (NEW)
+# ----------------------------
+@export_group("UI SFX")
+@export var ui_click_event: StringName = &"UI_click.mp3"
+@export var ui_click_volume_db: float = 0.0
+@export var audio_autoload_names: PackedStringArray = PackedStringArray(["AudioSys", "AudioSystem"])
+
 var _bg_tex: TextureRect
 var _panels: Array[ScrollContainer] = []
 var _panel_pads: Array[MarginContainer] = []
@@ -90,6 +98,10 @@ var _points_label_bottom: Label
 
 var _bg_origin: Vector2i
 
+# Audio autoload cache (NEW)
+var _audio_obj: Object = null
+var _audio_checked_once: bool = false
+
 
 func _ready() -> void:
 	if ui_theme != null:
@@ -102,6 +114,9 @@ func _ready() -> void:
 	if not _discover_base_nodes():
 		push_error("SkillTreeSheet: required nodes missing (SkillTreeBG and/or buttons).")
 		return
+
+	# Resolve audio (best-effort)
+	_resolve_audio_sys()
 
 	_ensure_scrollable_panels()
 	_ensure_points_hud()
@@ -424,11 +439,25 @@ func _make_stylebox(col: Color, radius: int) -> StyleBoxFlat:
 func _connect_buttons() -> void:
 	var i: int = 0
 	while i < _btns.size():
-		_btns[i].pressed.connect(_on_btn_pressed.bind(i))
+		var btn: BaseButton = _btns[i]
+		if btn != null:
+			# Prevent duplicate connections
+			var conns: Array = btn.pressed.get_connections()
+			var j: int = 0
+			while j < conns.size():
+				var info: Dictionary = conns[j]
+				if info.has("callable"):
+					var cb: Callable = info["callable"]
+					btn.pressed.disconnect(cb)
+				j += 1
+
+			btn.pressed.connect(_on_btn_pressed.bind(i))
 		i += 1
 
 
 func _on_btn_pressed(index: int) -> void:
+	# NEW: play UI_click when switching ability sections via the buttons
+	_play_ui_sound(ui_click_event, ui_click_volume_db)
 	_select_section(index)
 
 
@@ -885,3 +914,49 @@ func _draw() -> void:
 
 	# Blue: panel area == EXACTLY the background area
 	draw_rect(bg_rect, Color(0.2, 0.6, 1.0, 0.7), false, 1.0)
+
+
+# -------------------------------------------------------------------
+# AUDIO (UI SFX) (NEW)
+# -------------------------------------------------------------------
+func _resolve_audio_sys() -> void:
+	if _audio_checked_once and _audio_obj != null and is_instance_valid(_audio_obj):
+		return
+	if _audio_checked_once and _audio_obj == null:
+		return
+
+	_audio_checked_once = true
+	_audio_obj = null
+
+	var root: Node = get_tree().get_root()
+	var i: int = 0
+	while i < audio_autoload_names.size():
+		var nm: String = audio_autoload_names[i]
+		var path: String = "/root/" + nm
+		if root.has_node(path):
+			var obj: Object = root.get_node(path)
+			if obj != null:
+				_audio_obj = obj
+				return
+		i += 1
+
+
+func _play_ui_sound(event_name: StringName, volume_db: float) -> void:
+	if event_name == StringName(""):
+		return
+
+	if _audio_obj == null or not is_instance_valid(_audio_obj):
+		_audio_checked_once = false
+		_resolve_audio_sys()
+
+	if _audio_obj == null or not is_instance_valid(_audio_obj):
+		return
+
+	if _audio_obj.has_method("play_ui_sfx"):
+		_audio_obj.call("play_ui_sfx", event_name, volume_db)
+		return
+
+	# Fallback (older AudioSystem)
+	if _audio_obj.has_method("play_sfx_event"):
+		_audio_obj.call("play_sfx_event", event_name, Vector2.INF, volume_db)
+		return

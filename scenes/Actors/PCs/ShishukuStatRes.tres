@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="StatsResource" load_steps=2 format=3 uid="uid://u6gdnds7f0p1"]
+
+[ext_resource type="Script" uid="uid://bu1fg0bjwbliq" path="res://scripts/resources/StatsResource.gd" id="1_bw5b7"]
+
+[resource]
+script = ExtResource("1_bw5b7")
+base_stats = {
+"AGI": 10.0,
+"Attack": 9.0,
+"BaseAttackDelay": 0.5,
+"BlockChance": 0.0,
+"BluntRes": 0.0,
+"CHA": 10.0,
+"CritChance": 0.0,
+"CritHealChance": 0.0,
+"DEX": 13.0,
+"DarknessRes": 0.0,
+"Defense": 5.0,
+"END": 10.0,
+"EarthRes": 0.0,
+"Evasion": 0.1,
+"FireRes": 0.0,
+"HP": 75.0,
+"INT": 10.0,
+"IceRes": 0.0,
+"LCK": 11.0,
+"LightRes": 0.0,
+"MP": 30.0,
+"MagicRes": 0.0,
+"MoveSpeed": 90.0,
+"ParryChance": 0.15,
+"PierceRes": 0.0,
+"PoisonRes": 0.0,
+"STA": 10.0,
+"STR": 10.0,
+"SlashRes": 0.0,
+"WIS": 10.0,
+"WeaponWeight": 1.0,
+"WindRes": 0.0
+}
+metadata/_custom_type_script = "uid://bu1fg0bjwbliq"

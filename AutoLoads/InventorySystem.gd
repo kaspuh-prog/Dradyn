@@ -91,6 +91,36 @@ func give_currency(amount: int) -> int:
 	return add_currency(amount)
 
 # -----------------------------
+# Helper: find KnownAbilitiesComponent on an actor
+# -----------------------------
+func _find_known_abilities_component(actor: Node) -> KnownAbilitiesComponent:
+	if actor == null:
+		return null
+
+	# Direct child by common name first (cheap).
+	var kac: KnownAbilitiesComponent = actor.get_node_or_null("KnownAbilitiesComponent") as KnownAbilitiesComponent
+	if kac != null:
+		return kac
+
+	# Breadth-first search by type, so we do not depend on node names.
+	var queue: Array = []
+	queue.append(actor)
+
+	while not queue.is_empty():
+		var cur: Node = queue.pop_front()
+		if cur is KnownAbilitiesComponent:
+			return cur as KnownAbilitiesComponent
+		var children: Array = cur.get_children()
+		var i: int = 0
+		while i < children.size():
+			var c: Node = children[i]
+			if c != null:
+				queue.append(c)
+			i += 1
+
+	return null
+
+# -----------------------------
 # Per-actor inventory (NEW)
 # -----------------------------
 func ensure_inventory_model_for(actor: Node) -> InventoryModel:
@@ -137,6 +167,13 @@ func add_item_for(actor: Node, item: ItemDef, count: int) -> int:
 	var leftover: int = bag.add_item(item, count)
 	var added: int = before - leftover
 	if added > 0:
+		# If this item exposes a use_ability_id, grant it to the actor's KnownAbilitiesComponent
+		# so item-based abilities behave like skill-tree unlocked abilities.
+		if String(item.use_ability_id) != "":
+			var ability_id: String = String(item.use_ability_id)
+			var kac: KnownAbilitiesComponent = _find_known_abilities_component(actor)
+			if kac != null:
+				kac.add_ability(ability_id)
 		emit_signal("item_obtained", item, added, leftover)
 		emit_signal("inventory_changed")
 	return leftover
@@ -201,6 +238,14 @@ func transfer_stack_between_actors(from_actor: Node, from_index: int, to_actor: 
 	var moved: int = qty - leftover
 	if moved > 0:
 		from_bag.remove_amount(from_index, moved)
+
+		# If the receiving actor obtained at least one of an item with a use_ability_id,
+		# grant that ability to their KnownAbilitiesComponent.
+		if String(item.use_ability_id) != "":
+			var ability_id: String = String(item.use_ability_id)
+			var kac: KnownAbilitiesComponent = _find_known_abilities_component(to_actor)
+			if kac != null:
+				kac.add_ability(ability_id)
 
 	emit_signal("inventory_changed")
 	return leftover
@@ -709,6 +754,15 @@ func give_item(item: ItemDef, count: int) -> int:
 	var added: int = before_leftover - leftover
 	emit_signal("item_obtained", item, added, leftover)
 	if added > 0:
+		# NEW: if this item has a use_ability_id, grant it to the controlled actor's KnownAbilitiesComponent
+		# so vendor / party-bag awards also unlock the ability.
+		if String(item.use_ability_id) != "":
+			var actor: Node = _controlled_actor()
+			if actor != null:
+				var ability_id: String = String(item.use_ability_id)
+				var kac: KnownAbilitiesComponent = _find_known_abilities_component(actor)
+				if kac != null:
+					kac.add_ability(ability_id)
 		emit_signal("inventory_changed")
 	return leftover
 

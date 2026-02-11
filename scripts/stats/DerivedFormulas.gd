@@ -21,13 +21,17 @@ const MS_PER_DEX: float = 0.80
 const MS_PER_END: float = 0.20
 
 # ----- Regeneration (per second) -----
+# Regen (HP) is now intended to be a base stat driven by gear/buffs/abilities, not attributes.
+# We keep these legacy constants for reference, but hp_regen_per_sec() no longer uses STA/WIS.
 const HP_REGEN_BASE: float    = 0.00
 const HP_REGEN_PER_STA: float = 0.00
 const HP_REGEN_PER_WIS: float = 0.00
 
-const MP_REGEN_BASE: float    = 0.50
-const MP_REGEN_PER_WIS: float = 0.09
-const MP_REGEN_PER_INT: float = 0.045
+# MP regen tuned down (early game was too high).
+# mp_regen_per_sec() respects class MP source policy (int/wis/hybrid).
+const MP_REGEN_BASE: float    = 0.45
+const MP_REGEN_PER_WIS: float = 0.065
+const MP_REGEN_PER_INT: float = 0.075
 
 const END_REGEN_BASE: float    = 2.00
 const END_REGEN_PER_STA: float = 0.05
@@ -38,6 +42,15 @@ const HEAL_VARIANCE_PCT: float = 0.10     # ±10% variance on heals
 
 # ----- Avoid outrageous rates -----
 const REGEN_MAX: float = 50.0
+const MP_REGEN_MAX: float = 10.0
+
+# ----- Accuracy (0..1) -----
+# Accuracy is the offensive precision pressure that contests Evasion.
+# Keep a modest baseline so low-level characters don't whiff-lock.
+const ACC_BONUS_BASE: float = 0.06
+const ACC_PER_DEX: float = 0.0030
+const ACC_MIN: float = 0.05
+const ACC_MAX: float = 0.95
 
 # =========================
 # Derived helpers
@@ -118,6 +131,20 @@ static func defense_rating(stats: Object) -> float:
 
 # ----- Chances (0..1) -----
 
+static func accuracy(stats: Object) -> float:
+	# Accuracy is attacker-side. It is intended to contest evasion in AbilityExecutor.
+	# Base stat "Accuracy" allows gear/buffs to add/mul/override.
+	var base: float = stats.get_base_stat("Accuracy")
+	var dex: float = stats.get_final_stat("DEX")
+
+	var r: float = base + (ACC_BONUS_BASE + (ACC_PER_DEX * dex))
+
+	if r < ACC_MIN:
+		return ACC_MIN
+	if r > ACC_MAX:
+		return ACC_MAX
+	return r
+
 static func block_chance(stats: Object) -> float:
 	var base: float = stats.get_base_stat("BlockChance")
 	var strn: float = stats.get_final_stat("STR")
@@ -173,24 +200,65 @@ static func crit_heal_chance(stats: Object) -> float:
 	return r
 
 # ----- Regeneration -----
+# Regen (HP) is purely a stat now: "Regen" (HP per second).
+# IMPORTANT: allow negative Regen so abilities can apply a drawback like -1 Regen (HP drain over time).
 static func hp_regen_per_sec(stats: Object) -> float:
-	var sta: float = stats.get_final_stat("STA")
-	var wis: float = stats.get_final_stat("WIS")
-	var r: float = HP_REGEN_BASE + HP_REGEN_PER_STA * sta + HP_REGEN_PER_WIS * wis
-	if r < 0.0:
-		return 0.0
+	var r: float = 0.0
+	if stats != null and stats.has_method("get_final_stat"):
+		var any_v: Variant = stats.get_final_stat("Regen")
+		if typeof(any_v) == TYPE_FLOAT or typeof(any_v) == TYPE_INT:
+			r = float(any_v)
+
 	if r > REGEN_MAX:
 		return REGEN_MAX
+	if r < -REGEN_MAX:
+		return -REGEN_MAX
 	return r
 
+# MP regen respects MP source policy and supports buffing via StatModifier on stat_name "MPRegen"
+# (flat MP per second added to the derived rate).
 static func mp_regen_per_sec(stats: Object) -> float:
-	var wis: float   = stats.get_final_stat("WIS")
+	var wis: float = stats.get_final_stat("WIS")
 	var intel: float = stats.get_final_stat("INT")
-	var r: float = MP_REGEN_BASE + MP_REGEN_PER_WIS * wis + MP_REGEN_PER_INT * intel
+
+	var source: String = ""
+	var weights: Dictionary = {}
+
+	# Duck-typing via methods on StatsComponent (same pattern as mp_max)
+	if stats.has_method("get_mp_source"):
+		source = String(stats.get_mp_source())
+	if stats.has_method("get_mp_weights"):
+		var w: Variant = stats.get_mp_weights()
+		if typeof(w) == TYPE_DICTIONARY:
+			weights = w
+
+	var r: float = 0.0
+
+	if source == "int":
+		r = MP_REGEN_BASE + (MP_REGEN_PER_INT * intel)
+	elif source == "wis":
+		r = MP_REGEN_BASE + (MP_REGEN_PER_WIS * wis)
+	elif source == "hybrid":
+		var w_int: float = float(weights.get("INT", 0.5))
+		var w_wis: float = float(weights.get("WIS", 0.5))
+		r = MP_REGEN_BASE + (MP_REGEN_PER_INT * intel * w_int) + (MP_REGEN_PER_WIS * wis * w_wis)
+	else:
+		# Legacy fallback: both contribute
+		r = MP_REGEN_BASE + (MP_REGEN_PER_WIS * wis) + (MP_REGEN_PER_INT * intel)
+
+	# Buff hook: flat MP/sec from normal stats/modifiers
+	var bonus: float = 0.0
+	if stats != null and stats.has_method("get_final_stat"):
+		var b_any: Variant = stats.get_final_stat("MPRegen")
+		if typeof(b_any) == TYPE_FLOAT or typeof(b_any) == TYPE_INT:
+			bonus = float(b_any)
+
+	r += bonus
+
 	if r < 0.0:
 		return 0.0
-	if r > REGEN_MAX:
-		return REGEN_MAX
+	if r > MP_REGEN_MAX:
+		return MP_REGEN_MAX
 	return r
 
 static func end_regen_per_sec(stats: Object) -> float:
@@ -258,11 +326,18 @@ static func calc_attack_speed(stats: Object) -> Dictionary:
 	var weight: float = 1.0
 
 	if stats != null:
-		# Read base delay from base stats if available; fall back to final
-		if stats.has_method("get_base_stat"):
+		# IMPORTANT: Read BaseAttackDelay from FINAL stats first so StatModifiers can affect cadence.
+		# Fall back to base stat only if final stat isn't available.
+		if stats.has_method("get_final_stat"):
+			var bd_any: Variant = stats.get_final_stat("BaseAttackDelay")
+			var bd: float = float(bd_any)
+			if bd > 0.0:
+				base_delay = bd
+		elif stats.has_method("get_base_stat"):
 			var b: float = float(stats.get_base_stat("BaseAttackDelay"))
 			if b > 0.0:
 				base_delay = b
+
 		if stats.has_method("get_final_stat"):
 			agi = float(stats.get_final_stat("AGI"))
 			str_ = float(stats.get_final_stat("STR"))

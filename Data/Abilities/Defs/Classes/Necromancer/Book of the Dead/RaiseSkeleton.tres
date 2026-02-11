@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=7 format=3 uid="uid://bjm2qsw236ebv"]
+
+[ext_resource type="Script" uid="uid://u63t4oseank1" path="res://scenes/Actors/status/StatusApplySpec.gd" id="1_ysv37"]
+[ext_resource type="Script" uid="uid://byobol8rhb4cs" path="res://scripts/stats/StatModifier.gd" id="2_ltbxc"]
+[ext_resource type="Texture2D" uid="uid://2ohownofh6pi" path="res://assets/sprites/abilityicons/RaiseSkeleton.png" id="3_2y8pj"]
+[ext_resource type="Script" uid="uid://dsj3lq6kwixdp" path="res://Data/Abilities/AbilityDef.gd" id="3_a3ui4"]
+[ext_resource type="Script" uid="uid://c87lf672qvjv1" path="res://Data/Abilities/AbilitySfxCue.gd" id="4_2y8pj"]
+[ext_resource type="PackedScene" uid="uid://c38ysig350en5" path="res://scenes/Actors/NPCs/SummonedPets/Starterskelly.tscn" id="5_ltbxc"]
+
+[resource]
+script = ExtResource("3_a3ui4")
+ability_id = "RaiseSkeleton"
+display_name = "Raise Skeletal Minion"
+icon = ExtResource("3_2y8pj")
+description = "I wonder who the first student of magic was, that was like, \"Look at this smelly carcass. It should do my bidding!\""
+ability_type = "SUMMON_SPELL"
+requires_target = false
+mp_cost = 25.0
+cast_anim = "cast1"
+vfx_hint = "SummonSkelly"
+summon_scene = ExtResource("5_ltbxc")
+summon_spawn_offset_px = 24.0
+melee_hit_frames = null
+passive_gate_equipment_classes = null
+passive_gate_item_ids = null
+passive_proc_section_indices = null
+passive_proc_ability_types = null
+passive_proc_ability_ids = null
+cure_status_ids = null
+cure_modifier_sources = null
+cure_stacking_keys = null
+metadata/_custom_type_script = "uid://dsj3lq6kwixdp"

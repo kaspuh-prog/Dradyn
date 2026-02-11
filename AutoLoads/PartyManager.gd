@@ -12,6 +12,7 @@ const GROUP_LEADER := "PartyLeader"
 var _members: Array[Node] = []
 var _controlled_idx: int = -1
 
+
 # -------------------------------------------------------------------
 # Lifecycle
 # -------------------------------------------------------------------
@@ -40,6 +41,7 @@ func _ready() -> void:
 		call_deferred("_update_camera_target_deferred")
 		_emphasize_controlled_z()
 
+
 # -------------------------------------------------------------------
 # Public API
 # -------------------------------------------------------------------
@@ -65,8 +67,10 @@ func add_member(member: Node, make_controlled: bool = false) -> void:
 			_refresh_followers()
 			_emphasize_controlled_z()
 
+
 func register_member(member: Node, make_controlled: bool = false) -> void:
 	add_member(member, make_controlled)
+
 
 func remove_member(member: Node) -> void:
 	var idx: int = _members.find(member)
@@ -90,18 +94,22 @@ func remove_member(member: Node) -> void:
 		_refresh_followers()
 		_emphasize_controlled_z()
 
+
 func get_members() -> Array:
 	return _members.duplicate()
+
 
 func get_controlled() -> Node:
 	if _controlled_idx >= 0 and _controlled_idx < _members.size():
 		return _members[_controlled_idx]
 	return null
 
+
 func set_controlled(member: Node) -> void:
 	var idx: int = _members.find(member)
 	if idx != -1:
 		_set_controlled_by_index(idx)
+
 
 # -------------------------------------------------------------------
 # Control logic
@@ -132,6 +140,7 @@ func _set_controlled_by_index(idx: int) -> void:
 	_update_camera_target(cur)
 	_emphasize_controlled_z()
 
+
 func next_controlled() -> void:
 	if _members.is_empty():
 		return
@@ -142,8 +151,10 @@ func next_controlled() -> void:
 		return
 	_set_controlled_by_index(next_idx)
 
+
 func next() -> void:
 	next_controlled()
+
 
 # Followers: leader has no target; others chain up
 func _refresh_followers() -> void:
@@ -171,6 +182,7 @@ func _refresh_followers() -> void:
 			prev = m
 		i += 1
 
+
 func _set_follow_for_member(m: Node, target: Node) -> void:
 	if m == null:
 		return
@@ -182,6 +194,7 @@ func _set_follow_for_member(m: Node, target: Node) -> void:
 		if cf.has_method("set_follow_target"):
 			cf.set_follow_target(target)
 
+
 func _clear_follow_for_member(m: Node) -> void:
 	if m == null:
 		return
@@ -192,6 +205,7 @@ func _clear_follow_for_member(m: Node) -> void:
 	if cf != null:
 		if cf.has_method("set_follow_target"):
 			cf.set_follow_target(null)
+
 
 func _set_companion_active(m: Node, active: bool) -> void:
 	if m == null:
@@ -209,6 +223,7 @@ func _set_companion_active(m: Node, active: bool) -> void:
 			else:
 				if cf.has_variable("active"):
 					cf.set("active", active)
+
 
 func _update_leader_group_flags() -> void:
 	var i: int = 0
@@ -231,6 +246,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed(ACTION_PARTY_NEXT):
 		next_controlled()
 
+
 # -------------------------------------------------------------------
 # DamageNumber hookup
 # -------------------------------------------------------------------
@@ -238,12 +254,14 @@ func _register_emitters_late() -> void:
 	for m in _members:
 		_register_member_emitter(m)
 
+
 func _register_member_emitter(member: Node) -> void:
 	var stats: Node = _find_stats_component(member)
 	if stats == null:
 		return
 	var anchor: Node2D = _guess_anchor_from_stats(stats)
 	get_tree().call_group("DamageNumberSpawners", "register_emitter", stats, anchor)
+
 
 func _find_stats_component(root: Node) -> Node:
 	if root == null:
@@ -265,6 +283,7 @@ func _find_stats_component(root: Node) -> Node:
 			return root
 	return null
 
+
 func _guess_anchor_from_stats(stats_node: Node) -> Node2D:
 	var n: Node = stats_node
 	while n != null:
@@ -273,12 +292,14 @@ func _guess_anchor_from_stats(stats_node: Node) -> Node2D:
 		n = n.get_parent()
 	return null
 
+
 # -------------------------------------------------------------------
 # Camera helpers
 # -------------------------------------------------------------------
 func _ensure_camera() -> void:
 	if _cam == null:
 		_cam = get_tree().get_first_node_in_group("LeaderCamera") as LeaderCamera
+
 
 func _update_camera_target(n: Node) -> void:
 	_ensure_camera()
@@ -289,8 +310,10 @@ func _update_camera_target(n: Node) -> void:
 		_cam.set_target(n2d)
 		_cam.make_current()
 
+
 func _update_camera_target_deferred() -> void:
 	_update_camera_target(get_controlled())
+
 
 # -------------------------------------------------------------------
 # Visual Z helpers
@@ -303,6 +326,7 @@ func _set_visual_z_recursive(node: Node, z: int, relative: bool) -> void:
 	for ch in node.get_children():
 		_set_visual_z_recursive(ch, z, relative)
 
+
 func _emphasize_controlled_z() -> void:
 	var leader: Node = get_controlled()
 	for m in _members:
@@ -311,6 +335,7 @@ func _emphasize_controlled_z() -> void:
 			if m == leader:
 				z = 1
 			_set_visual_z_recursive(m, z, true)
+
 
 # -------------------------------------------------------------------
 # Scene change hook
@@ -321,6 +346,7 @@ func _on_area_changed(area: Node, entry_tag: String) -> void:
 	_emphasize_controlled_z()
 	# NEW: optional party teleport to entry marker
 	_teleport_party_to_entry(area, entry_tag)
+
 
 # NEW: Teleport party to an entry marker when areas change.
 # Looks for "EntryPoints/<entry_tag>" first, then any node in group "AreaEntry" under the new area with matching name.
@@ -374,9 +400,11 @@ func _teleport_party_to_entry(area: Node, entry_tag: String) -> void:
 					m2d.global_position = target_pos
 		j += 1
 
+
 # -------------------------------------------------------------------
 # Dead/Revive integration (NEW)
 # -------------------------------------------------------------------
+
 
 ## Called by StatusConditions via: get_tree().call_group("PartyManager", "on_actor_dead", actor)
 func on_actor_dead(actor: Node) -> void:
@@ -389,6 +417,7 @@ func on_actor_dead(actor: Node) -> void:
 			# No alive party members available (MP "wait for revive" scenario)
 			_set_controlled_none()
 
+
 ## Called by StatusConditions via: get_tree().call_group("PartyManager", "on_actor_revived", actor)
 func on_actor_revived(actor: Node) -> void:
 	# If no one is currently controlled (e.g., all local members were dead), take control of the revived actor.
@@ -397,6 +426,7 @@ func on_actor_revived(actor: Node) -> void:
 		if idx != -1:
 			_set_controlled_by_index(idx)
 	# Otherwise no change; player-initiated cycling still works.
+
 
 # Utility: clear control (keeps party intact)
 func _set_controlled_none() -> void:
@@ -410,6 +440,7 @@ func _set_controlled_none() -> void:
 	_refresh_followers()
 	# Camera remains on last target; GameRoot logic can decide what to do in MP wait state.
 	_emphasize_controlled_z()
+
 
 # Returns true if member is considered alive (prefers StatusConditions; falls back to HP>0)
 func _is_member_alive(member: Node) -> bool:
@@ -433,6 +464,7 @@ func _is_member_alive(member: Node) -> bool:
 			return chp_val > 0
 	return true  # If unknown, assume alive to avoid false lockouts
 
+
 # Find next alive member index after start_idx (wraps). Returns -1 if none found.
 func _find_next_alive_index(start_idx: int) -> int:
 	if _members.is_empty():
@@ -448,6 +480,7 @@ func _find_next_alive_index(start_idx: int) -> int:
 			return idx
 		i += 1
 	return -1
+
 
 # Find first alive index scanning forward from start (wraps once). Returns -1 if none.
 func _find_first_alive_index(start: int) -> int:

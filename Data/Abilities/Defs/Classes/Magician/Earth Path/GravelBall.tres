@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=7 format=3 uid="uid://kup1svll0ssy"]
+
+[ext_resource type="Script" uid="uid://u63t4oseank1" path="res://scenes/Actors/status/StatusApplySpec.gd" id="1_fik4e"]
+[ext_resource type="Script" uid="uid://byobol8rhb4cs" path="res://scripts/stats/StatModifier.gd" id="2_y2wm0"]
+[ext_resource type="Texture2D" uid="uid://k7oxi8hjwyqj" path="res://assets/sprites/abilityicons/GravelBall.png" id="3_7ue27"]
+[ext_resource type="Script" uid="uid://dsj3lq6kwixdp" path="res://Data/Abilities/AbilityDef.gd" id="4_jni5j"]
+[ext_resource type="Script" uid="uid://c87lf672qvjv1" path="res://Data/Abilities/AbilitySfxCue.gd" id="5_7ue27"]
+[ext_resource type="Resource" uid="uid://bpbdbfdxip35q" path="res://Data/Abilities/AbilitySFXCues/GravelBall.tres" id="6_jni5j"]
+
+[resource]
+script = ExtResource("4_jni5j")
+ability_id = "GravelBall"
+display_name = "GravelBall"
+icon = ExtResource("3_7ue27")
+description = "Using mana to amplify the innate magnetism in stones is the first step to building your own golem friends."
+ability_type = "DAMAGE_SPELL"
+target_rule = "ENEMY_SINGLE"
+mp_cost = 14.0
+gcd_sec = 1.0
+cooldown_sec = 3.0
+power = 22.0
+scale_stat = "INT"
+cast_anim = "cast1"
+vfx_hint = "Singe"
+sfx_cues = Array[ExtResource("5_7ue27")]([ExtResource("6_jni5j")])
+melee_hit_frames = null
+passive_gate_equipment_classes = null
+passive_gate_item_ids = null
+passive_proc_section_indices = null
+passive_proc_ability_types = null
+passive_proc_ability_ids = null
+cure_status_ids = PackedStringArray()
+cure_modifier_sources = PackedStringArray()
+cure_stacking_keys = PackedStringArray()

@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="QuestDef" load_steps=2 format=3 uid="uid://cl46xauh71ijs"]
+
+[ext_resource type="Script" uid="uid://dqo3si8cg6o3n" path="res://Data/Quests/QuestDef.gd" id="1_gtvah"]
+
+[resource]
+script = ExtResource("1_gtvah")
+quest_id = &"CulltheRats"
+display_name = "Cull the Rats"
+description = "Bring me 10 rat parts from the cellar (any mix of tails, ears, poison ears, or poison teeth).
+"
+require_part_id = 2
+require_flags_all = Array[StringName]([&"quest_rats_active"])
+require_items_any = Array[StringName]([&"RatTail", &"RatEar", &"PoisonRatEar", &"PoisonRatTooth"])
+require_items_any_total = 10
+consume_items_on_complete = false
+reward_xp = 50
+set_flags_on_complete = Array[StringName]([&"quest_rats_complete", &"visit_rosali"])
+clear_flags_on_complete = Array[StringName]([&"quest_rats_active"])
+advance_story_position_on_complete = true
+advance_step_id = 2
+dialogue_not_ready = "I don't have the oomph I had in my youth, whackin rats with a broom is not for an old maid... So it's up to you! Bring me proof of killing 10 rats, that should keep them out of our grains! You haven't killed 10 rats  yet. Come back when you have."
+dialogue_ready_to_turn_in = "Good boy! 10 rats down!"
+dialogue_completed = "By the way... Rosali was here earlier for her volunteer work. That girl is a saint. She asked me to tell you her mother invited you for dinner. She lives in the Golden Hen Inn of the Entertainment District. "
+metadata/_custom_type_script = "uid://dqo3si8cg6o3n"

@@ -1,0 +1,57 @@
+[gd_scene load_steps=7 format=3 uid="uid://ckx7b1toatusg"]
+
+[ext_resource type="Script" uid="uid://c4x3tqlpfs380" path="res://scenes/Actors/NPCs/NonCombatNPC.gd" id="1_f7fvv"]
+[ext_resource type="Texture2D" uid="uid://dalasn8h8bfgj" path="res://assets/sprites/NPCs/CitadelGuardF.png" id="2_g2nf5"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_45fin"]
+atlas = ExtResource("2_g2nf5")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jd6lb"]
+atlas = ExtResource("2_g2nf5")
+region = Rect2(0, 128, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6kq26"]
+atlas = ExtResource("2_g2nf5")
+region = Rect2(0, 64, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_11h0f"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_45fin")
+}],
+"loop": true,
+"name": &"idle_down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jd6lb")
+}],
+"loop": true,
+"name": &"idle_side",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6kq26")
+}],
+"loop": true,
+"name": &"idle_up",
+"speed": 5.0
+}]
+
+[node name="FCitadelGuard" type="Node2D"]
+script = ExtResource("1_f7fvv")
+npc_name = "GeoKnight Guard"
+sprite_path = NodePath("AnimatedSprite2D")
+talk_lines = PackedStringArray("There is no entry to the Citadel from this access point. ")
+metadata/_custom_type_script = "uid://c4x3tqlpfs380"
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -8)
+sprite_frames = SubResource("SpriteFrames_11h0f")
+animation = &"idle_side"
+offset = Vector2(0, -8)
+flip_h = true

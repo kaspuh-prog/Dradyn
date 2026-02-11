@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://c6hxkeb0x3v50"
+
+[deps]
+
+files=["res://Data/items/ItemDefs.display.translation", "res://Data/items/ItemDefs.description.translation", "res://Data/items/ItemDefs.item.translation", "res://Data/items/ItemDefs.equipment.translation", "res://Data/items/ItemDefs.base.translation", "res://Data/items/ItemDefs.stack.translation", "res://Data/items/ItemDefs.equip.translation", "res://Data/items/ItemDefs.restore.translation", "res://Data/items/ItemDefs.restore.translation", "res://Data/items/ItemDefs.restore.translation", "res://Data/items/ItemDefs.use.translation", "res://Data/items/ItemDefs.weapon.translation", "res://Data/items/ItemDefs.icon.translation", "res://Data/items/ItemDefs.stat.translation"]
+
+source_file="res://Data/items/ItemDefs.csv"
+dest_files=["res://Data/items/ItemDefs.display.translation", "res://Data/items/ItemDefs.description.translation", "res://Data/items/ItemDefs.item.translation", "res://Data/items/ItemDefs.equipment.translation", "res://Data/items/ItemDefs.base.translation", "res://Data/items/ItemDefs.stack.translation", "res://Data/items/ItemDefs.equip.translation", "res://Data/items/ItemDefs.restore.translation", "res://Data/items/ItemDefs.restore.translation", "res://Data/items/ItemDefs.restore.translation", "res://Data/items/ItemDefs.use.translation", "res://Data/items/ItemDefs.weapon.translation", "res://Data/items/ItemDefs.icon.translation", "res://Data/items/ItemDefs.stat.translation"]
+
+[params]
+
+compress=true
+delimiter=0

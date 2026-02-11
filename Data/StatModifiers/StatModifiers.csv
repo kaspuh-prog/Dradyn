@@ -1,0 +1,10 @@
+resource_id,stat_name,add_value,mul_value,duration_sec,source_id,apply_override,override_value,stacking_key,max_stacks,refresh_duration_on_stack,source_type
+Attack5,Attack,5,1,0,,FALSE,0,,1,FALSE,
+Defense5,Defense,5,1,0,,FALSE,0,,1,FALSE,
+Defense25,Defense,25,1,1800,,FALSE,0,ReinforcedByFaith,1,TRUE,
+AtkSpd10(momentum),BaseAttackDelay,0,0.9090909,0,,FALSE,0,,1,FALSE,
+AtkSpd05,BaseAttackDelay,0,0.952381,0,,FALSE,0,,1,FALSE,
+AtkSpd15,BaseAttackDelay,0,0.8695652,0,,FALSE,0,,1,FALSE,
+AtkSpd20,BaseAttackDelay,0,0.8333333,0,,FALSE,0,,1,FALSE,
+Attack5(Honed edge),Attack,5,1,0,,FALSE,0,,1,FALSE,
+AtkPct5,Attack,0,1.05,0,,FALSE,0,,1,FALSE,

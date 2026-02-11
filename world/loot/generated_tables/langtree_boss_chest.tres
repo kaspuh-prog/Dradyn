@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="LootTable" load_steps=3 format=3 uid="uid://bus0rm2j2mwcb"]
+
+[ext_resource type="Script" uid="uid://bj3tpnw12ybt7" path="res://world/loot/LootEntry.gd" id="1_lr4s4"]
+[ext_resource type="Script" uid="uid://cyfln17m0bmbe" path="res://world/loot/LootTable.gd" id="2_71086"]
+
+[resource]
+script = ExtResource("2_71086")
+rolls = 2
+allow_duplicates = false
+currency_percent_chance = 75.0
+currency_min = 50
+currency_max = 100

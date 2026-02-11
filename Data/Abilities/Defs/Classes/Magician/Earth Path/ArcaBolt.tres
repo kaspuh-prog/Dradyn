@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=8 format=3 uid="uid://ckkr1f4fg6fdv"]
+
+[ext_resource type="Script" uid="uid://u63t4oseank1" path="res://scenes/Actors/status/StatusApplySpec.gd" id="1_68agr"]
+[ext_resource type="Script" uid="uid://byobol8rhb4cs" path="res://scripts/stats/StatModifier.gd" id="2_cgvb2"]
+[ext_resource type="Texture2D" uid="uid://d3mpx5yex8qfb" path="res://assets/sprites/abilityicons/ArcaBolt.png" id="3_pscax"]
+[ext_resource type="PackedScene" uid="uid://dq0giejtxlp5g" path="res://scenes/Projectiles/ArcaBolt.tscn" id="4_a6hph"]
+[ext_resource type="Script" uid="uid://dsj3lq6kwixdp" path="res://Data/Abilities/AbilityDef.gd" id="5_x18yv"]
+[ext_resource type="Script" uid="uid://c87lf672qvjv1" path="res://Data/Abilities/AbilitySfxCue.gd" id="6_pscax"]
+[ext_resource type="Resource" uid="uid://db7et2jhlrhf4" path="res://Data/Abilities/AbilitySFXCues/ArcaBolt.tres" id="7_a6hph"]
+
+[resource]
+script = ExtResource("5_x18yv")
+ability_id = "ArcaBolt"
+display_name = "Arca-Bolt"
+icon = ExtResource("3_pscax")
+description = "All magicians must first learn to give raw mana form, and control it. This ability proves to their master they are ready to channel it into an element."
+unlock_cost = 0
+ability_type = "PROJECTILE"
+requires_target = false
+mp_cost = 3.0
+cooldown_sec = 1.0
+power = 19.0
+scale_stat = "INT"
+cast_anim = "projectile1"
+vfx_hint = "ArcaBoltcollide"
+sfx_cues = Array[ExtResource("6_pscax")]([ExtResource("7_a6hph")])
+projectile_scene = ExtResource("4_a6hph")
+melee_hit_frames = null
+passive_gate_equipment_classes = null
+passive_gate_item_ids = null
+passive_proc_section_indices = null
+passive_proc_ability_types = null
+passive_proc_ability_ids = null
+cure_status_ids = PackedStringArray()
+cure_modifier_sources = PackedStringArray()
+cure_stacking_keys = PackedStringArray()

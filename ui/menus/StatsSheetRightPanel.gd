@@ -63,7 +63,7 @@ class_name StatsSheetRightPanel
 # Inspector: Stat Order Override
 # ===============================
 @export_category("Stat Order")
-@export var stat_order_override: PackedStringArray = []  # Optional explicit order from the panel
+@export var stat_order_override: PackedStringArray = []  # Currently unused, but kept for future flexibility.
 
 # ===============================
 # Runtime nodes
@@ -292,6 +292,8 @@ func _rebuild_deferred() -> void:
 func _rebuild_contents() -> void:
 	if _vbox == null:
 		return
+	if not visible:
+		return
 
 	# Clear
 	var children: Array = _vbox.get_children()
@@ -339,7 +341,31 @@ func _rebuild_contents() -> void:
 			var val: float = 0.0
 			if vv != null:
 				val = float(vv)
-			_add_stat_row(display_key, int(round(val)))
+
+			# Special case: vitals show Current / Total
+			if display_key == "HP" or display_key == "MP" or display_key == "END":
+				var cur: float = 0.0
+				if _stats != null:
+					if display_key == "HP":
+						if "current_hp" in _stats:
+							var chp_v: Variant = _stats.get("current_hp")
+							if chp_v != null:
+								cur = float(chp_v)
+					elif display_key == "MP":
+						if "current_mp" in _stats:
+							var cmp_v: Variant = _stats.get("current_mp")
+							if cmp_v != null:
+								cur = float(cmp_v)
+					elif display_key == "END":
+						if "current_end" in _stats:
+							var cend_v: Variant = _stats.get("current_end")
+							if cend_v != null:
+								cur = float(cend_v)
+
+				_add_vital_row(display_key, int(round(cur)), int(round(val)))
+			else:
+				# Everything else stays as a single “total” value
+				_add_stat_row(display_key, int(round(val)))
 		k += 1
 
 	# Ensure scrollbar theme persists if content changes size
@@ -360,6 +386,33 @@ func _add_stat_row(key_text: String, value_int: int) -> void:
 
 	var v_lbl: Label = Label.new()
 	v_lbl.text = str(value_int)
+	v_lbl.clip_text = label_clip
+	v_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	v_lbl.size_flags_stretch_ratio = 0.4
+	if value_align_right == true:
+		v_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	else:
+		v_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_apply_label_theme(v_lbl, false)
+
+	row.add_child(k_lbl)
+	row.add_child(v_lbl)
+	_vbox.add_child(row)
+
+func _add_vital_row(key_text: String, current_int: int, max_int: int) -> void:
+	var row: HBoxContainer = HBoxContainer.new()
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var k_lbl: Label = Label.new()
+	k_lbl.text = key_text
+	k_lbl.clip_text = label_clip
+	k_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	k_lbl.size_flags_stretch_ratio = 0.6
+	_apply_label_theme(k_lbl, false)
+
+	var v_lbl: Label = Label.new()
+	v_lbl.text = str(current_int) + " / " + str(max_int)
 	v_lbl.clip_text = label_clip
 	v_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	v_lbl.size_flags_stretch_ratio = 0.4
@@ -449,95 +502,46 @@ func _apply_scrollbar_theme(sc: ScrollContainer) -> void:
 	vbar.add_theme_stylebox_override("grabber_pressed", grabber_pressed)
 
 # ---------------------------
-# Sorting helpers (match StatsComponent order)
+# Sorting helpers
 # ---------------------------
 func _get_sorted_keys(stats_dict: Dictionary) -> Array:
-	# Build a normalization lookup from the dict that maps normalized name -> original key
-	var norm_to_original: Dictionary = {}
-	var insertion_order: Array = []
-	for key_any in stats_dict.keys():
-		var key_str: String = str(key_any)
-		var norm: String = _normalize_key(key_str)
-		norm_to_original[norm] = key_str
-		insertion_order.append(key_str)
+	# Canonical order, as requested
+	var canonical: Array[String] = [
+		"HP","MP","END","MoveSpeed","Attack","Defense",
+		"STR","DEX","STA","INT","WIS","LCK",
+		"BlockChance","ParryChance","Evasion","CritChance","CritHealChance",
+		"SlashRes","PierceRes","BluntRes","FireRes","IceRes",
+		"WindRes","EarthRes","MagicRes","LightRes","DarknessRes","PoisonRes"
+	]
 
-	# 1) Panel override takes priority
-	if stat_order_override.size() > 0:
-		return _map_order_to_existing(stat_order_override, norm_to_original, insertion_order)
-
-	# 2) Ask StatsComponent for its order
-	var comp_order: Array = _resolve_stat_order()
-	if comp_order.size() > 0:
-		return _map_order_to_existing(comp_order, norm_to_original, insertion_order)
-
-	# 3) No order available: preserve insertion order from the dictionary
-	return insertion_order
-
-func _map_order_to_existing(order_any: Array, norm_to_original: Dictionary, insertion_order: Array) -> Array:
 	var out: Array = []
-	var added: Dictionary = {}
+	var seen: Dictionary = {}
 
-	# Place known keys in the given order (case-insensitive)
 	var i: int = 0
-	while i < order_any.size():
-		var want_str: String = str(order_any[i])
-		var norm: String = _normalize_key(want_str)
-		if norm_to_original.has(norm):
-			var original: String = norm_to_original[norm]
-			if not added.has(original):
-				out.append(original)
-				added[original] = true
+	while i < canonical.size():
+		var key: String = canonical[i]
+		if stats_dict.has(key):
+			out.append(key)
+			seen[key] = true
 		i += 1
 
-	# Append any remaining keys in their original insertion order
-	var j: int = 0
-	while j < insertion_order.size():
-		var k: String = insertion_order[j]
-		if not added.has(k):
-			out.append(k)
-			added[k] = true
-		j += 1
+	# Append any unexpected stats at the end (future-proof)
+	for key_any in stats_dict.keys():
+		var key_str: String = str(key_any)
+		if not seen.has(key_str):
+			out.append(key_str)
+			seen[key_str] = true
 
 	return out
 
-func _normalize_key(s: String) -> String:
-	# Case-insensitive, trim spaces/underscores/dashes
-	var t: String = s.strip_edges()
-	t = t.replace("_", "")
-	t = t.replace("-", "")
-	return t.to_lower()
-
-func _resolve_stat_order() -> Array:
-	var order: Array = []
-	if _stats == null:
-		return order
-
-	# Preferred explicit method
-	if _stats.has_method("get_stat_order"):
-		var v: Variant = _stats.call("get_stat_order")
-		if v is Array:
-			return v as Array
-
-	# Fallback properties
-	if "stat_order" in _stats:
-		var v2: Variant = _stats.get("stat_order")
-		if v2 is Array:
-			return v2 as Array
-	if "display_order" in _stats:
-		var v3: Variant = _stats.get("display_order")
-		if v3 is Array:
-			return v3 as Array
-
-	return order
-
-# ---------------------------
-# Misc helpers
-# ---------------------------
 func _sort_keys(a: Variant, b: Variant) -> bool:
 	var sa: String = str(a)
 	var sb: String = str(b)
 	return sa < sb
 
+# ---------------------------
+# Misc helpers
+# ---------------------------
 func _format_xp_line() -> String:
 	var cxp: int = 0
 	var to_next: int = 0

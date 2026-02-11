@@ -1,16 +1,18 @@
-[gd_resource type="Resource" script_class="AbilityDef" load_steps=5 format=3 uid="uid://dyw7m4auvbahc"]
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=7 format=3 uid="uid://dyw7m4auvbahc"]
 
 [ext_resource type="Script" uid="uid://dsj3lq6kwixdp" path="res://Data/Abilities/AbilityDef.gd" id="1_0qidy"]
 [ext_resource type="Script" uid="uid://byobol8rhb4cs" path="res://scripts/stats/StatModifier.gd" id="1_1tqg0"]
 [ext_resource type="Texture2D" uid="uid://c6fbk2bkl3yij" path="res://assets/sprites/abilityicons/HealingWhisper.png" id="1_6ijb1"]
 [ext_resource type="Script" uid="uid://u63t4oseank1" path="res://scenes/Actors/status/StatusApplySpec.gd" id="1_bnh42"]
+[ext_resource type="Script" uid="uid://c87lf672qvjv1" path="res://Data/Abilities/AbilitySfxCue.gd" id="5_sj22f"]
+[ext_resource type="Resource" uid="uid://b2wtdwsircx1" path="res://Data/Abilities/AbilitySFXCues/HealingWhisper.tres" id="6_5xkd4"]
 
 [resource]
 script = ExtResource("1_0qidy")
 ability_id = "HealingWhisper"
 display_name = "Healing Whisper"
 icon = ExtResource("1_6ijb1")
-description = "The first healing chant you learn as a priest. "
+description = "The first healing chant you learn as a priest."
 ability_type = "HEAL_SPELL"
 target_rule = "ALLY_SINGLE"
 mp_cost = 9.0
@@ -19,6 +21,13 @@ power = 4.0
 scale_stat = "WIS"
 cast_anim = "cast1"
 vfx_hint = "HealingWhisper"
+sfx_cues = Array[ExtResource("5_sj22f")]([ExtResource("6_5xkd4")])
+melee_hit_frames = null
+passive_gate_equipment_classes = null
+passive_gate_item_ids = null
+passive_proc_section_indices = null
+passive_proc_ability_types = null
+passive_proc_ability_ids = null
 cure_status_ids = null
 cure_modifier_sources = null
 cure_stacking_keys = null

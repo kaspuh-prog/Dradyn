@@ -1,0 +1,59 @@
+[gd_scene load_steps=5 format=3 uid="uid://cig012jfgqfcj"]
+
+[ext_resource type="Texture2D" uid="uid://ddmxhj0d8ua04" path="res://ui/styles/lane_bar.png" id="1_5lohl"]
+[ext_resource type="Texture2D" uid="uid://c6qw5j2xeb0yn" path="res://ui/styles/gold_slider_9patch.png" id="2_ep6dl"]
+[ext_resource type="Texture2D" uid="uid://dlnqgbp5rhtsy" path="res://ui/styles/red_window_9patch.png" id="3_dyhuv"]
+[ext_resource type="Texture2D" uid="uid://27o76e4nm65h" path="res://ui/styles/red_window_9patch_Front.png" id="4_ep6dl"]
+
+[node name="LockpickLane" type="Control"]
+custom_minimum_size = Vector2(12, 64)
+layout_mode = 3
+anchors_preset = 0
+
+[node name="LaneBar" type="NinePatchRect" parent="."]
+layout_mode = 0
+offset_right = 12.0
+offset_bottom = 64.0
+texture = ExtResource("1_5lohl")
+patch_margin_top = 5
+patch_margin_bottom = 5
+axis_stretch_horizontal = 2
+
+[node name="Gold" type="NinePatchRect" parent="LaneBar"]
+z_index = 1
+custom_minimum_size = Vector2(12, 18)
+layout_mode = 0
+offset_top = 40.0
+offset_right = 12.0
+offset_bottom = 72.0
+texture = ExtResource("2_ep6dl")
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+
+[node name="RedBack" type="NinePatchRect" parent="LaneBar/Gold"]
+custom_minimum_size = Vector2(12, 10)
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_dyhuv")
+axis_stretch_vertical = 2
+
+[node name="RedFront" type="NinePatchRect" parent="LaneBar/Gold/RedBack"]
+z_index = 4
+clip_contents = true
+custom_minimum_size = Vector2(6, 12)
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 6.0
+grow_horizontal = 0
+grow_vertical = 2
+texture = ExtResource("4_ep6dl")
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2

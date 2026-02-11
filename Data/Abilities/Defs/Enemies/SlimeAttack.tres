@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=7 format=3 uid="uid://xdd0ppkb3pi5"]
+
+[ext_resource type="Script" uid="uid://u63t4oseank1" path="res://scenes/Actors/status/StatusApplySpec.gd" id="1_dxtcr"]
+[ext_resource type="Script" uid="uid://byobol8rhb4cs" path="res://scripts/stats/StatModifier.gd" id="2_e4mvo"]
+[ext_resource type="Resource" uid="uid://bg8dh0uk2oab6" path="res://Data/Abilities/StatusApplySpecs/Slowed.tres" id="2_fpqqu"]
+[ext_resource type="Script" uid="uid://dsj3lq6kwixdp" path="res://Data/Abilities/AbilityDef.gd" id="3_fpqqu"]
+[ext_resource type="Script" uid="uid://c87lf672qvjv1" path="res://Data/Abilities/AbilitySfxCue.gd" id="4_n8172"]
+[ext_resource type="Resource" uid="uid://bmla40toav51p" path="res://Data/Abilities/Defs/Enemies/SlimeAttacksound.tres" id="6_fpqqu"]
+
+[resource]
+script = ExtResource("3_fpqqu")
+ability_id = "SlimeAttack"
+display_name = "Slimed"
+unlock_cost = 0
+level = 0
+ability_type = "MELEE"
+target_rule = "ENEMY_SINGLE"
+cooldown_sec = 1.0
+power = 5.0
+cast_anim = "attack1"
+sfx_cues = Array[ExtResource("4_n8172")]([ExtResource("6_fpqqu")])
+melee_hit_frame = 3
+melee_hit_frames = null
+passive_gate_equipment_classes = null
+passive_gate_item_ids = null
+passive_proc_section_indices = null
+passive_proc_ability_types = null
+passive_proc_ability_ids = null
+cure_status_ids = null
+cure_modifier_sources = null
+cure_stacking_keys = null
+applies_status = Array[ExtResource("1_dxtcr")]([ExtResource("2_fpqqu")])
+metadata/_custom_type_script = "uid://dsj3lq6kwixdp"

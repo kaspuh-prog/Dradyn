@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="LootEntry" load_steps=2 format=3 uid="uid://bcefdar2owbs"]
+
+[ext_resource type="Script" uid="uid://bj3tpnw12ybt7" path="res://world/loot/LootEntry.gd" id="1_k8knl"]
+
+[resource]
+script = ExtResource("1_k8knl")
+id = "TatteredLeatherVest_Loot"
+weight = 10.0
+percent_chance = 15.0

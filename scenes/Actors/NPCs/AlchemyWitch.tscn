@@ -1,7 +1,8 @@
-[gd_scene load_steps=8 format=3 uid="uid://hkqdx5dpgg6"]
+[gd_scene load_steps=10 format=3 uid="uid://hkqdx5dpgg6"]
 
 [ext_resource type="Script" uid="uid://c4x3tqlpfs380" path="res://scenes/Actors/NPCs/NonCombatNPC.gd" id="1_x31qy"]
 [ext_resource type="Texture2D" uid="uid://dgowjmycblk3l" path="res://assets/sprites/NPCs/SlumsAlchemyWitch.png" id="2_n5md3"]
+[ext_resource type="Script" uid="uid://60wgq008rd3m" path="res://scenes/Actors/NPCs/AlchemyWitchAnimator.gd" id="3_os1s3"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_os1s3"]
 atlas = ExtResource("2_n5md3")
@@ -18,6 +19,10 @@ region = Rect2(128, 0, 64, 64)
 [sub_resource type="AtlasTexture" id="AtlasTexture_bv6i8"]
 atlas = ExtResource("2_n5md3")
 region = Rect2(192, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_n5md3"]
+atlas = ExtResource("2_n5md3")
+region = Rect2(64, 0, 64, 64)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_56rg7"]
 animations = [{
@@ -36,6 +41,14 @@ animations = [{
 }],
 "loop": true,
 "name": &"brewing",
+"speed": 7.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_n5md3")
+}],
+"loop": false,
+"name": &"idle",
 "speed": 5.0
 }]
 
@@ -43,12 +56,13 @@ animations = [{
 script = ExtResource("1_x31qy")
 npc_name = "Alchemist"
 npc_role = "merchant"
-highlight_modulate = Color(1.1405495, 1.1328646, 2.8081545e-06, 1)
+sprite_path = NodePath("AlchemyWitchAnimator")
+merchant_id = &"alchemy"
 metadata/_custom_type_script = "uid://c4x3tqlpfs380"
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-light_mask = 2
+[node name="AlchemyWitchAnimator" type="AnimatedSprite2D" parent="."]
 position = Vector2(0, -8)
 sprite_frames = SubResource("SpriteFrames_56rg7")
-animation = &"brewing"
+animation = &"idle"
 offset = Vector2(0, -8)
+script = ExtResource("3_os1s3")

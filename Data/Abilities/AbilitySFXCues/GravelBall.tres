@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="AbilitySfxCue" load_steps=2 format=3 uid="uid://bpbdbfdxip35q"]
+
+[ext_resource type="Script" uid="uid://c87lf672qvjv1" path="res://Data/Abilities/AbilitySfxCue.gd" id="1_e1f5b"]
+
+[resource]
+script = ExtResource("1_e1f5b")
+event = &"GravelBall"
+volume_db = -10.0
+metadata/_custom_type_script = "uid://c87lf672qvjv1"

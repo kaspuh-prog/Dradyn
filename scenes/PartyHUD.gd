@@ -10,7 +10,8 @@ class_name PartyHUD
 @onready var _row: Control = $"Row"
 
 var _pm: PartyManager = null
-var _panels: Array[Control] = []
+var _panels: Array[PartyBarsPanel] = []
+var _members: Array[Node] = []
 
 func _ready() -> void:
 	_pm = get_tree().get_first_node_in_group("PartyManager") as PartyManager
@@ -30,39 +31,54 @@ func _on_party_changed(members: Array) -> void:
 	_rebuild_from(members)
 
 func _on_controlled_changed(current: Node) -> void:
-	# Optional: highlight leader later if desired
-	pass
+	_refresh_highlight(current)
 
 func _rebuild_from(members: Array) -> void:
 	_clear_row()
 
+	_members.clear()
 	var x: int = x_start
 	var i: int = 0
 	while i < members.size():
 		var m: Node = members[i]
-		var panel: Control = _spawn_panel(m)
-		panel.scale = Vector2(panel_scale, panel_scale)
+		_members.append(m)
 
+		var panel: PartyBarsPanel = _spawn_panel(m)
+		panel.scale = Vector2(panel_scale, panel_scale)
 		panel.position = Vector2(x, y_start)
 		_panels.append(panel)
 
-		# Next x position: use panel’s unscaled width times scale, plus spacing
 		var w: int = int(panel.size.x * panel.scale.x)
 		x += w + x_spacing
 		i += 1
 
-func _spawn_panel(member: Node) -> Control:
-	var panel: Control = panel_scene.instantiate() as Control
+	if _pm != null:
+		_refresh_highlight(_pm.get_controlled())
+
+func _spawn_panel(member: Node) -> PartyBarsPanel:
+	var panel: PartyBarsPanel = panel_scene.instantiate() as PartyBarsPanel
 	_row.add_child(panel)
 
-	# Find Bars node and hook stats
+	var stats: Node = _find_stats_on(member)
+
+	# Hook stats into panel's Bars node (existing behavior)
 	var bars: Node = panel.get_node_or_null("Bars")
 	if bars == null:
 		push_warning("PartyHUD: Bars node missing on panel.")
 	else:
-		var stats: Node = _find_stats_on(member)
 		if stats != null and "set_stats" in bars:
 			bars.set_stats(stats)
+
+	# NEW: let the panel track buffs from the same StatsComponent
+	if stats != null and panel != null:
+		if panel.has_method("set_stats_component"):
+			panel.set_stats_component(stats)
+
+	# Set display name using same rule as StatsHeaderBinder
+	var display_name: String = _derive_actor_name(member)
+	panel.set_display_name(display_name)
+
+	panel.set_highlighted(false)
 
 	return panel
 
@@ -71,14 +87,41 @@ func _clear_row() -> void:
 		if is_instance_valid(c):
 			c.queue_free()
 	_panels.clear()
+	_members.clear()
 
 func _find_stats_on(actor: Node) -> Node:
 	if actor == null:
 		return null
 	if actor.has_node("StatsComponent"):
 		return actor.get_node("StatsComponent")
-	# Shallow search fallback
 	for ch in actor.get_children():
 		if ch.name == "StatsComponent":
 			return ch
 	return null
+
+func _derive_actor_name(actor: Node) -> String:
+	if actor == null:
+		return "Unknown"
+	if actor.has_method("get_name"):
+		return str(actor.get_name())
+	return str(actor.name)
+
+func _refresh_highlight(current: Node) -> void:
+	var i: int = 0
+	while i < _panels.size():
+		var panel: PartyBarsPanel = _panels[i]
+		if not is_instance_valid(panel):
+			i += 1
+			continue
+
+		var member: Node = null
+		if i < _members.size():
+			member = _members[i]
+
+		var is_highlighted: bool = false
+		if member != null and current != null:
+			if member == current:
+				is_highlighted = true
+
+		panel.set_highlighted(is_highlighted)
+		i += 1

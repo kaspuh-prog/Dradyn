@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="AbilitySfxCue" load_steps=2 format=3 uid="uid://dbx81n74qolc2"]
+
+[ext_resource type="Script" uid="uid://c87lf672qvjv1" path="res://Data/Abilities/AbilitySfxCue.gd" id="1_hq37n"]
+
+[resource]
+script = ExtResource("1_hq37n")
+event = &"swordswing"
+frame = 2
+volume_db = -10.0
+metadata/_custom_type_script = "uid://c87lf672qvjv1"

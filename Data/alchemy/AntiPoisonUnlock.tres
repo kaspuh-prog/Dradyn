@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="AlchemyUnlockDef" load_steps=6 format=3 uid="uid://5h0ar0kpdsbc"]
+
+[ext_resource type="Script" uid="uid://2mjbmehwxafs" path="res://Data/items/equipment/ItemDef.gd" id="1_3he3c"]
+[ext_resource type="Script" uid="uid://b46mlxcoyxt80" path="res://Data/alchemy/AlchemyUnlockDef.gd" id="2_3he3c"]
+[ext_resource type="Resource" uid="uid://chttyv6jl6uvk" path="res://Data/items/consumable/AntiPoison.tres" id="2_68v7r"]
+[ext_resource type="Resource" uid="uid://c0530yxm1h32y" path="res://Data/items/reagent/PoisonRatEar.tres" id="2_hyibh"]
+[ext_resource type="Resource" uid="uid://1aclrnqowl4h" path="res://Data/items/reagent/PoisonRatTooth.tres" id="3_cf1av"]
+
+[resource]
+script = ExtResource("2_3he3c")
+id = &"AntiPoison"
+potion = ExtResource("2_68v7r")
+cost_items = Array[ExtResource("1_3he3c")]([ExtResource("2_hyibh"), ExtResource("3_cf1av")])
+cost_counts = Array[int]([2, 4])
+metadata/_custom_type_script = "uid://b46mlxcoyxt80"

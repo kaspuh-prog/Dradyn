@@ -1,0 +1,46 @@
+[gd_scene load_steps=7 format=3 uid="uid://cdfjiq7xho8bv"]
+
+[ext_resource type="Texture2D" uid="uid://bbwnyp2v3ttoc" path="res://assets/tilesets/AnimatedFountain2.png" id="1_euxjw"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jcygl"]
+atlas = ExtResource("1_euxjw")
+region = Rect2(0, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wj1k5"]
+atlas = ExtResource("1_euxjw")
+region = Rect2(48, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ebg1s"]
+atlas = ExtResource("1_euxjw")
+region = Rect2(96, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j1nom"]
+atlas = ExtResource("1_euxjw")
+region = Rect2(144, 0, 48, 48)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_0ssbo"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jcygl")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wj1k5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ebg1s")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j1nom")
+}],
+"loop": true,
+"name": &"default",
+"speed": 8.0
+}]
+
+[node name="AnimatedFountainLarge" type="Node2D"]
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_0ssbo")
+autoplay = "default"
+frame_progress = 0.20819871

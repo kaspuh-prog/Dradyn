@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=3 format=3 uid="uid://c0530yxm1h32y"]
+
+[ext_resource type="Script" uid="uid://2mjbmehwxafs" path="res://Data/items/equipment/ItemDef.gd" id="1_hleq6"]
+[ext_resource type="Texture2D" uid="uid://cokenwqnsjk85" path="res://assets/sprites/items/reagents/poison rat ear.png" id="1_rd4ao"]
+
+[resource]
+script = ExtResource("1_hleq6")
+id = &"PoisonRatEar"
+display_name = "Poison Rat Ear"
+description = "The blood has purple spots in it! "
+icon = ExtResource("1_rd4ao")
+item_type = "reagent"
+base_gold_value = 5
+metadata/_custom_type_script = "uid://2mjbmehwxafs"

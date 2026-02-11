@@ -1,0 +1,39 @@
+[gd_resource type="SpriteFrames" load_steps=6 format=3 uid="uid://b8vxle14xpujt"]
+
+[ext_resource type="Texture2D" uid="uid://hkmjbjryc563" path="res://assets/VFX/Spout.png" id="1_j60jd"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pu2rv"]
+atlas = ExtResource("1_j60jd")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sbyda"]
+atlas = ExtResource("1_j60jd")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8ngaa"]
+atlas = ExtResource("1_j60jd")
+region = Rect2(128, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8kgsy"]
+atlas = ExtResource("1_j60jd")
+region = Rect2(192, 0, 64, 64)
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pu2rv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sbyda")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8ngaa")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8kgsy")
+}],
+"loop": true,
+"name": &"default",
+"speed": 8.0
+}]

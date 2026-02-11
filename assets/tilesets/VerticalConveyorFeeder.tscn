@@ -1,0 +1,91 @@
+[gd_scene load_steps=14 format=3 uid="uid://cagv6muw1x8cv"]
+
+[ext_resource type="Script" uid="uid://bgpg64rnlm8b1" path="res://assets/tilesets/ConveyorTile.gd" id="1_25ibu"]
+[ext_resource type="Texture2D" uid="uid://dn7rm7v4hlwyw" path="res://assets/tilesets/VerticalConveyorFeeder.png" id="2_25ibu"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yv2sf"]
+atlas = ExtResource("2_25ibu")
+region = Rect2(0, 0, 32, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_uyxwn"]
+atlas = ExtResource("2_25ibu")
+region = Rect2(0, 16, 32, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_38eut"]
+atlas = ExtResource("2_25ibu")
+region = Rect2(0, 32, 32, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yheyt"]
+atlas = ExtResource("2_25ibu")
+region = Rect2(0, 48, 32, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_n5tay"]
+atlas = ExtResource("2_25ibu")
+region = Rect2(0, 64, 32, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jb0m8"]
+atlas = ExtResource("2_25ibu")
+region = Rect2(0, 80, 32, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_b6akp"]
+atlas = ExtResource("2_25ibu")
+region = Rect2(0, 96, 32, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kh33o"]
+atlas = ExtResource("2_25ibu")
+region = Rect2(0, 112, 32, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0qvhq"]
+atlas = ExtResource("2_25ibu")
+region = Rect2(0, 128, 32, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1pcu7"]
+atlas = ExtResource("2_25ibu")
+region = Rect2(0, 144, 32, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_bhyt8"]
+animations = [{
+"frames": [{
+"duration": 0.5,
+"texture": SubResource("AtlasTexture_yv2sf")
+}, {
+"duration": 0.5,
+"texture": SubResource("AtlasTexture_uyxwn")
+}, {
+"duration": 0.5,
+"texture": SubResource("AtlasTexture_38eut")
+}, {
+"duration": 0.5,
+"texture": SubResource("AtlasTexture_yheyt")
+}, {
+"duration": 0.5,
+"texture": SubResource("AtlasTexture_n5tay")
+}, {
+"duration": 0.5,
+"texture": SubResource("AtlasTexture_jb0m8")
+}, {
+"duration": 0.5,
+"texture": SubResource("AtlasTexture_b6akp")
+}, {
+"duration": 0.5,
+"texture": SubResource("AtlasTexture_kh33o")
+}, {
+"duration": 0.5,
+"texture": SubResource("AtlasTexture_0qvhq")
+}, {
+"duration": 0.5,
+"texture": SubResource("AtlasTexture_1pcu7")
+}],
+"loop": true,
+"name": &"default",
+"speed": 7.0
+}]
+
+[node name="VerticalConveyor" type="Node2D"]
+script = ExtResource("1_25ibu")
+allow_vertical = false
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_bhyt8")
+autoplay = "default"
+frame_progress = 0.14805622

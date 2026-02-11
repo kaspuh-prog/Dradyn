@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="ClassDefinition" load_steps=3 format=3 uid="uid://dp6fydovcveoe"]
+
+[ext_resource type="Script" uid="uid://bw2bhebcfgp1u" path="res://Data/KeyFloatPair.gd" id="1_h1yb1"]
+[ext_resource type="Script" uid="uid://b7ipjii2rumgu" path="res://scripts/resources/ClassDefinition.gd" id="2_cjwqo"]
+
+[resource]
+script = ExtResource("2_cjwqo")
+class_title = "Rogue"
+description = "Speedy combatants who favor stealth, light armor, and a little sleight of hand. "
+mp_source = "none"
+gr_STR = 0.2
+gr_DEX = 0.8
+gr_STA = 0.3
+gr_INT = 0.4
+gr_LCK = 0.4
+gr_Attack = 0.1
+gr_Defense = 0.3
+allowed_point_targets = null
+allowed_equipment_classes = null
+section0_name = "Bladedancing"
+section1_name = "Shadework"
+section2_name = "Subterfuge"
+section3_name = "Acrobatics"
+section0_dir = "res://Data/Abilities/Defs/Classes/Rogue/Bladedancing/"
+section1_dir = "res://Data/Abilities/Defs/Classes/Rogue/Shadework/"
+section2_dir = "res://Data/Abilities/Defs/Classes/Rogue/Subterfuge/"
+section3_dir = "res://Data/Abilities/Defs/Classes/Rogue/Acrobatics/"
+metadata/_custom_type_script = "uid://b7ipjii2rumgu"

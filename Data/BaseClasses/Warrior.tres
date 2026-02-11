@@ -6,7 +6,6 @@
 [resource]
 script = ExtResource("1_4nkfv")
 class_title = "Warrior"
-description = "Front-line melee. High STR/STA growth, best physical mitigation."
 mp_source = "none"
 mp_weight_INT = 0.0
 mp_weight_WIS = 0.0

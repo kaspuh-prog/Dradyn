@@ -1,0 +1,57 @@
+[gd_scene load_steps=7 format=3 uid="uid://cybs6qumhbeo1"]
+
+[ext_resource type="Script" uid="uid://c4x3tqlpfs380" path="res://scenes/Actors/NPCs/NonCombatNPC.gd" id="1_3rlhh"]
+[ext_resource type="Texture2D" uid="uid://mbtrcnrsd64u" path="res://assets/sprites/NPCs/NPCHomelesswoman.png" id="2_xsmsm"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3fw82"]
+atlas = ExtResource("2_xsmsm")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8lt3p"]
+atlas = ExtResource("2_xsmsm")
+region = Rect2(0, 128, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yoat1"]
+atlas = ExtResource("2_xsmsm")
+region = Rect2(0, 64, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_ijbgj"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3fw82")
+}],
+"loop": true,
+"name": &"idle_down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8lt3p")
+}],
+"loop": true,
+"name": &"idle_side",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yoat1")
+}],
+"loop": true,
+"name": &"idle_up",
+"speed": 5.0
+}]
+
+[node name="EvictedWoman" type="Node2D"]
+script = ExtResource("1_3rlhh")
+npc_name = "Evicted Woman"
+sprite_path = NodePath("AnimatedSprite2D")
+merchant_id = &""
+talk_lines = PackedStringArray("We used to have an apartment here... After the ArcaLight factory closed my husband lost his job. So now we live out here.", "I wish we could still get inside... A locket from my mother is still in there.", "My husband became addicted to slime during his tenure in the factory. They destroyed our lives...")
+metadata/_custom_type_script = "uid://c4x3tqlpfs380"
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -8)
+sprite_frames = SubResource("SpriteFrames_ijbgj")
+animation = &"idle_down"
+offset = Vector2(0, -8)

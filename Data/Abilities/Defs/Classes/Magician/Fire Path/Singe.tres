@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=8 format=3 uid="uid://boqs5bw7e0b4e"]
+
+[ext_resource type="Script" uid="uid://u63t4oseank1" path="res://scenes/Actors/status/StatusApplySpec.gd" id="1_0bjeb"]
+[ext_resource type="Resource" uid="uid://otcvka3cyw7d" path="res://Data/Abilities/StatusApplySpecs/BurntBySinge.tres" id="2_1eylk"]
+[ext_resource type="Script" uid="uid://byobol8rhb4cs" path="res://scripts/stats/StatModifier.gd" id="2_ygkox"]
+[ext_resource type="Texture2D" uid="uid://55s0i5aejubv" path="res://assets/sprites/abilityicons/Singe.png" id="3_1eylk"]
+[ext_resource type="Script" uid="uid://dsj3lq6kwixdp" path="res://Data/Abilities/AbilityDef.gd" id="4_62u3h"]
+[ext_resource type="Script" uid="uid://c87lf672qvjv1" path="res://Data/Abilities/AbilitySfxCue.gd" id="6_62u3h"]
+[ext_resource type="Resource" uid="uid://c10p33rvrfe7t" path="res://Data/Abilities/AbilitySFXCues/Singe.tres" id="7_0q525"]
+
+[resource]
+script = ExtResource("4_62u3h")
+ability_id = "Singe"
+display_name = "Singe"
+icon = ExtResource("3_1eylk")
+description = "No kindling required, imagine if the cavemen would have learned to make fire this way."
+section_index = 1
+ability_type = "DAMAGE_SPELL"
+target_rule = "ENEMY_SINGLE"
+mp_cost = 16.0
+gcd_sec = 1.0
+cooldown_sec = 3.0
+power = 28.0
+scale_stat = "INT"
+cast_anim = "cast1"
+vfx_hint = "Singe"
+sfx_cues = Array[ExtResource("6_62u3h")]([ExtResource("7_0q525")])
+melee_hit_frames = null
+passive_gate_equipment_classes = null
+passive_gate_item_ids = null
+passive_proc_section_indices = null
+passive_proc_ability_types = null
+passive_proc_ability_ids = null
+cure_status_ids = PackedStringArray()
+cure_modifier_sources = PackedStringArray()
+cure_stacking_keys = PackedStringArray()
+applies_status = Array[ExtResource("1_0bjeb")]([ExtResource("2_1eylk")])

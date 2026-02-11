@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=8 format=3 uid="uid://5drb0o3whuf"]
+
+[ext_resource type="Script" uid="uid://u63t4oseank1" path="res://scenes/Actors/status/StatusApplySpec.gd" id="1_lxvl3"]
+[ext_resource type="Script" uid="uid://byobol8rhb4cs" path="res://scripts/stats/StatModifier.gd" id="2_liqf0"]
+[ext_resource type="Resource" uid="uid://b8cxll45cct4a" path="res://Data/StatModifiers/MPRegen1.tres" id="3_5io7g"]
+[ext_resource type="Script" uid="uid://dsj3lq6kwixdp" path="res://Data/Abilities/AbilityDef.gd" id="3_kqqyn"]
+[ext_resource type="Script" uid="uid://c87lf672qvjv1" path="res://Data/Abilities/AbilitySfxCue.gd" id="4_5io7g"]
+[ext_resource type="Resource" uid="uid://bwytyhktsauq3" path="res://Data/StatModifiers/Regen-1.tres" id="4_6vbxv"]
+[ext_resource type="Texture2D" uid="uid://cwoipwb1kdelj" path="res://assets/sprites/abilityicons/BloodtoBurn.png" id="5_5io7g"]
+
+[resource]
+script = ExtResource("3_kqqyn")
+ability_id = "BloodtoBurn"
+display_name = "Blood to Burn"
+icon = ExtResource("5_5io7g")
+description = "The necromancer uses their own lifeforce to regenerate fuel for their arcane abilities."
+unlock_cost = 0
+ability_type = "BUFF"
+requires_target = false
+target_rule = "SELF"
+mp_cost = 10.0
+cast_anim = "cast2"
+vfx_hint = "BloodtoBurn"
+duration_sec = 900.0
+melee_hit_frames = null
+buff_mods = Array[ExtResource("2_liqf0")]([ExtResource("3_5io7g"), ExtResource("4_6vbxv")])
+passive_gate_equipment_classes = null
+passive_gate_item_ids = null
+passive_proc_section_indices = null
+passive_proc_ability_types = null
+passive_proc_ability_ids = null
+cure_status_ids = null
+cure_modifier_sources = null
+cure_stacking_keys = null
+metadata/_custom_type_script = "uid://dsj3lq6kwixdp"

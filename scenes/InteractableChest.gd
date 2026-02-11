@@ -84,6 +84,7 @@ func interact(actor: Node) -> void:
 		_opened = true
 		_opening_in_progress = false
 		# Fire visuals; watchdog will force despawn if anything stalls
+		_start_despawn_watchdog()
 		_play_open_visual_and_bump_then_despawn()
 		return
 
@@ -230,15 +231,22 @@ func _wait_for_open_visuals() -> void:
 				if est <= 0.0:
 					est = despawn_fallback_seconds
 
-				var finished: bool = false
-				var timed_out: bool = false
+				# Godot 4.x warning fix:
+				# Use boxed locals so lambda writes are unambiguous.
+				var finished_box: Array[bool] = [false]
+				var timed_out_box: Array[bool] = [false]
 
-				_sprite.animation_finished.connect(func() -> void: finished = true, CONNECT_ONE_SHOT)
+				_sprite.animation_finished.connect(func() -> void:
+					finished_box[0] = true
+				, CONNECT_ONE_SHOT)
+
 				var timer: SceneTreeTimer = get_tree().create_timer(est)
-				timer.timeout.connect(func() -> void: timed_out = true, CONNECT_ONE_SHOT)
+				timer.timeout.connect(func() -> void:
+					timed_out_box[0] = true
+				, CONNECT_ONE_SHOT)
 
 				_sprite.play(String(open_anim))
-				while not finished and not timed_out:
+				while (not finished_box[0]) and (not timed_out_box[0]):
 					await get_tree().process_frame
 
 				waited = true

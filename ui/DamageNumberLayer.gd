@@ -52,7 +52,7 @@ class_name DamageNumberLayer
 # --- Status banner defaults (match StatusConditions tinting) ---
 const STATUS_COLOR_DEFAULT: Color = Color(0.95, 0.95, 0.95, 1.0)
 const STATUS_COLOR_POISONED: Color = Color8(0xA6, 0x4B, 0xD6, 0xFF)  # purple
-const STATUS_COLOR_BURNING: Color  = Color8(0xFF, 0x8A, 0x00, 0xFF)  # orange
+const STATUS_COLOR_BURNING: Color = Color("#e44a00")
 const STATUS_COLOR_FROZEN: Color   = Color8(0x66, 0xCC, 0xFF, 0xFF)  # light blue
 
 # Recommended defaults for status banners (kept internal, StatusConditions can send explicit opts)
@@ -304,16 +304,28 @@ func _status_default_color(id: StringName) -> Color:
 # -----------------------------------------------------------------------------
 # Signals
 # -----------------------------------------------------------------------------
-func _on_damage_taken(amount: float, _dmg_type: String, _source: String, stats: Node) -> void:
+
+# NEW: treat Status:* sources as "handled elsewhere" (StatusConditions calls show_status_tick).
+func _is_status_source(source: String) -> bool:
+	var s: String = source.strip_edges()
+	if s == "":
+		return false
+	return s.to_lower().begins_with("status:")
+
+func _on_damage_taken(amount: float, _dmg_type: String, source: String, stats: Node) -> void:
+	if _is_status_source(source):
+		return
 	var now: float = _now()
 	_suppress_hp_until[stats] = now + suppress_hp_after_damage_sec
 	_queue_delta(stats, -absf(amount), false)
 
-func _on_damage_taken_ex(amount: float, _dmg_type: String, _source: String, is_crit: bool, stats: Node) -> void:
+func _on_damage_taken_ex(amount: float, _dmg_type: String, source: String, is_crit: bool, stats: Node) -> void:
+	if _is_status_source(source):
+		return
 	var now: float = _now()
 	_suppress_hp_until[stats] = now + suppress_hp_after_damage_sec
 	if debug_log:
-		print("[DNL] dmg_ex amount=", amount, " is_crit=", is_crit, " stats=", stats)
+		print("[DNL] dmg_ex amount=", amount, " is_crit=", is_crit, " source=", source, " stats=", stats)
 	if crit_immediate and is_crit:
 		_flush_now_for(stats)  # keep ordering sane
 		_emit_number(stats, -absf(amount), true)
@@ -366,7 +378,7 @@ func _queue_delta(stats: Node, delta: float, is_crit: bool) -> void:
 		_pending[stats] = entry
 	else:
 		_pending[stats] = {"sum": delta, "crit": is_crit}
-	_flush_at[stats] = _now() + coalesce_window_sec
+		_flush_at[stats] = _now() + coalesce_window_sec
 
 func _flush_now_for(stats_key) -> void:
 	var val: Variant = _pending.get(stats_key, null)

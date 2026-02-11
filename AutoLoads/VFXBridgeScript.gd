@@ -8,14 +8,35 @@ class_name VFXBridgeScript
 
 @export_group("Appearance Defaults")
 @export var heal_lifetime: float = 1.20
+# Legacy (kept for compatibility; no longer used)
 @export var heal_offset: Vector2 = Vector2(-2, -24)
 @export var heal_opacity: float = 0.80
 @export var heal_z_index: int = 5
 
 @export var revive_lifetime: float = 1.20
+# Legacy (kept for compatibility; no longer used)
 @export var revive_offset: Vector2 = Vector2(0, -20)
 @export var revive_opacity: float = 0.90
 @export var revive_z_index: int = 6
+
+@export_group("Global VFX Offset")
+@export var vfx_offset_from_center: Vector2 = Vector2(0, -4)
+# You can override per-cast via ctx["vfx_offset"] = Vector2(...)
+
+@export_group("Auto Scale")
+@export var auto_scale_enabled: bool = true
+@export var auto_scale_only_down: bool = true
+@export var auto_scale_target_height_px: float = 64.0
+@export var auto_scale_max_width_px: float = 64.0
+@export var auto_scale_min_scale: float = 0.12
+@export var auto_scale_max_scale: float = 3.0
+
+# ctx overrides supported:
+#  - vfx_disable_auto_scale: bool
+#  - vfx_target_height_px: float
+#  - vfx_max_width_px: float
+#  - vfx_scale: float   (multiplies final computed scale)
+#  - vfx_offset: Vector2 (overrides vfx_offset_from_center)
 
 @export_group("Debug")
 @export var debug_logging: bool = false
@@ -25,17 +46,26 @@ const META_DESPAWN_AT_MS: String = "vfx_despawn_at_ms"
 
 
 func _ready() -> void:
-	# Make sure our cleanup _process runs every frame, even when the game is paused.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_process(true)
 
 
+# -------------------------------------------------------------------
+# Public API (legacy): emit and forget
+# -------------------------------------------------------------------
 func emit_for_node(hint: StringName, target: Node, ctx: Dictionary = {}) -> void:
+	emit_for_node_sprite(hint, target, ctx)
+
+
+# -------------------------------------------------------------------
+# Public API (NEW): emit and return the spawned sprite (for frame hooks)
+# -------------------------------------------------------------------
+func emit_for_node_sprite(hint: StringName, target: Node, ctx: Dictionary = {}) -> AnimatedSprite2D:
 	if hint == StringName(""):
-		return
+		return null
 	if target == null:
-		_log("emit_for_node: target is null")
-		return
+		_log("emit_for_node_sprite: target is null")
+		return null
 
 	var frames: SpriteFrames = _resolve_frames_by_ctx(ctx)
 
@@ -49,17 +79,18 @@ func emit_for_node(hint: StringName, target: Node, ctx: Dictionary = {}) -> void
 
 	if frames == null:
 		_log("No frames resolved for hint=" + String(hint))
-		return
+		return null
 
 	var anchor: Node2D = _best_anchor_for(target)
 	if anchor == null:
 		_log("No anchor found for target=" + target.name)
-		return
+		return null
 
+	# NOTE: Offsets are now globally controlled by vfx_offset_from_center (or ctx["vfx_offset"]).
 	if hint == StringName("revive_target"):
-		_spawn_frames_sprite(anchor, frames, revive_lifetime, revive_offset, revive_z_index, revive_opacity)
-	else:
-		_spawn_frames_sprite(anchor, frames, heal_lifetime, heal_offset, heal_z_index, heal_opacity)
+		return _spawn_frames_sprite(anchor, frames, revive_lifetime, Vector2.ZERO, revive_z_index, revive_opacity, ctx, hint)
+
+	return _spawn_frames_sprite(anchor, frames, heal_lifetime, Vector2.ZERO, heal_z_index, heal_opacity, ctx, hint)
 
 
 func emit_at_position(hint: StringName, world_position: Vector2, ctx: Dictionary = {}, parent_hint: Node = null) -> void:
@@ -81,7 +112,7 @@ func emit_at_position(hint: StringName, world_position: Vector2, ctx: Dictionary
 	if parent == null:
 		return
 
-	var spr: AnimatedSprite2D = _spawn_frames_sprite(parent, frames, 1.0, Vector2.ZERO, 0, 1.0)
+	var spr: AnimatedSprite2D = _spawn_frames_sprite(parent, frames, 1.0, Vector2.ZERO, 0, 1.0, ctx, hint)
 	if spr != null:
 		spr.global_position = world_position
 
@@ -245,7 +276,16 @@ func _try_load_frames(path: String) -> SpriteFrames:
 	return frames
 
 
-func _spawn_frames_sprite(parent: Node2D, frames: SpriteFrames, lifetime: float, offset: Vector2, z_index: int, opacity: float) -> AnimatedSprite2D:
+func _spawn_frames_sprite(
+	parent: Node2D,
+	frames: SpriteFrames,
+	lifetime: float,
+	offset: Vector2,
+	z_index: int,
+	opacity: float,
+	ctx: Dictionary = {},
+	hint: StringName = &""
+) -> AnimatedSprite2D:
 	if parent == null or frames == null:
 		return null
 
@@ -256,7 +296,10 @@ func _spawn_frames_sprite(parent: Node2D, frames: SpriteFrames, lifetime: float,
 	spr.visible = true
 	spr.z_index = z_index
 
-	# Tag as transient VFX so we can hard-clean if timers fail.
+	var scale_factor: float = _compute_vfx_scale(dup_frames, ctx)
+	if scale_factor != 1.0:
+		spr.scale = Vector2(scale_factor, scale_factor)
+
 	spr.add_to_group(GROUP_TRANSIENT_VFX)
 	var now_ms: int = Time.get_ticks_msec()
 	var base_ms: int = int(max(0.0, lifetime) * 1000.0)
@@ -266,9 +309,13 @@ func _spawn_frames_sprite(parent: Node2D, frames: SpriteFrames, lifetime: float,
 
 	parent.add_child(spr)
 
+	var final_offset: Vector2 = Vector2.ZERO
+	final_offset += offset
+	final_offset += _resolve_vfx_offset(ctx)
+
 	var n2d: Node2D = spr as Node2D
 	if n2d != null:
-		n2d.position += offset
+		n2d.position += final_offset
 
 	var ci: CanvasItem = spr as CanvasItem
 	if ci != null:
@@ -283,8 +330,16 @@ func _spawn_frames_sprite(parent: Node2D, frames: SpriteFrames, lifetime: float,
 			if names.size() > 0:
 				anim_name = names[0]
 
+	if dup_frames != null:
+		dup_frames.set_animation_loop(anim_name, false)
+
 	spr.animation = anim_name
 	spr.play()
+
+	spr.animation_finished.connect(func() -> void:
+		if is_instance_valid(spr):
+			spr.queue_free()
+	)
 
 	var timer: Timer = Timer.new()
 	timer.one_shot = true
@@ -299,6 +354,83 @@ func _spawn_frames_sprite(parent: Node2D, frames: SpriteFrames, lifetime: float,
 	return spr
 
 
+func _resolve_vfx_offset(ctx: Dictionary) -> Vector2:
+	if ctx.has("vfx_offset"):
+		var v: Variant = ctx["vfx_offset"]
+		if typeof(v) == TYPE_VECTOR2:
+			return v as Vector2
+	return vfx_offset_from_center
+
+
+func _compute_vfx_scale(frames: SpriteFrames, ctx: Dictionary) -> float:
+	var final_scale: float = 1.0
+
+	var disable_auto: bool = false
+	if ctx.has("vfx_disable_auto_scale"):
+		var v_disable: Variant = ctx["vfx_disable_auto_scale"]
+		if typeof(v_disable) == TYPE_BOOL:
+			disable_auto = bool(v_disable)
+
+	var target_h: float = auto_scale_target_height_px
+	if ctx.has("vfx_target_height_px"):
+		var v_th: Variant = ctx["vfx_target_height_px"]
+		if typeof(v_th) == TYPE_FLOAT or typeof(v_th) == TYPE_INT:
+			target_h = float(v_th)
+
+	var max_w: float = auto_scale_max_width_px
+	if ctx.has("vfx_max_width_px"):
+		var v_mw: Variant = ctx["vfx_max_width_px"]
+		if typeof(v_mw) == TYPE_FLOAT or typeof(v_mw) == TYPE_INT:
+			max_w = float(v_mw)
+
+	if auto_scale_enabled and not disable_auto:
+		var anim_name: String = "default"
+		if not frames.has_animation(anim_name):
+			var names: PackedStringArray = frames.get_animation_names()
+			if names.size() > 0:
+				anim_name = names[0]
+
+		var tex: Texture2D = null
+		if frames.has_animation(anim_name):
+			if frames.get_frame_count(anim_name) > 0:
+				tex = frames.get_frame_texture(anim_name, 0)
+
+		if tex != null:
+			var w: float = float(tex.get_width())
+			var h: float = float(tex.get_height())
+
+			var scale_h: float = 1.0
+			if h > 0.0 and target_h > 0.0:
+				scale_h = target_h / h
+
+			var scale_w: float = 1.0
+			if max_w > 0.0 and w > 0.0:
+				scale_w = max_w / w
+
+			var computed: float = scale_h
+			if scale_w < computed:
+				computed = scale_w
+
+			if auto_scale_only_down:
+				if computed > 1.0:
+					computed = 1.0
+
+			if computed < auto_scale_min_scale:
+				computed = auto_scale_min_scale
+			if computed > auto_scale_max_scale:
+				computed = auto_scale_max_scale
+
+			final_scale = computed
+
+	if ctx.has("vfx_scale"):
+		var v_scale: Variant = ctx["vfx_scale"]
+		if typeof(v_scale) == TYPE_FLOAT or typeof(v_scale) == TYPE_INT:
+			var mul: float = float(v_scale)
+			final_scale *= mul
+
+	return final_scale
+
+
 func _fallback_world_canvas() -> Node2D:
 	var root: Node = get_tree().current_scene
 	if root == null:
@@ -307,7 +439,6 @@ func _fallback_world_canvas() -> Node2D:
 	return r2d
 
 
-# Small helpers
 func _to_camel_no_space(s: String) -> String:
 	var parts: PackedStringArray = s.split("_", false)
 	var out: String = ""

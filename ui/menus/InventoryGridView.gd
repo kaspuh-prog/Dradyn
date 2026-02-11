@@ -25,12 +25,28 @@ signal hovered(index: int)
 @export var tex_hover_overlay: Texture2D
 @export var tex_selected_overlay: Texture2D
 
+@export_group("Selection Outline")
+@export var selected_outline_enabled: bool = true
+@export var selected_outline_color: Color = Color(1.0, 1.0, 1.0, 1.0)
+@export var selected_outline_width: float = 1.0
+
+# ---------------- UI SFX ----------------
+@export_group("UI SFX")
+@export var ui_click_event: StringName = &"UI_click"
+@export var ui_click_volume_db: float = 0.0
+@export var audio_autoload_names: PackedStringArray = PackedStringArray(["AudioSys", "AudioSystem"])
+@export var debug_log: bool = false
+
 var _hover_index: int = -1
 var _selected_index: int = -1
 var _total_capacity: int = 0
 
 var _inv: InventorySystem = null
 var _party: Node = null
+
+# Audio autoload cache
+var _audio_obj: Object = null
+var _audio_checked_once: bool = false
 
 # Click vs Drag state
 var _pressing: bool = false
@@ -44,6 +60,9 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_PASS
 	focus_mode = Control.FOCUS_ALL
 	_total_capacity = cols * rows
+
+	_resolve_audio_sys()
+
 	_resolve_inventory()
 	_resolve_party()
 	_bind_party_signals()
@@ -190,6 +209,7 @@ func _gui_input(event: InputEvent) -> void:
 				_press_pos = mb.position
 				_press_index = _index_at_local(mb.position)
 				if _press_index >= 0:
+					_play_ui_click()
 					set_selected_index(_press_index)
 			else:
 				if _pressing and not _dragging and _press_index >= 0:
@@ -217,6 +237,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_move_selection(cols)
 	elif event.is_action_pressed("ui_accept"):
 		if _selected_index >= 0:
+			_play_ui_click()
 			activated.emit(_selected_index)
 
 func _move_selection(delta: int) -> void:
@@ -296,6 +317,20 @@ func _draw_overlays() -> void:
 		var sx: int = _selected_index % cols
 		var sy: int = _selected_index / cols
 		draw_texture(tex_selected_overlay, Vector2(sx * cell_size, sy * cell_size))
+
+	# NEW: 1px outline for the selected cell (readability)
+	if selected_outline_enabled and _selected_index >= 0 and _selected_index < total:
+		var sx2: int = _selected_index % cols
+		var sy2: int = _selected_index / cols
+		var srect: Rect2 = Rect2(Vector2(sx2 * cell_size, sy2 * cell_size), Vector2(cell_size, cell_size))
+
+		var w: float = selected_outline_width
+		if w <= 0.0:
+			w = 1.0
+
+		var inset: float = w * 0.5
+		var orect: Rect2 = srect.grow(-inset)
+		draw_rect(orect, selected_outline_color, false, w)
 
 # -----------------------------
 # Drag & drop (STRICT per-actor)
@@ -422,3 +457,49 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 				return
 
 		# If neither API exists or both fail, do nothing here (avoid duplicating logic).
+
+# -----------------------------
+# Audio helpers
+# -----------------------------
+func _resolve_audio_sys() -> void:
+	if _audio_checked_once and _audio_obj != null and is_instance_valid(_audio_obj):
+		return
+	if _audio_checked_once and _audio_obj == null:
+		return
+
+	_audio_checked_once = true
+	_audio_obj = null
+
+	var root: Node = get_tree().get_root()
+	var i: int = 0
+	while i < audio_autoload_names.size():
+		var nm: String = audio_autoload_names[i]
+		var path: String = "/root/" + nm
+		if root.has_node(path):
+			var obj: Object = root.get_node(path)
+			if obj != null:
+				_audio_obj = obj
+				if debug_log:
+					print("[InventoryGridView] Resolved audio autoload: ", path)
+				return
+		i += 1
+
+func _play_ui_click() -> void:
+	if ui_click_event == StringName(""):
+		return
+
+	if _audio_obj == null or not is_instance_valid(_audio_obj):
+		_audio_checked_once = false
+		_resolve_audio_sys()
+
+	if _audio_obj == null or not is_instance_valid(_audio_obj):
+		return
+
+	if _audio_obj.has_method("play_ui_sfx"):
+		_audio_obj.call("play_ui_sfx", ui_click_event, ui_click_volume_db)
+		return
+
+	# Fallback (older AudioSystem only exposes play_sfx_event)
+	if _audio_obj.has_method("play_sfx_event"):
+		_audio_obj.call("play_sfx_event", ui_click_event, Vector2.INF, ui_click_volume_db)
+		return

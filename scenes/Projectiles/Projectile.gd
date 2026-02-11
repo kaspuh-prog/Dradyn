@@ -22,7 +22,7 @@ signal expired
 @onready var collision: CollisionShape2D = $Collision
 
 # Debug
-@export var debug_projectile: bool = true
+@export var debug_projectile: bool = false
 
 # Runtime
 var _dir: Vector2 = Vector2.RIGHT
@@ -137,11 +137,14 @@ func _try_hit(target: Node) -> void:
 
 	# Apply damage through StatsComponent if available
 	if stats != null:
-		var packet := {
+		var packet: Dictionary = {
 			"amount": _base_damage,
 			"types": {damage_type: 1.0},
 			"source": _ability_id,
-			"is_crit": false
+			"is_crit": false,
+			"source_node": _caster,
+			"ability_id": _ability_id,
+			"ability_type": "PROJECTILE"
 		}
 		if stats.has_method("apply_damage_packet"):
 			stats.apply_damage_packet(packet)
@@ -168,30 +171,55 @@ func _matches_hit_groups(n: Node) -> bool:
 	return false
 
 func _find_stats_component(n: Node) -> Node:
+	if n == null:
+		return null
+	if n.has_method("get_stats"):
+		var v: Variant = n.call("get_stats")
+		if v is Node:
+			return v
 	if n.has_node("StatsComponent"):
-		var s := n.get_node("StatsComponent")
-		if s is Node:
-			return s
-	for c in n.get_children():
-		if c is Node and c.name == "StatsComponent":
-			return c
+		return n.get_node("StatsComponent")
 	return null
 
 func _apply_sprite_orientation(dir: Vector2) -> void:
-	if sprite == null:
-		return
 	if orientation_mode == "FREE_ROTATE":
-		rotation = atan2(dir.y, dir.x)
-		if sprite is AnimatedSprite2D:
-			sprite.flip_h = false
-	else:
-		# FOUR_WAY: keep crisp pixels (flip for left; rotate 90° for up/down)
-		if abs(dir.x) >= abs(dir.y):
-			rotation = 0.0
+		if dir.length() > 0.001:
+			rotation = dir.angle()
+		return
+
+	# FOUR_WAY mode: up/down/left/right or side/down/up with flip
+	if dir == Vector2.ZERO:
+		return
+
+	var use_side: bool = false
+	if sprite != null and sprite.sprite_frames != null:
+		if sprite.sprite_frames.has_animation("fly_side"):
+			use_side = true
+
+	if use_side:
+		if absf(dir.x) >= absf(dir.y):
+			if sprite is AnimatedSprite2D:
+				sprite.flip_h = (dir.x < 0.0)
 			if dir.x >= 0.0:
+				rotation = 0.0
+			else:
+				rotation = PI
+		else:
+			if sprite is AnimatedSprite2D:
+				sprite.flip_h = false
+			if dir.y < 0.0:
+				rotation = -PI * 0.5
+			else:
+				rotation = PI * 0.5
+	else:
+		# Simple directional flip based on X, with up/down rotation.
+		if absf(dir.x) > absf(dir.y):
+			if dir.x >= 0.0:
+				rotation = 0.0
 				if sprite is AnimatedSprite2D:
 					sprite.flip_h = false
 			else:
+				rotation = 0.0
 				if sprite is AnimatedSprite2D:
 					sprite.flip_h = true
 		else:

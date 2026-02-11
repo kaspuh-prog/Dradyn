@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="LootEntry" load_steps=3 format=3 uid="uid://jkroo3agm7m5"]
+
+[ext_resource type="Resource" uid="uid://c0530yxm1h32y" path="res://Data/items/reagent/PoisonRatEar.tres" id="1_721rn"]
+[ext_resource type="Script" uid="uid://bj3tpnw12ybt7" path="res://world/loot/LootEntry.gd" id="2_5da1r"]
+
+[resource]
+script = ExtResource("2_5da1r")
+id = "PoisonRatEar_Loot"
+percent_chance = 12.0
+item_def = ExtResource("1_721rn")

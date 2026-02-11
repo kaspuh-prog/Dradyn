@@ -1,0 +1,14 @@
+act_id,step_id,part_id,story_key,story_label,next_act_id,next_part_id,next_step_id,flags_set_on_enter,flags_clear_on_enter,flags_set_on_complete,flags_clear_on_complete
+1,1,1,WAKE_UP_TO_RATS,Rats in the Cellar (Intro Cutscene),1,2,1,story_orphanage_intro_done,," ""quest_rats_active""",
+1,1,2,RATS_CELLAR_QUEST,Cull the Rats in the Cellar,1,3,1,,," ""quest_rats_complete""",quest_rats_active
+1,1,3,HOUSE_MOTHER_POST_RATS,Report Back to the House Mother,1,1,2,visit_rosali,," """"",
+1,2,1,VISIT_ROSALI,A Dinner for Friends,1,1,3,,,,
+1,3,,SHUS_TEST,Shishuku's Affinity Test,1,4,,,,,
+1,4,,GOLDEN_HEN_INN,We've All Got Problems,1,5,,,,,
+1,5,,SECRET_MEETING,Meetup on the Rooftops,1,6,,,,,
+1,6,,SLUMS_AMBUSH,We the Hunted,1,7,,,,,
+1,7,,SNEAKING_ENTERTAINMENT,Creeping through the Entertainment District,1,8,,,,,
+1,8,,SNEAKING_MARKET,Ducking through Merchant's Row,1,9,,,,,
+1,9,,AIRSHIP_DOCKS,Flight through the Docks,1,10,,,,,
+1,10,,LEAVING_HOME,Say Goodbye to Langtree,2,1,,,,,
+2,1,,ACT2_INTRO,"The ""City"" of Krimbad",0,0,,,,,

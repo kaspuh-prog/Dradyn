@@ -33,6 +33,11 @@ signal sell_payload_dropped(data: Dictionary)
 @export var tex_hover_overlay: Texture2D
 @export var tex_selected_overlay: Texture2D
 
+@export_group("Selection Outline")
+@export var selected_outline_enabled: bool = true
+@export var selected_outline_color: Color = Color(1.0, 1.0, 1.0, 1.0)
+@export var selected_outline_width: float = 1.0
+
 var _hover_index: int = -1
 var _selected_index: int = -1
 
@@ -59,7 +64,7 @@ func _resize_items() -> void:
 # Public API
 # -------------------------------------------------
 
-func set_stock(items: Array) -> void:
+func set_stock(items: Array[ItemDef]) -> void:
 	var total: int = cols * rows
 	_items.resize(total)
 
@@ -215,9 +220,11 @@ func _draw() -> void:
 		var cx: int = i % cols
 		var cy: int = i / cols
 		var pos: Vector2 = Vector2(float(cx * cell_size), float(cy * cell_size))
+		var slot_rect: Rect2 = Rect2(pos, Vector2(float(cell_size), float(cell_size)))
 
 		if tex_slot_empty != null:
-			draw_texture(tex_slot_empty, pos)
+			# Scale the empty slot art to exactly the cell rect.
+			draw_texture_rect(tex_slot_empty, slot_rect, false)
 
 		i += 1
 
@@ -228,6 +235,12 @@ func _draw_item_icons() -> void:
 	var total: int = cols * rows
 	var i: int = 0
 
+	# Draw each icon slightly inset so it never crowds the slot border.
+	var inset: float = 1.0
+	var icon_size: float = float(cell_size) - inset * 2.0
+	if icon_size < 1.0:
+		icon_size = float(cell_size)
+
 	while i < total:
 		if i < _items.size():
 			var it_v: Variant = _items[i]
@@ -236,8 +249,9 @@ func _draw_item_icons() -> void:
 				if def.icon != null:
 					var cx: int = i % cols
 					var cy: int = i / cols
-					var pos: Vector2 = Vector2(float(cx * cell_size), float(cy * cell_size))
-					var rect: Rect2 = Rect2(pos, Vector2(float(cell_size), float(cell_size)))
+					var base_pos: Vector2 = Vector2(float(cx * cell_size), float(cy * cell_size))
+					var icon_pos: Vector2 = base_pos + Vector2(inset, inset)
+					var rect: Rect2 = Rect2(icon_pos, Vector2(icon_size, icon_size))
 					draw_texture_rect(def.icon, rect, false)
 		i += 1
 
@@ -248,10 +262,27 @@ func _draw_overlays() -> void:
 		var hx: int = _hover_index % cols
 		var hy: int = _hover_index / cols
 		var hpos: Vector2 = Vector2(float(hx * cell_size), float(hy * cell_size))
-		draw_texture(tex_hover_overlay, hpos)
+		var hrect: Rect2 = Rect2(hpos, Vector2(float(cell_size), float(cell_size)))
+		draw_texture_rect(tex_hover_overlay, hrect, false)
 
 	if _selected_index >= 0 and _selected_index < total and tex_selected_overlay != null:
 		var sx: int = _selected_index % cols
 		var sy: int = _selected_index / cols
 		var spos: Vector2 = Vector2(float(sx * cell_size), float(sy * cell_size))
-		draw_texture(tex_selected_overlay, spos)
+		var srect: Rect2 = Rect2(spos, Vector2(float(cell_size), float(cell_size)))
+		draw_texture_rect(tex_selected_overlay, srect, false)
+
+	if _selected_index >= 0 and _selected_index < total and selected_outline_enabled:
+		var sx2: int = _selected_index % cols
+		var sy2: int = _selected_index / cols
+		var spos2: Vector2 = Vector2(float(sx2 * cell_size), float(sy2 * cell_size))
+		var srect2: Rect2 = Rect2(spos2, Vector2(float(cell_size), float(cell_size)))
+
+		var w: float = selected_outline_width
+		if w <= 0.0:
+			w = 1.0
+
+		# Inset by half the line width so the stroke doesn’t clip outside the cell.
+		var inset2: float = w * 0.5
+		var orect: Rect2 = srect2.grow(-inset2)
+		draw_rect(orect, selected_outline_color, false, w)

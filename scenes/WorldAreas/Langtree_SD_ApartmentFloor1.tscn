@@ -1,0 +1,149 @@
+[gd_scene load_steps=12 format=4 uid="uid://b6hpu4rijvwnp"]
+
+[ext_resource type="Script" uid="uid://bm1dpu20h5tgk" path="res://scripts/AreaTemplate.gd" id="1_2x6bm"]
+[ext_resource type="TileSet" uid="uid://ce704ljctriud" path="res://assets/tilesets/Main.tres" id="2_m8vck"]
+[ext_resource type="Script" uid="uid://c3v3pby11hsgf" path="res://scenes/WorldAreas/TileTorchLights.gd" id="3_2jxfb"]
+[ext_resource type="Script" uid="uid://cjnlnc13qv4i4" path="res://scenes/lighting/LightingController.gd" id="4_7f03w"]
+[ext_resource type="Script" uid="uid://b60ucdsusu26g" path="res://scenes/lighting/WindowBeams2D.gd" id="5_wjc4n"]
+[ext_resource type="Texture2D" uid="uid://bfdipqlq7iy8q" path="res://assets/lighting/lightcookie.png" id="6_cc42t"]
+[ext_resource type="Script" uid="uid://cebew03wacnla" path="res://scenes/WorldAreas/AreaLootProvider.gd" id="7_m3n7e"]
+[ext_resource type="PackedScene" uid="uid://cir0u84wdxg38" path="res://scenes/InteractableChest.tscn" id="8_snfju"]
+[ext_resource type="Script" uid="uid://dyj0l2pcdql7b" path="res://scenes/WorldAreas/InteractableDoor.gd" id="9_po4j5"]
+[ext_resource type="SpriteFrames" uid="uid://dhjh2y050t1va" path="res://assets/sprites/Doors/ExteriorGreenDoor.tres" id="10_dvre6"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_bcmc2"]
+size = Vector2(30, 46)
+
+[node name="LangtreeSlumsApartments" type="Node2D"]
+script = ExtResource("1_2x6bm")
+metadata/_custom_type_script = "uid://bm1dpu20h5tgk"
+
+[node name="L0_Ground" type="TileMapLayer" parent="."]
+z_index = -10
+tile_map_data = PackedByteArray("AAAEAPz/CAARAA4AAAAEAP3/CAARAA8AAAAFAPz/CAARAA4AAAAFAP3/CAARAA8AAAADAPz/CAARAA4AAAADAP3/CAARAA8AAAACAPz/CAARAA4AAAACAP3/CAARAA8AAAABAPz/CAARAA4AAAABAP3/CAARAA8AAAAAAPz/CAARAA4AAAAAAP3/CAARAA8AAAD///z/CAARAA4AAAD///3/CAARAA8AAAD+//z/CAARAA4AAAD+//3/CAARAA8AAAD9//z/CAARAA4AAAD9//3/CAARAA8AAAD8//z/CAARAA4AAAD8//3/CAARAA8AAAD7//z/CAARAA4AAAD7//3/CAARAA8AAAD6//z/CAARAA4AAAD6//3/CAARAA8AAAD5//z/CAARAA4AAAD5//3/CAARAA8AAAD4//z/CAARAA4AAAD4//3/CAARAA8AAAD3//z/CAARAA4AAAD3//3/CAARAA8AAAD2//z/CAARAA4AAAD2//3/CAARAA8AAAD1//z/CAARAA4AAAD1//3/CAARAA8AAAD0//z/CAARAA4AAAD0//3/CAARAA8AAADz//z/CAARAA4AAADz//3/CAARAA8AAADy//z/CAARAA4AAADy//3/CAARAA8AAADx//z/CAARAA4AAADx//3/CAARAA8AAADw//z/CAARAA4AAADw//3/CAARAA8AAADv//z/CAARAA4AAADv//3/CAARAA8AAADu//z/CAARAA4AAADu//3/CAARAA8AAADt//z/CAARAA4AAADt//3/CAARAA8AAADs//z/CAARAA4AAADs//3/CAARAA8AAADr//z/CAARAA4AAADr//3/CAARAA8AAADq//z/CAARAA4AAADq//3/CAARAA8AAADp//z/CAARAA4AAADp//3/CAARAA8AAADo//z/CAARAA4AAADo//3/CAARAA8AAADn//z/CAARAA4AAADn//3/CAARAA8AAADm//z/CAARAA4AAADm//3/CAARAA8AAADl//z/CAARAA4AAADl//3/CAARAA8AAADk//z/CAAWAAcAAADk//3/CAAWAAgAAAAFAP7/CAAEAAQAAAAEAP7/CAADAAQAAAADAP7/CAACAAQAAAACAP7/CAABAAQAAAABAP7/CAAAAAQAAAAAAP7/CAAAAAQAAAD///7/CAAAAAQAAAD+//7/CAAAAAQAAAD9//7/CAAAAAQAAAD8//7/CAAAAAQAAAD7//7/CAAAAAQAAAD6//7/CAAAAAQAAAD5//7/CAAEAAQAAAD4//7/CAADAAQAAAD3//7/CAACAAQAAAD2//7/CAABAAQAAAD1//7/CAAAAAQAAAD0//7/CAAAAAQAAADz//7/CAAAAAQAAADy//7/CAAAAAQAAADx//7/CAAAAAQAAADw//7/CAAAAAQAAADv//7/CAAAAAQAAADu//7/CAAAAAQAAADt//7/CAAAAAQAAADs//7/CAAAAAQAAADr//7/CAAAAAQAAADq//7/CAAAAAQAAADp//7/CAAEAAQAAADo//7/CAADAAQAAADn//7/CAACAAQAAADm//7/CAABAAQAAADl//7/CAAAAAQAAADk//7/CAADAAQAAADk////CAAAAAQAAADl////CAAAAAQAAADm////CAAAAAQAAADp////CAABAAQAAADq////CAACAAQAAADr////CAADAAQAAADs////CAAEAAQAAADo////CAAAAAQAAADn////CAAAAAQAAADt////CAAAAAQAAADu////CAAAAAQAAADv////CAAAAAQAAADw////CAAAAAQAAADx////CAAAAAQAAADy////CAAAAAQAAADz////CAAAAAQAAAD0////CAAAAAQAAAD1////CAAAAAQAAAD2////CAAAAAQAAAD3////CAAAAAQAAAD5////CAAAAAQAAAD6////CAAAAAQAAAD7////CAAAAAQAAAD8////CAABAAQAAAD4////CAAAAAQAAAD9////CAACAAQAAAD+////CAADAAQAAAD/////CAAEAAQAAAAAAP//CAAAAAQAAAABAP//CAAAAAQAAAACAP//CAAAAAQAAAADAP//CAAAAAQAAAAEAP//CAAAAAQAAAAFAP//CAAAAAQAAAAFAPv/CAAHAAMAAAAEAPv/CAAHAAMAAAADAPv/CAAHAAMAAAACAPv/CAAHAAMAAAABAPv/CAAHAAMAAAAAAPv/CAAHAAMAAAD///v/CAAHAAMAAAD+//v/CAAHAAMAAAD9//v/CAAHAAMAAAD8//v/CAAHAAMAAAD7//v/CAAHAAMAAAD6//v/CAAHAAMAAAD5//v/CAAHAAMAAAD4//v/CAAHAAMAAAD3//v/CAAHAAMAAAD2//v/CAAHAAMAAAD1//v/CAAHAAMAAAD0//v/CAAHAAMAAADz//v/CAAHAAMAAADy//v/CAAHAAMAAADx//v/CAAHAAMAAADw//v/CAAHAAMAAADv//v/CAAHAAMAAADu//v/CAAHAAMAAADt//v/CAAHAAMAAADs//v/CAAHAAMAAADr//v/CAAHAAMAAADq//v/CAAHAAMAAADp//v/CAAHAAMAAADo//v/CAAHAAMAAADn//v/CAAHAAMAAADm//v/CAAHAAMAAADl//v/CAAHAAMAAADk//v/CAAGAAMAAAAGAPz/CAAGAAIAAAAGAPv/CAAHAAQAAAAGAP3/CAAGAAIAAAAGAP7/CAAGAAIAAAAGAP//CAAGAAIAAAAGAAAACAAHAAUAAAAFAAAACAAHAAEAAAAEAAAACAAHAAEAAAADAAAACAAWAAQAAAAAAAAACAATAAQAAAD//wAACAAHAAEAAAD+/wAACAAHAAEAAAD9/wAACAAHAAEAAAD8/wAACAAHAAEAAAD7/wAACAAHAAEAAAD6/wAACAAHAAEAAAD5/wAACAAHAAEAAAD4/wAACAAHAAEAAAD3/wAACAAHAAEAAAD2/wAACAAHAAEAAAD1/wAACAAHAAEAAADx/wAACAATAAQAAADx/wEACAATAAUAAADy/wEACAAUAAUAAADz/wEACAAVAAUAAAD0/wAACAAWAAQAAAD0/wEACAAWAAUAAADr/wAACAATAAQAAADr/wEACAATAAUAAADs/wEACAAUAAUAAADt/wEACAAVAAUAAADu/wAACAAWAAQAAADu/wEACAAWAAUAAADw/wAACAAQAAUAAADv/wAACAAQAAUAAADi//v/BwABAAwAAADi//z/BwABAA0AAADi//3/BwABAA4AAADj//v/BwACAAwAAADj//z/BwACAA0AAADj//3/BwACAA4AAADh//z/CAATAAcAAADh//3/CAATAAgAAADh//v/CAAIAAMAAADg//z/CAAIAAIAAADg//3/CAAIAAIAAADg//7/CAAIAAIAAADg////CAAIAAIAAADg/wAACAAGAAUAAADg//v/CAAGAAQAAADh/wAACAAHAAEAAADi/wAACAAHAAEAAADj/wAACAAHAAEAAADk/wAACAAHAAEAAADl/wAACAAHAAEAAADm/wAACAAHAAEAAADn/wAACAAHAAEAAADo/wAACAAHAAEAAADp/wAACAAHAAEAAADq/wAACAAHAAEAAADs/wAACQABAAQAAADt/wAACQABAAQAAADy/wAACQABAAQAAADz/wAACQABAAQAAADj//7/CAACAAQAAADj////CAACAAQAAADi////CAACAAQAAADi//7/CAABAAQAAADh//7/CAAAAAQAAADh////CAACAAQAAAABAAAACAAAAAUAAAACAAAACAABAAUAAAAAAAcACAATAAUAAAABAAcACAAVAAUAAAACAAcACAAVAAUAAAADAAcACAAWAAUAAAAAAAYACAAIAAIAAAAAAAUACAAIAAIAAAAAAAQACAAIAAIAAAAAAAMACAAIAAIAAAAAAAIACAAIAAIAAAAAAAEACAAIAAIAAAADAAYACAAGAAIAAAADAAUACAAGAAIAAAADAAQACAAGAAIAAAADAAMACAAGAAIAAAADAAIACAAGAAIAAAADAAEACAAGAAIAAAABAAEACAAAAAYAAAACAAEACAABAAYAAAABAAIACAAAAAUAAAABAAMACAAAAAYAAAACAAIACAABAAUAAAACAAMACAABAAYAAAABAAUACAAAAAYAAAABAAYACAAdAAUAAAACAAUACAABAAYAAAACAAYACAAdAAUAAAABAAQACAAAAAUAAAACAAQACAABAAUAAAA=")
+tile_set = ExtResource("2_m8vck")
+
+[node name="L1_Details" type="TileMapLayer" parent="."]
+z_index = -5
+
+[node name="L2_Colliders" type="TileMapLayer" parent="."]
+z_index = -1
+
+[node name="L3_Overhangs" type="TileMapLayer" parent="."]
+z_index = 10
+
+[node name="EntryPoints" type="Node2D" parent="."]
+position = Vector2(26, -18)
+
+[node name="default" type="Node2D" parent="EntryPoints"]
+
+[node name="TorchLights" type="Node2D" parent="."]
+script = ExtResource("3_2jxfb")
+target_layer_path = NodePath("../L1_Details")
+torch_source_ids = Array[int]([5])
+light_radius_pixels = 85
+light_energy_base = 0.75
+use_shadows = true
+flicker_speed_hz = 5.0
+
+[node name="LightingController" type="Node" parent="."]
+script = ExtResource("4_7f03w")
+torch_tiles_path = NodePath("../L1_Details")
+torch_lit_source_id = 5
+torch_unlit_source_id = 2
+torch_unlit_atlas = Vector2i(2, 1)
+window_tiles_path = NodePath("../L1_Details")
+window_day_source_id = 3
+window_day_atlas = Vector2i(4, 14)
+window_night_source_id = 3
+window_night_atlas = Vector2i(3, 14)
+fireplace_tiles_path = NodePath("../L1_Details")
+fireplace_lit_source_id = 10
+fireplace_lit_atlas = Vector2i(0, 3)
+fireplace_unlit_source_id = 10
+fireplace_unlit_atlas = Vector2i(0, 2)
+torch_lights_node_path = NodePath("../TorchLights")
+
+[node name="WindowBeams" type="Node2D" parent="."]
+script = ExtResource("5_wjc4n")
+force_high_energy_debug = true
+window_layer_path = NodePath("../L1_Details")
+collider_layer_path = NodePath("../L2_Colliders")
+beam_max_tiles = 2
+anchor_fraction_along_length = 0.36
+start_offset_px = -0.5
+light_texture = ExtResource("6_cc42t")
+light_color = Color(1, 0.9607843, 0.8509804, 0.32156864)
+light_energy_day = 5.33
+light_energy_dawn_dusk = 5.28
+beam_base_width_px = 26.0
+beam_length_per_tile_px = 20.0
+cookie_angle_offset_deg = -90.0
+shadow_color = Color(0, 0, 0, 0.6862745)
+window_glow_energy = 2.0
+window_glow_radius_px = 8.0
+window_glow_color = Color(1, 0.9490196, 0.8, 0.23137255)
+window_glow_inset_px = -6.0
+
+[node name="AreaLootProvider" type="Node" parent="."]
+script = ExtResource("7_m3n7e")
+chest_scene = ExtResource("8_snfju")
+
+[node name="LockedApartmentDoor1" type="Area2D" parent="."]
+position = Vector2(32, 135)
+script = ExtResource("9_po4j5")
+target_scene_path = "res://scenes/WorldAreas/Langtree_SlumsDistrict.tscn"
+entry_tag = "fromapartments"
+animated_sprite_path = NodePath("AnimatedSprite2D")
+key_item_id = &"ApartmentKey"
+consume_key_on_unlock = true
+lockpick_required_dex = 12
+debug_lock_ui = true
+metadata/_custom_type_script = "uid://dyj0l2pcdql7b"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LockedApartmentDoor1"]
+shape = SubResource("RectangleShape2D_bcmc2")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="LockedApartmentDoor1"]
+sprite_frames = ExtResource("10_dvre6")
+animation = &"open"
+
+[node name="LockedApartmentDoor2" type="Area2D" parent="."]
+position = Vector2(-208, 40)
+script = ExtResource("9_po4j5")
+target_scene_path = "res://scenes/WorldAreas/Langtree_SlumsDistrict.tscn"
+entry_tag = "fromapartments"
+animated_sprite_path = NodePath("AnimatedSprite2D")
+is_locked = true
+key_item_id = &"ApartmentKey"
+consume_key_on_unlock = true
+lockpick_required_dex = 12
+debug_lock_ui = true
+metadata/_custom_type_script = "uid://dyj0l2pcdql7b"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LockedApartmentDoor2"]
+shape = SubResource("RectangleShape2D_bcmc2")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="LockedApartmentDoor2"]
+sprite_frames = ExtResource("10_dvre6")
+animation = &"open"
+
+[node name="LockedApartmentDoor3" type="Area2D" parent="."]
+position = Vector2(-305, 40)
+script = ExtResource("9_po4j5")
+target_scene_path = "res://scenes/WorldAreas/Langtree_SlumsDistrict.tscn"
+entry_tag = "fromapartments"
+animated_sprite_path = NodePath("AnimatedSprite2D")
+is_locked = true
+key_item_id = &"ApartmentKey"
+consume_key_on_unlock = true
+lockpick_required_dex = 18
+debug_lock_ui = true
+metadata/_custom_type_script = "uid://dyj0l2pcdql7b"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LockedApartmentDoor3"]
+shape = SubResource("RectangleShape2D_bcmc2")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="LockedApartmentDoor3"]
+sprite_frames = ExtResource("10_dvre6")
+animation = &"open"

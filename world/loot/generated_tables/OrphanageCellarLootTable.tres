@@ -1,0 +1,54 @@
+[gd_resource type="Resource" script_class="LootTable" load_steps=14 format=3 uid="uid://begtku1wkpnxo"]
+
+[ext_resource type="Script" uid="uid://bj3tpnw12ybt7" path="res://world/loot/LootEntry.gd" id="1_jyyrl"]
+[ext_resource type="Resource" uid="uid://1b6nwvtpbjgr" path="res://Data/items/consumable/MinorDraughtofLife.tres" id="2_inh1x"]
+[ext_resource type="Resource" uid="uid://c0530yxm1h32y" path="res://Data/items/reagent/PoisonRatEar.tres" id="3_4n48r"]
+[ext_resource type="Resource" uid="uid://1aclrnqowl4h" path="res://Data/items/reagent/PoisonRatTooth.tres" id="4_w1lmk"]
+[ext_resource type="Resource" uid="uid://27p80ggq760h" path="res://Data/items/reagent/RatEar.tres" id="5_cd3cx"]
+[ext_resource type="Resource" uid="uid://bs0ri4pf4u4u" path="res://Data/items/reagent/RatTail.tres" id="6_b0eqj"]
+[ext_resource type="Script" uid="uid://cyfln17m0bmbe" path="res://world/loot/LootTable.gd" id="7_6uft2"]
+
+[sub_resource type="Resource" id="Resource_ry802"]
+script = ExtResource("1_jyyrl")
+id = "TatteredLeatherVest_Loot"
+weight = 10.0
+percent_chance = 15.0
+
+[sub_resource type="Resource" id="Resource_nqcxd"]
+script = ExtResource("1_jyyrl")
+id = "MinorDraughtofLife_Loot"
+weight = 2.0
+percent_chance = 20.0
+item_def = ExtResource("2_inh1x")
+
+[sub_resource type="Resource" id="Resource_8jlnk"]
+script = ExtResource("1_jyyrl")
+id = "PoisonRatEar_Loot"
+percent_chance = 12.0
+item_def = ExtResource("3_4n48r")
+
+[sub_resource type="Resource" id="Resource_l0v45"]
+script = ExtResource("1_jyyrl")
+id = "PoisonRatTooth_Loot"
+percent_chance = 18.0
+item_def = ExtResource("4_w1lmk")
+
+[sub_resource type="Resource" id="Resource_godou"]
+script = ExtResource("1_jyyrl")
+id = "RatEar_Loot"
+percent_chance = 30.0
+item_def = ExtResource("5_cd3cx")
+
+[sub_resource type="Resource" id="Resource_wg3kf"]
+script = ExtResource("1_jyyrl")
+id = "RatTail_Loot"
+percent_chance = 25.0
+item_def = ExtResource("6_b0eqj")
+
+[resource]
+script = ExtResource("7_6uft2")
+allow_duplicates = false
+entries = Array[ExtResource("1_jyyrl")]([SubResource("Resource_ry802"), SubResource("Resource_nqcxd"), SubResource("Resource_8jlnk"), SubResource("Resource_l0v45"), SubResource("Resource_godou"), SubResource("Resource_wg3kf")])
+currency_percent_chance = 18.0
+currency_min = 1
+currency_max = 3

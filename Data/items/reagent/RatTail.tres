@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=3 format=3 uid="uid://bs0ri4pf4u4u"]
+
+[ext_resource type="Texture2D" uid="uid://b4ybsfi18aqd0" path="res://assets/sprites/items/reagents/RatTail.png" id="1_28nsy"]
+[ext_resource type="Script" uid="uid://2mjbmehwxafs" path="res://Data/items/equipment/ItemDef.gd" id="1_bp0wm"]
+
+[resource]
+script = ExtResource("1_bp0wm")
+id = &"RatTail"
+display_name = "Rat Tail"
+description = "Maybe you can use it as a strap?"
+icon = ExtResource("1_28nsy")
+item_type = "reagent"
+base_gold_value = 4

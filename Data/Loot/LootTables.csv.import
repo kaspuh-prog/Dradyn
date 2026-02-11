@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://b3c2uas6w1sv3"
+
+[deps]
+
+files=["res://Data/Loot/LootTables.rolls.translation", "res://Data/Loot/LootTables.allow.translation", "res://Data/Loot/LootTables.currency.translation", "res://Data/Loot/LootTables.currency.translation", "res://Data/Loot/LootTables.currency.translation", "res://Data/Loot/LootTables.notes.translation"]
+
+source_file="res://Data/Loot/LootTables.csv"
+dest_files=["res://Data/Loot/LootTables.rolls.translation", "res://Data/Loot/LootTables.allow.translation", "res://Data/Loot/LootTables.currency.translation", "res://Data/Loot/LootTables.currency.translation", "res://Data/Loot/LootTables.currency.translation", "res://Data/Loot/LootTables.notes.translation"]
+
+[params]
+
+compress=true
+delimiter=0

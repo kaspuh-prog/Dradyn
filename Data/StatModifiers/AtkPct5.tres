@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="StatModifier" load_steps=2 format=3 uid="uid://jd3jrf4d8a3o"]
+
+[ext_resource type="Script" uid="uid://byobol8rhb4cs" path="res://scripts/stats/StatModifier.gd" id="1_yev3u"]
+
+[resource]
+script = ExtResource("1_yev3u")
+stat_name = &"Attack"
+mul_value = 1.05
+source_id = "FALSE"
+override_value = 1.0
+stacking_key = &"FALSE"

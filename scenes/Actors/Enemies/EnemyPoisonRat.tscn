@@ -252,7 +252,6 @@ size = Vector2(15, 17)
 [node name="EnemyPoisonRat" type="CharacterBody2D" groups=["Enemies"]]
 script = ExtResource("1_0c75a")
 enemy_name = "Cellar Rat"
-anim_attack_prefix = "attack1"
 death_vfx_frames = ExtResource("2_f6pnd")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
@@ -317,4 +316,4 @@ stats_path = NodePath("../StatsComponent")
 
 [node name="KnownAbilities" type="Node" parent="."]
 script = ExtResource("14_oyceb")
-known_abilities = ["PoisonBite"]
+known_abilities = ["PoisonBite", "BiteAttack"]

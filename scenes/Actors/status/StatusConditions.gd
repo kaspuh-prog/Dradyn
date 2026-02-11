@@ -23,6 +23,7 @@ signal animation_state_hint(name: StringName, data: Dictionary) # e.g. ("dead", 
 @export var frozen_attack_speed_mul: float = 0.6         # 40% slow to attack speed when frozen
 @export var snared_move_speed_mul: float = 0.6           # 40% slow to movement when snared
 @export var slowed_attack_speed_mul: float = 0.7         # 30% slow to attack speed when slowed
+@export var haste_attack_speed_mul: float = 1.10         # 10% faster attack speed when hasted (default)
 
 # --- UI tuning for the status banner ---
 @export var status_banner_scale: float = 0.85
@@ -44,6 +45,7 @@ const TRANSFORMED: StringName = &"transformed"
 const STUNNED: StringName = &"stunned"
 const CONFUSED: StringName = &"confused"
 const BROKEN: StringName = &"broken"
+const HASTE: StringName = &"haste"
 
 # -----------------------------
 # Default tint colors (used in animation_state_hint payloads)
@@ -110,8 +112,9 @@ func is_transformed() -> bool: return has(TRANSFORMED)
 func is_stunned() -> bool: return has(STUNNED)
 func is_confused() -> bool: return has(CONFUSED)
 func is_broken() -> bool: return has(BROKEN)
+func is_haste() -> bool: return has(HASTE)
 
-# Movement multiplier for consumers (Player, CompanionFollow, enemies, etc.)
+# Movement multiplier for consumers (Player, CompanionFollow, enemies, etc.).
 # Uses SNARED and FROZEN (stack multiplicatively).
 func get_move_speed_multiplier() -> float:
 	var mul: float = 1.0
@@ -122,13 +125,57 @@ func get_move_speed_multiplier() -> float:
 	return mul
 
 # Attack-speed multiplier for consumers (e.g., DerivedFormulas.calc_attack_speed).
-# Uses SLOWED and FROZEN (stack multiplicatively).
+# Uses FROZEN, SLOWED, and HASTE (stack multiplicatively).
+# SLOWED:
+#   - If payload.magnitude exists, treat it as "percent slow":
+#       magnitude = 0.3 -> 30% slower -> multiplier = 0.7
+#   - Else fall back to slowed_attack_speed_mul.
+# HASTE:
+#   - Uses haste_attack_speed_mul by default, can be overridden by payload.attack_speed_mul.
 func get_attack_speed_multiplier() -> float:
 	var mul: float = 1.0
+
+	# Frozen: global slow to attack speed
 	if is_frozen():
-		mul *= clampf(frozen_attack_speed_mul, 0.05, 1.0)
+		var frozen_mul: float = frozen_attack_speed_mul
+		mul *= clampf(frozen_mul, 0.05, 1.0)
+
+	# Slowed: attack-speed-only slow; can be shaped by payload.magnitude
 	if is_slowed():
-		mul *= clampf(slowed_attack_speed_mul, 0.05, 1.0)
+		var slow_mul: float = slowed_attack_speed_mul
+		if _statuses.has(SLOWED):
+			var entry_any: Variant = _statuses[SLOWED]
+			if typeof(entry_any) == TYPE_DICTIONARY:
+				var entry: Dictionary = entry_any
+				if entry.has("payload"):
+					var payload_any: Variant = entry["payload"]
+					if typeof(payload_any) == TYPE_DICTIONARY:
+						var payload: Dictionary = payload_any
+						if payload.has("magnitude"):
+							var mag_any: Variant = payload["magnitude"]
+							if typeof(mag_any) == TYPE_FLOAT or typeof(mag_any) == TYPE_INT:
+								var mag: float = float(mag_any)
+								# 0.3 -> 0.7, 0.5 -> 0.5
+								slow_mul = 1.0 - mag
+		mul *= clampf(slow_mul, 0.05, 1.0)
+
+	# Haste: attack-speed buff (e.g., from Momentum passive)
+	if is_haste():
+		var haste_mul: float = haste_attack_speed_mul
+		if _statuses.has(HASTE):
+			var h_entry_any: Variant = _statuses[HASTE]
+			if typeof(h_entry_any) == TYPE_DICTIONARY:
+				var h_entry: Dictionary = h_entry_any
+				if h_entry.has("payload"):
+					var h_payload_any: Variant = h_entry["payload"]
+					if typeof(h_payload_any) == TYPE_DICTIONARY:
+						var h_payload: Dictionary = h_payload_any
+						if h_payload.has("attack_speed_mul"):
+							var m_any: Variant = h_payload["attack_speed_mul"]
+							if typeof(m_any) == TYPE_FLOAT or typeof(m_any) == TYPE_INT:
+								haste_mul = float(m_any)
+		mul *= clampf(haste_mul, 0.05, 2.0)
+
 	return mul
 
 # Gating (per design: TRANSFORMED can still move)
@@ -261,6 +308,7 @@ func apply(id: StringName, options: Dictionary = {}) -> void:
 			emit_signal("animation_state_hint", StringName("transformed_on"), {"duration": duration})
 		elif id == BROKEN:
 			emit_signal("animation_state_hint", StringName("broken_on"), {"duration": duration})
+		# HASTE currently has no special animation hint; banner will still show.
 
 	if not _banner_shown_active.get(id, false):
 		_emit_status_banner(id, entry)
@@ -302,6 +350,7 @@ func remove(id: StringName) -> void:
 		emit_signal("animation_state_hint", StringName("transformed_off"), {})
 	elif id == BROKEN:
 		emit_signal("animation_state_hint", StringName("broken_off"), {})
+	# HASTE: no dedicated animation hint; status banner is enough for now.
 
 func remove_many(ids: PackedStringArray) -> void:
 	var i: int = 0

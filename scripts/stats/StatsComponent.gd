@@ -4,13 +4,16 @@ class_name StatsComponent
 signal hp_changed(current: float, max_value: float)
 signal damage_taken(amount: float, dmg_type: String, source: String)
 signal damage_taken_ex(amount: float, dmg_type: String, source: String, is_crit: bool)
+signal damage_threat(amount: float, dmg_type: String, source_node: Node, ability_id: String, ability_type: String)
 signal mp_changed(current: float, max_value: float)
 signal end_changed(current: float, max_value: float)
 signal died
 signal stat_changed(stat_name: String, final_value: float)
 signal healed(amount: float, source: String, is_crit: bool)
+signal heal_threat(amount: float, source_node: Node, ability_id: String, ability_type: String)
 
 @export var debug_damage_log: bool = false
+@export var show_avoid_popups: bool = true
 
 @export var stats: Resource
 @export var damage_formula: String = "armor"
@@ -151,22 +154,39 @@ func get_attack_speed_multiplier() -> float:
 			return legacy_mul
 	return 1.0
 
+# IMPORTANT: some stats must be allowed to go negative.
+# - Regen (HP drain)
+# - Resistances may be negative (vulnerability) before clamp in _get_resistance_for
+func _allows_negative(stat_name: String) -> bool:
+	if stat_name == "Regen":
+		return true
+	if stat_name == "MPRegen":
+		return true
+	if stat_name == "EndRegen":
+		return true
+	if stat_name.ends_with("Res"):
+		return true
+	return false
+
 func _recalc_processing() -> void:
 	var should_process: bool = false
 	if auto_tick_modifiers:
 		should_process = true
-	if should_process == false and hp_regen_per_sec > 0.0:
+
+	# Allow negative regen (HP drain), so process on non-zero.
+	if should_process == false and hp_regen_per_sec != 0.0:
 		should_process = true
-	if should_process == false and mp_regen_per_sec > 0.0:
+	if should_process == false and mp_regen_per_sec != 0.0:
 		should_process = true
-	if should_process == false and end_regen_per_sec > 0.0:
+	if should_process == false and end_regen_per_sec != 0.0:
 		should_process = true
-	if should_process == false and DerivedFormulas.hp_regen_per_sec(self) > 0.0:
+	if should_process == false and DerivedFormulas.hp_regen_per_sec(self) != 0.0:
 		should_process = true
-	if should_process == false and DerivedFormulas.mp_regen_per_sec(self) > 0.0:
+	if should_process == false and DerivedFormulas.mp_regen_per_sec(self) != 0.0:
 		should_process = true
-	if should_process == false and DerivedFormulas.end_regen_per_sec(self) > 0.0:
+	if should_process == false and DerivedFormulas.end_regen_per_sec(self) != 0.0:
 		should_process = true
+
 	set_process(should_process)
 
 func _set_auto_tick_mods(v: bool) -> void:
@@ -237,6 +257,8 @@ func _derived_base_for(stat_name: String) -> float:
 			return DerivedFormulas.attack_rating(self)
 		"Defense":
 			return DerivedFormulas.defense_rating(self)
+		"Accuracy":
+			return DerivedFormulas.accuracy(self)
 		"BlockChance":
 			return DerivedFormulas.block_chance(self)
 		"ParryChance":
@@ -300,8 +322,11 @@ func get_final_stat(stat_name: String) -> float:
 	var final_val: float = (base_val + add_sum) * mul_prod
 	if override_present:
 		final_val = override_value
+
+	# IMPORTANT: do not clamp negative for stats that are allowed to be negative.
 	if final_val < 0.0:
-		final_val = 0.0
+		if _allows_negative(stat_name) == false:
+			final_val = 0.0
 
 	# Status-based movement scaling globally
 	if stat_name == "MoveSpeed":
@@ -322,7 +347,7 @@ func get_all_final_stats() -> Dictionary:
 		var keys: Array[String] = [
 			"HP","MP","END","MoveSpeed","Attack","Defense",
 			"STR","DEX","STA","INT","WIS","LCK",
-			"BlockChance","ParryChance","Evasion","CritChance","CritHealChance",
+			"Accuracy","BlockChance","ParryChance","Evasion","CritChance","CritHealChance",
 			"SlashRes","PierceRes","BluntRes","FireRes","IceRes",
 			"WindRes","EarthRes","MagicRes","LightRes","DarknessRes","PoisonRes"
 		]
@@ -332,6 +357,45 @@ func get_all_final_stats() -> Dictionary:
 			out[k] = get_final_stat(k)
 			i += 1
 	return out
+
+# NEW: canonical stat order for UIs like StatsSheetRightPanel
+func get_stat_order() -> Array:
+	var order: Array = []
+
+	if stats != null:
+		# 1) If the StatsResource itself exposes an order, respect it.
+		if stats.has_method("get_stat_order"):
+			var v: Variant = stats.call("get_stat_order")
+			if v is Array:
+				return v as Array
+
+		if "stat_order" in stats:
+			var v2: Variant = stats.get("stat_order")
+			if v2 is Array:
+				return v2 as Array
+
+		if "display_order" in stats:
+			var v3: Variant = stats.get("display_order")
+			if v3 is Array:
+				return v3 as Array
+
+		# 2) If base_stats is a dictionary, preserve its key order.
+		var dict_v: Variant = stats.get("base_stats")
+		if typeof(dict_v) == TYPE_DICTIONARY:
+			var base_dict: Dictionary = dict_v
+			for k in base_dict.keys():
+				order.append(str(k))
+			return order
+
+	# 3) Fallback: built-in default order (matches get_all_final_stats fallback)
+	order = [
+		"HP","MP","END","MoveSpeed","Attack","Defense",
+		"STR","DEX","STA","INT","WIS","LCK",
+		"Accuracy","BlockChance","ParryChance","Evasion","CritChance","CritHealChance",
+		"SlashRes","PierceRes","BluntRes","FireRes","IceRes",
+		"WindRes","EarthRes","MagicRes","LightRes","DarknessRes","PoisonRes"
+	]
+	return order
 
 func max_hp() -> float:
 	return get_final_stat("HP")
@@ -347,7 +411,14 @@ func change_hp(amount: float) -> void:
 	if current_hp <= 0.0:
 		emit_signal("died")
 
-func apply_heal(amount: float, source: String = "", is_crit: bool = false) -> int:
+func apply_heal(
+	amount: float,
+	source: String = "",
+	is_crit: bool = false,
+	source_node: Node = null,
+	ability_id: String = "",
+	ability_type: String = ""
+) -> int:
 	if amount <= 0.0:
 		return 0
 	var before: float = current_hp
@@ -357,6 +428,13 @@ func apply_heal(amount: float, source: String = "", is_crit: bool = false) -> in
 	var landed: int = int(landed_f)
 	if landed > 0:
 		emit_signal("healed", float(landed), source, is_crit)
+
+		# NEW: threat bridge for healing. We do not decide HEAL vs HOT here;
+		# we simply forward the metadata so EnemyBase (or other listeners)
+		# can apply threat coefficients based on ability_type.
+		if source_node != null and is_instance_valid(source_node):
+			emit_signal("heal_threat", float(landed), source_node, ability_id, ability_type)
+
 	return landed
 
 func change_mp(amount: float) -> void:
@@ -426,12 +504,251 @@ func _should_accept_attack(packet: Dictionary) -> bool:
 	_recent_attack_ids[src] = aid
 	return true
 
+# -----------------------------------------------------------------------------
+# Avoidance rolls (Evasion, ParryChance, BlockChance)
+# - Accuracy vs Evasion: MISS (new)
+# - Parry:   full negation for MELEE only
+# - Block:   full negation for MELEE only, requires shield
+# - Knights: if shield equipped, block chance is at least 30%
+# Feedback: "MISS", "PARRIED", "BLOCKED" via DamageNumberLayer (group: DamageNumberSpawners)
+#
+# IMPORTANT: For lock-only actions, AnimationBridge resolves direction from its _last_dir.
+# We seed facing toward the attacker using AnimationBridge.set_facing(dir_to_attacker).
+# -----------------------------------------------------------------------------
+const _MAX_AVOID_CHANCE: float = 0.95
+const _KNIGHT_SHIELD_BLOCK_CHANCE: float = 0.30
+const _AVOID_REACT_LOCK_SEC: float = 0.35
+
+# Hit-chance bounds (prevents 100% hit or 0% hit)
+const _BASE_HIT_CHANCE: float = 0.85
+const _MIN_HIT_CHANCE: float = 0.05
+const _MAX_HIT_CHANCE: float = 0.95
+
+func _roll_chance(chance: float) -> bool:
+	# Accept either fraction (0..1) OR percent (0..100).
+	var c_in: float = chance
+	if c_in > 1.0:
+		# Treat as percent (e.g., 9 => 9%).
+		c_in = c_in / 100.0
+
+	var c: float = clampf(c_in, 0.0, _MAX_AVOID_CHANCE)
+	if c <= 0.0:
+		return false
+	var r: float = randf()
+	if r < c:
+		return true
+	return false
+
+
+func _packet_is_physical_like(types: Dictionary) -> bool:
+	# Heuristic fallback only when packet omits ability_type.
+	# Treat as physical-like if it includes Physical/Slash/Pierce/Blunt keys.
+	if types.is_empty():
+		return true
+	for k in types.keys():
+		var key: String = String(k).strip_edges()
+		if key == "":
+			continue
+		var u: String = key.to_upper()
+		if u == "PHYSICAL" or u == "SLASH" or u == "PIERCE" or u == "BLUNT":
+			return true
+	return false
+
+func _is_knight_class() -> bool:
+	if class_def == null:
+		return false
+	var cd: ClassDefinition = class_def as ClassDefinition
+	if cd == null:
+		return false
+	return cd.class_title.strip_edges().to_lower() == "knight"
+
+func _has_shield_equipped() -> bool:
+	var actor: Node = get_parent()
+	if actor == null:
+		return false
+
+	var inv: InventorySystem = get_node_or_null("/root/InventorySys") as InventorySystem
+	if inv == null:
+		return false
+
+	# Ensure we have an EquipmentModel for this actor.
+	var em: EquipmentModel = inv.ensure_equipment_model_for(actor)
+	if em == null:
+		return false
+
+	var offhand: ItemDef = em.get_equipped("offhand")
+	if offhand == null:
+		return false
+
+	# Shield identification: equipment_class should be "shield" (StringName),
+	# with a small safety net for names like "roundshield", etc.
+	var cls_str: String = String(offhand.equipment_class).to_lower()
+	if cls_str == "shield":
+		return true
+	if cls_str.contains("shield"):
+		return true
+
+	return false
+
+func _get_animation_bridge() -> AnimationBridge:
+	var parent_node: Node = get_parent()
+	if parent_node == null:
+		return null
+
+	var by_name: Node = parent_node.find_child("AnimationBridge", true, false)
+	if by_name != null:
+		var bridge1: AnimationBridge = by_name as AnimationBridge
+		if bridge1 != null:
+			return bridge1
+
+	var i: int = 0
+	while i < parent_node.get_child_count():
+		var ch: Node = parent_node.get_child(i)
+		var bridge2: AnimationBridge = ch as AnimationBridge
+		if bridge2 != null:
+			return bridge2
+		i += 1
+
+	return null
+
+func _dir_to_attacker_from_packet(packet: Dictionary) -> Vector2:
+	var defender: Node2D = get_parent() as Node2D
+	if defender == null:
+		return Vector2.ZERO
+
+	if not packet.has("source_node"):
+		return Vector2.ZERO
+
+	var sn_any: Variant = packet["source_node"]
+	var attacker: Node2D = sn_any as Node2D
+	if attacker == null:
+		return Vector2.ZERO
+
+	var dir: Vector2 = attacker.global_position - defender.global_position
+	if dir.length() <= 0.001:
+		return Vector2.ZERO
+	return dir.normalized()
+
+func _try_play_avoid_anim(prefix: String, packet: Dictionary) -> void:
+	var bridge: AnimationBridge = _get_animation_bridge()
+	if bridge == null:
+		return
+
+	# Seed facing toward attacker so AnimationBridge picks parry_up/down/side correctly.
+	var face_dir: Vector2 = _dir_to_attacker_from_packet(packet)
+	if face_dir != Vector2.ZERO and bridge.has_method("set_facing"):
+		bridge.call("set_facing", face_dir)
+
+	# IMPORTANT: AnimationBridge.play_buff_with_prefix() clamps lock to 0.2s (in Dradyn/Actors/AnimationBridge.gd).
+	# Use cast-lock to hold the reaction long enough to be visible.
+	if bridge.has_method("play_cast_with_prefix"):
+		bridge.call("play_cast_with_prefix", prefix, _AVOID_REACT_LOCK_SEC)
+		return
+
+	# Fallback (shouldn't happen with current AnimationBridge)
+	if bridge.has_method("play_buff_with_prefix"):
+		bridge.call("play_buff_with_prefix", prefix, _AVOID_REACT_LOCK_SEC)
+
+func _show_avoid_text(text: String) -> void:
+	if show_avoid_popups == false:
+		return
+	var actor2d: Node2D = get_parent() as Node2D
+	if actor2d == null:
+		return
+
+	var spawners: Array[Node] = get_tree().get_nodes_in_group("DamageNumberSpawners")
+	var i: int = 0
+	while i < spawners.size():
+		var n: Node = spawners[i]
+		if n != null and n.has_method("show_text_for_node"):
+			# DamageNumberLayer.gd signature:
+			# show_text_for_node(node2d, text, color := levelup_text_color, scale_mult := -1.0)
+			n.call("show_text_for_node", actor2d, text, Color.WHITE)
+			return
+		i += 1
+
 func _owner_node_name() -> String:
 	var parent_node: Node = get_parent()
 	if parent_node != null:
 		return parent_node.name
 	return name
 
+# -----------------------------------------------------------------------------
+# NEW: attacker accuracy lookup + accuracy vs evasion hit-roll
+# -----------------------------------------------------------------------------
+func _resolve_attacker_accuracy_from_packet(packet: Dictionary) -> float:
+	if not packet.has("source_node"):
+		return 0.0
+	var sn_any: Variant = packet["source_node"]
+	var src_node: Node = sn_any as Node
+	if src_node == null:
+		return 0.0
+	if not is_instance_valid(src_node):
+		return 0.0
+
+	# Prefer: src_node.get_stats() -> StatsComponent-like node with get_final_stat().
+	if src_node.has_method("get_stats"):
+		var stats_any: Variant = src_node.call("get_stats")
+		var st_node: Node = stats_any as Node
+		if st_node != null and is_instance_valid(st_node):
+			if st_node.has_method("get_final_stat"):
+				var v: Variant = st_node.call("get_final_stat", "Accuracy")
+				if typeof(v) == TYPE_FLOAT or typeof(v) == TYPE_INT:
+					return max(0.0, float(v))
+
+	# Fallback: direct child StatsComponent on source actor.
+	if src_node.has_node("StatsComponent"):
+		var sc: Node = src_node.get_node("StatsComponent")
+		if sc != null and sc.has_method("get_final_stat"):
+			var v2: Variant = sc.call("get_final_stat", "Accuracy")
+			if typeof(v2) == TYPE_FLOAT or typeof(v2) == TYPE_INT:
+				return max(0.0, float(v2))
+
+	return 0.0
+
+func _roll_accuracy_vs_evasion_miss(packet: Dictionary, ability_type_upper: String, is_melee: bool, is_projectile: bool, types: Dictionary, source: String) -> bool:
+	# Returns true if the attack should proceed (hit), false if MISS (stop).
+	# Only applies to MELEE + PROJECTILE (and physical-like legacy packets).
+	if not (is_melee or is_projectile):
+		return true
+
+	var attacker_acc: float = _resolve_attacker_accuracy_from_packet(packet)
+	if attacker_acc <= 0.0:
+		# No attacker accuracy available; do not enforce this roll.
+		return true
+
+	var defender_eva: float = get_final_stat("Evasion")
+
+	# Dual-mode interpretation:
+	# - If both are small (<= 1.5), treat them as small bonuses layered on top of a baseline.
+	#   This prevents "0 acc / 0 eva => 5% hit" from the clamp.
+	# - Otherwise treat as "ratings" and use acc/(acc+eva).
+	var hit_chance: float = 0.0
+	if attacker_acc <= 1.5 and defender_eva <= 1.5:
+		hit_chance = _BASE_HIT_CHANCE + attacker_acc - defender_eva
+	else:
+		var denom: float = attacker_acc + defender_eva
+		if denom <= 0.001:
+			hit_chance = _BASE_HIT_CHANCE
+		else:
+			hit_chance = attacker_acc / denom
+
+	hit_chance = clampf(hit_chance, _MIN_HIT_CHANCE, _MAX_HIT_CHANCE)
+
+	var roll: float = randf()
+	if roll <= hit_chance:
+		if debug_damage_log:
+			print("[Stats] HIT roll ok (Accuracy vs Evasion). hit_chance=", hit_chance, " roll=", roll, " acc=", attacker_acc, " eva=", defender_eva, " src=", source)
+		return true
+
+	# MISS
+	if debug_damage_log:
+		print("[Stats] MISS (Accuracy vs Evasion). hit_chance=", hit_chance, " roll=", roll, " acc=", attacker_acc, " eva=", defender_eva, " ability_type=", ability_type_upper, " src=", source)
+	_try_play_avoid_anim("evade", packet)
+	_show_avoid_text("MISS")
+	return false
+
+# --- Legacy simple-damage path (kept) ---
 func apply_damage(amount: float, dmg_type: String = "Physical", source: String = "") -> void:
 	# Invulnerability gate
 	if _is_invulnerable_now():
@@ -493,6 +810,72 @@ func apply_damage_packet(packet: Dictionary) -> void:
 	var is_crit: bool = false
 	if packet.has("is_crit"):
 		is_crit = bool(packet["is_crit"])
+
+	# -------------------------------------------------------------
+	# Classification
+	# -------------------------------------------------------------
+	var ability_type_upper: String = ""
+	if packet.has("ability_type"):
+		ability_type_upper = String(packet["ability_type"]).strip_edges().to_upper()
+
+	var is_melee: bool = false
+	var is_projectile: bool = false
+	if ability_type_upper == "MELEE":
+		is_melee = true
+	elif ability_type_upper == "PROJECTILE":
+		is_projectile = true
+	elif ability_type_upper == "":
+		# Heuristic fallback for older/handmade packets.
+		if _packet_is_physical_like(types):
+			is_melee = true
+
+	# -------------------------------------------------------------
+	# NEW: Accuracy vs Evasion -> MISS (melee + projectile)
+	# If this fails, we stop before Parry/Block/Damage.
+	# -------------------------------------------------------------
+	if is_melee or is_projectile:
+		var ok_hit: bool = _roll_accuracy_vs_evasion_miss(packet, ability_type_upper, is_melee, is_projectile, types, source)
+		if ok_hit == false:
+			return
+
+	# -------------------------------------------------------------
+	# Legacy Evasion chance (fallback when no attacker accuracy is available)
+	# -------------------------------------------------------------
+	if is_melee or is_projectile:
+		var attacker_acc_check: float = _resolve_attacker_accuracy_from_packet(packet)
+		if attacker_acc_check <= 0.0:
+			var evade_chance: float = get_final_stat("Evasion")
+			if _roll_chance(evade_chance):
+				if debug_damage_log:
+					print("[Stats] EVADED attack (legacy). ability_type=", ability_type_upper, " src=", source)
+				_try_play_avoid_anim("evade", packet)
+				_show_avoid_text("MISS")
+				return
+
+	# Parry: full negation for melee only
+	if is_melee:
+		var parry_chance: float = get_final_stat("ParryChance")
+		if _roll_chance(parry_chance):
+			if debug_damage_log:
+				print("[Stats] PARRIED attack. src=", source)
+			_try_play_avoid_anim("parry", packet)
+			_show_avoid_text("PARRIED")
+			return
+
+	# Block: full negation for melee only, requires shield
+	if is_melee:
+		var has_shield: bool = _has_shield_equipped()
+		if has_shield:
+			var block_chance: float = get_final_stat("BlockChance")
+			if _is_knight_class():
+				if block_chance < _KNIGHT_SHIELD_BLOCK_CHANCE:
+					block_chance = _KNIGHT_SHIELD_BLOCK_CHANCE
+			if _roll_chance(block_chance):
+				if debug_damage_log:
+					print("[Stats] BLOCKED attack. src=", source)
+				_try_play_avoid_anim("block", packet)
+				_show_avoid_text("BLOCKED")
+				return
 
 	var def_val: float = get_final_stat("Defense")
 	var total: float = 0.0
@@ -563,7 +946,6 @@ func apply_damage_packet(packet: Dictionary) -> void:
 				if portion2 <= 0.0:
 					continue
 				var after_def2: float = _mitigate_by_defense(portion2, def_val)
-				# Correct: use str(t) here
 				total += after_def2 * (1.0 - _get_resistance_for(str(t)))
 	else:
 		# No types; use base only (apply defense AND default Physical resist).
@@ -583,6 +965,30 @@ func apply_damage_packet(packet: Dictionary) -> void:
 
 		emit_signal("damage_taken", total, dtype, source)
 		emit_signal("damage_taken_ex", total, dtype, source, is_crit)
+
+		# --- Threat bridge: forward enriched metadata to listeners (EnemyBase) ---
+		# We expect AbilityExecutor (and other systems) to optionally include:
+		#   "source_node": Node (the attacker / caster)
+		#   "ability_id": String
+		#   "ability_type": String (e.g., "MELEE", "DAMAGE_SPELL", "DOT_SPELL")
+		var src_node: Node = null
+		if packet.has("source_node"):
+			var sn_any: Variant = packet["source_node"]
+			if sn_any is Node:
+				src_node = sn_any
+
+		var ability_id: String = ""
+		if packet.has("ability_id"):
+			var aid_any: Variant = packet["ability_id"]
+			ability_id = String(aid_any)
+
+		var ability_type: String = ""
+		if packet.has("ability_type"):
+			var at_any: Variant = packet["ability_type"]
+			ability_type = String(at_any)
+
+		if src_node != null and is_instance_valid(src_node):
+			emit_signal("damage_threat", total, dtype, src_node, ability_id, ability_type)
 
 # --- Reconciliation helpers when stats change ---
 func _reconcile_vital_if_needed(stat_name: String) -> void:
@@ -637,6 +1043,9 @@ func add_modifier(modifier: Variant) -> void:
 			emit_signal("stat_changed", s, get_final_stat(s))
 			_reconcile_vital_if_needed(s)
 
+	# IMPORTANT: modifiers can change regen (including negative), so update processing immediately.
+	_recalc_processing()
+
 func remove_modifiers_by_source(source_id: String) -> void:
 	var filtered: Array = []
 	var changed_stats: Dictionary = {}
@@ -666,6 +1075,7 @@ func remove_modifiers_by_source(source_id: String) -> void:
 		var key: String = str(k)
 		emit_signal("stat_changed", key, get_final_stat(key))
 	_reconcile_all_vitals()
+	_recalc_processing()
 
 func remove_modifiers_by_key(stacking_key: StringName) -> void:
 	if String(stacking_key) == "":
@@ -690,10 +1100,12 @@ func remove_modifiers_by_key(stacking_key: StringName) -> void:
 		var key: String = str(k)
 		emit_signal("stat_changed", key, get_final_stat(key))
 	_reconcile_all_vitals()
+	_recalc_processing()
 
 func clear_modifiers() -> void:
 	modifiers.clear()
 	_reconcile_all_vitals()
+	_recalc_processing()
 
 func clear_expired_modifiers() -> void:
 	var filtered: Array = []
@@ -716,6 +1128,7 @@ func clear_expired_modifiers() -> void:
 		var key: String = str(k)
 		emit_signal("stat_changed", key, get_final_stat(key))
 	_reconcile_all_vitals()
+	_recalc_processing()
 
 # --- Processing: tick timed buffs, regen ---
 func _process(delta: float) -> void:
@@ -739,15 +1152,18 @@ func _process(delta: float) -> void:
 			j += 1
 		if removed.size() > 0:
 			_reconcile_all_vitals()
+			_recalc_processing()
 
 	var hp_r: float = DerivedFormulas.hp_regen_per_sec(self)
 	var mp_r: float = DerivedFormulas.mp_regen_per_sec(self)
 	var end_r: float = DerivedFormulas.end_regen_per_sec(self)
-	if hp_r > 0.0:
+
+	# IMPORTANT: allow negative regen (HP drain, etc.)
+	if hp_r != 0.0:
 		change_hp(hp_r * delta)
-	if mp_r > 0.0:
+	if mp_r != 0.0:
 		change_mp(mp_r * delta)
-	if end_r > 0.0:
+	if end_r != 0.0:
 		change_end(end_r * delta)
 
 # --- Utility ---

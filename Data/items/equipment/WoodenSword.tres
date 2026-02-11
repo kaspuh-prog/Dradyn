@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=4 format=3 uid="uid://b8y282qapatvm"]
+
+[ext_resource type="Script" uid="uid://2mjbmehwxafs" path="res://Data/items/equipment/ItemDef.gd" id="1_ovfaq"]
+[ext_resource type="Texture2D" uid="uid://dlbe53r6hydfi" path="res://assets/sprites/items/weapons/WoodenSword.png" id="1_siu8l"]
+[ext_resource type="Resource" uid="uid://dbyt8poqin0l8" path="res://Data/StatModifiers/Attack5.tres" id="3_mtbfs"]
+
+[resource]
+script = ExtResource("1_ovfaq")
+id = &"WoodenSword"
+display_name = "Wooden Sword"
+description = "\"A wooden blade crafted by a former orphan for \"\"cellar duty.\"\"\""
+icon = ExtResource("1_siu8l")
+item_type = "equipment"
+equipment_class = &"sword"
+base_gold_value = 5
+equip_slot = "mainhand"
+stat_modifiers = Array[Resource]([ExtResource("3_mtbfs")])
+weapon_weight = 2.0

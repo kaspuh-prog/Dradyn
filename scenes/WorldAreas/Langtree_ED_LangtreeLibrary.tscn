@@ -1,0 +1,81 @@
+[gd_scene load_steps=8 format=3 uid="uid://d1mip8frlrtoe"]
+
+[ext_resource type="Script" uid="uid://bm1dpu20h5tgk" path="res://scripts/AreaTemplate.gd" id="1_jnkjv"]
+[ext_resource type="Script" uid="uid://c3v3pby11hsgf" path="res://scenes/WorldAreas/TileTorchLights.gd" id="2_y5kqy"]
+[ext_resource type="Script" uid="uid://cjnlnc13qv4i4" path="res://scenes/lighting/LightingController.gd" id="3_du2t5"]
+[ext_resource type="Script" uid="uid://b60ucdsusu26g" path="res://scenes/lighting/WindowBeams2D.gd" id="4_n37r7"]
+[ext_resource type="Texture2D" uid="uid://bfdipqlq7iy8q" path="res://assets/lighting/lightcookie.png" id="5_ymdaf"]
+[ext_resource type="Script" uid="uid://cebew03wacnla" path="res://scenes/WorldAreas/AreaLootProvider.gd" id="6_qbdo2"]
+[ext_resource type="PackedScene" uid="uid://cir0u84wdxg38" path="res://scenes/InteractableChest.tscn" id="7_dhokg"]
+
+[node name="AreaTemplate" type="Node2D"]
+script = ExtResource("1_jnkjv")
+
+[node name="L0_Ground" type="TileMapLayer" parent="."]
+z_index = -10
+
+[node name="L1_Details" type="TileMapLayer" parent="."]
+z_index = -5
+
+[node name="L2_Colliders" type="TileMapLayer" parent="."]
+visible = false
+z_index = -1
+
+[node name="L3_Overhangs" type="TileMapLayer" parent="."]
+z_index = 10
+
+[node name="EntryPoints" type="Node2D" parent="."]
+
+[node name="default" type="Node" parent="EntryPoints"]
+
+[node name="TorchLights" type="Node2D" parent="."]
+script = ExtResource("2_y5kqy")
+target_layer_path = NodePath("../L1_Details")
+torch_source_ids = Array[int]([5])
+light_radius_pixels = 85
+light_energy_base = 0.75
+use_shadows = true
+flicker_speed_hz = 5.0
+
+[node name="LightingController" type="Node" parent="."]
+script = ExtResource("3_du2t5")
+torch_tiles_path = NodePath("../L1_Details")
+torch_lit_source_id = 5
+torch_unlit_source_id = 2
+torch_unlit_atlas = Vector2i(2, 1)
+window_tiles_path = NodePath("../L1_Details")
+window_day_source_id = 3
+window_day_atlas = Vector2i(4, 14)
+window_night_source_id = 3
+window_night_atlas = Vector2i(3, 14)
+fireplace_tiles_path = NodePath("../L1_Details")
+fireplace_lit_source_id = 10
+fireplace_lit_atlas = Vector2i(0, 3)
+fireplace_unlit_source_id = 10
+fireplace_unlit_atlas = Vector2i(0, 2)
+torch_lights_node_path = NodePath("../TorchLights")
+
+[node name="WindowBeams" type="Node2D" parent="."]
+script = ExtResource("4_n37r7")
+force_high_energy_debug = true
+window_layer_path = NodePath("../L1_Details")
+collider_layer_path = NodePath("../L2_Colliders")
+beam_max_tiles = 2
+anchor_fraction_along_length = 0.36
+start_offset_px = -0.5
+light_texture = ExtResource("5_ymdaf")
+light_color = Color(1, 0.9607843, 0.8509804, 0.32156864)
+light_energy_day = 5.33
+light_energy_dawn_dusk = 5.28
+beam_base_width_px = 26.0
+beam_length_per_tile_px = 20.0
+cookie_angle_offset_deg = -90.0
+shadow_color = Color(0, 0, 0, 0.6862745)
+window_glow_energy = 2.0
+window_glow_radius_px = 8.0
+window_glow_color = Color(1, 0.9490196, 0.8, 0.23137255)
+window_glow_inset_px = -6.0
+
+[node name="AreaLootProvider" type="Node" parent="."]
+script = ExtResource("6_qbdo2")
+chest_scene = ExtResource("7_dhokg")

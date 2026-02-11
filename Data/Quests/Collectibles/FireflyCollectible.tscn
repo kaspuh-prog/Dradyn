@@ -1,0 +1,31 @@
+[gd_scene load_steps=5 format=3 uid="uid://cek63ne4ar76d"]
+
+[ext_resource type="Script" uid="uid://c56bh4e6tprea" path="res://Data/Quests/Collectibles/FireflyCollectible.gd" id="1_30u1n"]
+[ext_resource type="Resource" uid="uid://dy5wcxsfmdgw3" path="res://Data/items/reagent/firefly.tres" id="2_72b8d"]
+[ext_resource type="Texture2D" uid="uid://da0tfcig15l1p" path="res://assets/sprites/items/reagents/firefly.png" id="2_yl3ew"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_30u1n"]
+radius = 5.0990195
+
+[node name="FireflyCollectible" type="Area2D"]
+z_index = 14
+z_as_relative = false
+script = ExtResource("1_30u1n")
+prompt_text = "Collect Firefly?"
+item_def = ExtResource("2_72b8d")
+particles_color_tint = Color(0.9287949, 0.8988462, 0, 1)
+particles_brightness = 2.0
+pulse_period_sec = 2.0
+collect_sfx_event = &"PositiveDingle.mp3"
+default_particles_lifetime = 2.5
+default_drift_speed_min = 4.0
+default_spawn_radius_px = 12.0
+default_scale_min = 0.1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_30u1n")
+
+[node name="InteractAnchor" type="Node2D" parent="."]
+
+[node name="FirefliesParticles" type="GPUParticles2D" parent="."]
+texture = ExtResource("2_yl3ew")

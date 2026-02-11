@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="ClassDefinition" load_steps=3 format=3 uid="uid://87fyhgqgm6pb"]
+
+[ext_resource type="Script" uid="uid://bw2bhebcfgp1u" path="res://Data/KeyFloatPair.gd" id="1_nyqgl"]
+[ext_resource type="Script" uid="uid://b7ipjii2rumgu" path="res://scripts/resources/ClassDefinition.gd" id="2_wgoal"]
+
+[resource]
+script = ExtResource("2_wgoal")
+class_title = "Magician"
+description = "Disciple of magic and the ways of the elements. Often specializing in 1 to two primary elemental focuses. 
+"
+mp_weight_INT = 1.0
+mp_weight_WIS = 0.0
+gr_DEX = 0.5
+gr_STA = 0.3
+gr_INT = 0.9
+gr_Defense = 0.3
+grv_MP = 0.5
+allowed_point_targets = PackedStringArray()
+allowed_equipment_classes = PackedStringArray("cloth")
+section0_name = "Earth Path"
+section1_name = "Fire Path"
+section2_name = "Water Path"
+section3_name = "Wind Path"
+section0_dir = "res://Data/Abilities/Defs/Classes/Magician/Earth Path/"
+section1_dir = "res://Data/Abilities/Defs/Classes/Magician/Fire Path/"
+section2_dir = "res://Data/Abilities/Defs/Classes/Magician/Water Path/"
+section3_dir = "res://Data/Abilities/Defs/Classes/Magician/Wind Path/"
+metadata/_custom_type_script = "uid://b7ipjii2rumgu"

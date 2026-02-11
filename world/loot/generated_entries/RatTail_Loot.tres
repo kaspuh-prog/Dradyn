@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="LootEntry" load_steps=3 format=3 uid="uid://dmt5tkuokxvm2"]
+
+[ext_resource type="Resource" uid="uid://bs0ri4pf4u4u" path="res://Data/items/reagent/RatTail.tres" id="1_v6ttt"]
+[ext_resource type="Script" uid="uid://bj3tpnw12ybt7" path="res://world/loot/LootEntry.gd" id="2_qvvdk"]
+
+[resource]
+script = ExtResource("2_qvvdk")
+id = "RatTail_Loot"
+percent_chance = 25.0
+item_def = ExtResource("1_v6ttt")

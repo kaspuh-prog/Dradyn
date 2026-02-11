@@ -4,7 +4,7 @@ class_name AbilitySystem
 ## Signals
 signal cooldown_started(user: Node, ability_id: String, duration_ms: int, until_msec: int)
 signal ability_cast(user: Node, ability_id: String, ok: bool)
-signal gcd_started(user: Node, duration_ms: int, until_msec: int)
+signal gcd_started(user: Node, ability_id: String, duration_ms: int, until_msec: int)
 
 ## Constants
 const LOG_PREFIX: String = "[ABILITY] "
@@ -96,14 +96,25 @@ func request_cast(user: Node, ability_id: String, context: Dictionary = {}) -> b
 	if debug_log:
 		print_rich(LOG_PREFIX, "request by ", _uname(user), " ability=", ability_id)
 
+	# Detect item-based casts so they can bypass KnownAbilities gating.
+	var from_item: bool = false
+	if context.has("source"):
+		var src_any: Variant = context["source"]
+		if typeof(src_any) == TYPE_STRING:
+			var src_str: String = String(src_any)
+			if src_str == "item_use":
+				from_item = true
+
 	# Eligibility gate (class/brain/known list)
-	if not _user_has_ability(user, ability_id):
-		if __tr and ability_id == ABILITY_HEAL and __tr.has_method("trace_request_result"):
-			__tr.call("trace_request_result", user, ability_id, false, "not_eligible")
-		if debug_log:
-			push_warning(LOG_PREFIX + "user not eligible for ability_id=" + ability_id + " user=" + _uname(user))
-		emit_signal("ability_cast", user, ability_id, false)
-		return false
+	# Normal casts require the user to "know" the ability; item-based casts do not.
+	if not from_item:
+		if not _user_has_ability(user, ability_id):
+			if __tr and ability_id == ABILITY_HEAL and __tr.has_method("trace_request_result"):
+				__tr.call("trace_request_result", user, ability_id, false, "not_eligible")
+			if debug_log:
+				push_warning(LOG_PREFIX + "user not eligible for ability_id=" + ability_id + " user=" + _uname(user))
+			emit_signal("ability_cast", user, ability_id, false)
+			return false
 
 	var user_key: String = _user_key(user)
 	var gcd_blocked: bool = _is_on_gcd(user_key)
@@ -141,6 +152,33 @@ func request_cast(user: Node, ability_id: String, context: Dictionary = {}) -> b
 		var reg_def: Resource = _resolve_registered_ability_def(ability_id)
 		if reg_def != null:
 			ability_def = reg_def
+
+	# ---- Optional: item requirement gate for ability ----
+	# If the AbilityDef declares a "required_item_id", then non-item casts must
+	# have at least one of that item in the user's inventory.
+	var requires_item: bool = false
+	var required_item_id: StringName = StringName("")
+	if ability_def != null:
+		required_item_id = _required_item_id_for_def(ability_def)
+		if String(required_item_id) != "":
+			requires_item = true
+
+	if requires_item and not from_item:
+		if not _user_has_required_item_for_ability(user, required_item_id):
+			if debug_log:
+				push_warning(
+					LOG_PREFIX
+					+ "user missing required item "
+					+ String(required_item_id)
+					+ " for ability_id="
+					+ ability_id
+					+ " user="
+					+ _uname(user)
+				)
+			if __tr and ability_id == ABILITY_HEAL and __tr.has_method("trace_request_result"):
+				__tr.call("trace_request_result", user, ability_id, false, "missing_required_item")
+			emit_signal("ability_cast", user, ability_id, false)
+			return false
 
 	# ---- Execute via AbilityExec (single unified executor) ----
 	var ok: bool = false
@@ -266,7 +304,7 @@ func _resolve_registered_object_with_perform(ability_id: String) -> Object:
 			return res as Object
 	return null
 
-# --- Recursive scan helpers ----------------------------------------------------
+# --- Recursive scan helpers ---------------------------------------------------- #
 func _scan_ability_defs() -> void:
 	if _defs_scanned:
 		return
@@ -301,7 +339,7 @@ func _scan_dir_recursive(dir_path: String) -> void:
 					_def_by_id_cache[id_str] = def
 					_try_cache_icon_from_def(id_str, def)
 
-# --- Cache helpers for register_* paths ---------------------------------------
+# --- Cache helpers for register_* paths --------------------------------------- #
 func _try_cache_from_handler_entry(ability_id: String, entry: Variant) -> void:
 	if typeof(entry) == TYPE_OBJECT and entry is Resource:
 		_try_cache_icon_from_def(ability_id, entry as Resource)
@@ -312,7 +350,7 @@ func _try_cache_from_handler_entry(ability_id: String, entry: Variant) -> void:
 func _try_cache_def_from_path(ability_id: String, resource_path: String) -> void:
 	if resource_path == "":
 		return
-	if not (resource_path.ends_with(".tres") or resource_path.ends_with(".res")):
+	if not resource_path.ends_with(".tres") and not resource_path.ends_with(".res"):
 		return
 	if not ResourceLoader.exists(resource_path):
 		return
@@ -341,7 +379,7 @@ func _resolve_spell_resource_fallbacks(_ability_id: String) -> Resource:
 	return null
 
 # ----------------------------------------------------------------------------- #
-# Eligibility helpers (unchanged)
+# Eligibility helpers
 # ----------------------------------------------------------------------------- #
 func _user_has_ability(user: Object, ability_id: String) -> bool:
 	if user == null or not is_instance_valid(user):
@@ -368,13 +406,63 @@ func _find_known_abilities_component(user: Object) -> KnownAbilitiesComponent:
 	if not (user is Node):
 		return null
 	var n: Node = user as Node
-	var cand: Node = n.get_node_or_null("KnownAbilities")
+	var cand: Node = n.get_node_or_null("KnownAbilitiesComponent")
 	if cand != null and cand is KnownAbilitiesComponent:
 		return cand as KnownAbilitiesComponent
-	var found: Node = n.find_child("KnownAbilities", true, false)
+	var found: Node = n.find_child("KnownAbilitiesComponent", true, false)
 	if found != null and found is KnownAbilitiesComponent:
 		return found as KnownAbilitiesComponent
 	return null
+
+# ----------------------------------------------------------------------------- #
+# Item requirement helpers for abilities
+# ----------------------------------------------------------------------------- #
+func _required_item_id_for_def(def: Resource) -> StringName:
+	# AbilityDef can optionally export:
+	#   @export var required_item_id: StringName = &""
+	# This helper safely reads it if present, or returns empty otherwise.
+	if def == null:
+		return StringName("")
+	if not def.has_method("get"):
+		return StringName("")
+	var any_val: Variant = def.get("required_item_id")
+	if typeof(any_val) == TYPE_STRING_NAME:
+		var sn: StringName = any_val
+		return sn
+	if typeof(any_val) == TYPE_STRING:
+		var s: String = String(any_val)
+		if s != "":
+			return StringName(s)
+	return StringName("")
+
+func _user_has_required_item_for_ability(user: Node, item_id: StringName) -> bool:
+	if user == null or not is_instance_valid(user):
+		return false
+	if String(item_id) == "":
+		return false
+
+	var inv_sys: InventorySystem = get_node_or_null("/root/InventorySystem") as InventorySystem
+	if inv_sys == null:
+		return false
+
+	# Prefer an existing per-actor bag if present; otherwise create one.
+	var bag: InventoryModel = inv_sys.get_inventory_model_for(user)
+	if bag == null:
+		bag = inv_sys.ensure_inventory_model_for(user)
+	if bag == null:
+		return false
+
+	var slots_count: int = bag.slots
+	var i: int = 0
+	while i < slots_count:
+		var st_v: Variant = bag.get_slot_stack(i)
+		if st_v is ItemStack:
+			var st: ItemStack = st_v
+			if st.item != null and st.item.id == item_id and st.count > 0:
+				return true
+		i += 1
+
+	return false
 
 # ----------------------------------------------------------------------------- #
 # Cooldowns (GCD/CD) — sourced from AbilityDef or context

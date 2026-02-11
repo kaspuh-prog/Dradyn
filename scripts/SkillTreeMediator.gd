@@ -377,23 +377,47 @@ func _emit_unlocked(ability_id: String) -> void:
 	emit_signal("ability_unlocked", _actor, ability_id)
 	emit_signal("debug", "Unlocked: " + ability_id)
 
+# UPDATED: prefer any existing KnownAbilitiesComponent, whatever its node name.
 func _find_known_abilities_component(root: Node) -> KnownAbilitiesComponent:
 	if root == null:
 		return null
+
+	# 1) Direct child named "KnownAbilities" (canonical)
 	var direct: Node = root.get_node_or_null("KnownAbilities")
 	if direct != null and direct is KnownAbilitiesComponent:
 		return direct as KnownAbilitiesComponent
-	var deep: Node = root.find_child("KnownAbilities", true, false)
-	if deep != null and deep is KnownAbilitiesComponent:
-		return deep as KnownAbilitiesComponent
+
+	# 2) Direct child named "KnownAbilitiesComponent" (older scenes)
+	var compat: Node = root.get_node_or_null("KnownAbilitiesComponent")
+	if compat != null and compat is KnownAbilitiesComponent:
+		return compat as KnownAbilitiesComponent
+
+	# 3) Deep search for a child named "KnownAbilities"
+	var deep_named: Node = root.find_child("KnownAbilities", true, false)
+	if deep_named != null and deep_named is KnownAbilitiesComponent:
+		return deep_named as KnownAbilitiesComponent
+
+	# 4) Fallback: BFS by type (any KnownAbilitiesComponent, any name)
+	var queue: Array[Node] = [root]
+	while queue.size() > 0:
+		var cur: Node = queue.pop_front()
+		if cur is KnownAbilitiesComponent:
+			return cur as KnownAbilitiesComponent
+		for c in cur.get_children():
+			queue.append(c)
+
 	return null
 
 func _ensure_known_component(actor: Node) -> KnownAbilitiesComponent:
 	if actor == null:
 		return null
+
+	# Reuse any existing component first (prevents duplicate runtime nodes).
 	var kac: KnownAbilitiesComponent = _find_known_abilities_component(actor)
 	if kac != null:
 		return kac
+
+	# Only if none exists, create a new canonical node named "KnownAbilities"
 	var n := KnownAbilitiesComponent.new()
 	n.name = "KnownAbilities"
 	actor.add_child(n)

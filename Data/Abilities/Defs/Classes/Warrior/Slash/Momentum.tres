@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=6 format=3 uid="uid://c0prs4ehlvuy5"]
+
+[ext_resource type="Script" uid="uid://u63t4oseank1" path="res://scenes/Actors/status/StatusApplySpec.gd" id="1_hcl2j"]
+[ext_resource type="Script" uid="uid://byobol8rhb4cs" path="res://scripts/stats/StatModifier.gd" id="2_lg3tt"]
+[ext_resource type="Resource" uid="uid://bvjjsd21ajrsm" path="res://Data/StatModifiers/AtkSpd10(momentum).tres" id="3_tyxng"]
+[ext_resource type="Script" uid="uid://dsj3lq6kwixdp" path="res://Data/Abilities/AbilityDef.gd" id="4_di62k"]
+[ext_resource type="Texture2D" uid="uid://colyl0tc8bctj" path="res://assets/sprites/abilityicons/Momentum.png" id="4_lg3tt"]
+
+[resource]
+script = ExtResource("4_di62k")
+ability_id = "Momentum"
+display_name = "Momentum"
+icon = ExtResource("4_lg3tt")
+description = "After using a Section 0 ability, gain +10% attack speed for 3s."
+unlock_cost = 2
+level = 5
+ability_type = "PASSIVE"
+requires_target = false
+buff_mods = Array[ExtResource("2_lg3tt")]([ExtResource("3_tyxng")])
+passive_gate_equipment_classes = PackedStringArray()
+passive_gate_item_ids = PackedStringArray()
+passive_proc_mode = "ON_ABILITY_CAST_SECTION_INDEX"
+passive_proc_section_indices = PackedInt32Array(0)
+passive_proc_ability_types = PackedStringArray()
+passive_proc_ability_ids = PackedStringArray()
+passive_proc_duration_override_sec = 3.0
+cure_status_ids = PackedStringArray()
+cure_modifier_sources = PackedStringArray()
+cure_stacking_keys = PackedStringArray()

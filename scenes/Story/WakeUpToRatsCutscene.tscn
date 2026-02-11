@@ -6,4 +6,5 @@
 [node name="WakeUpToRatsCutscene" type="Node"]
 script = ExtResource("1_bxhpd")
 dialogue_box_scene = ExtResource("2_fe4va")
+story_gate_path = NodePath(".")
 speaker_name = "House Mother"

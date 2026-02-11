@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="LootEntry" load_steps=3 format=3 uid="uid://dkvr67nn1oyw4"]
+
+[ext_resource type="Resource" uid="uid://1aclrnqowl4h" path="res://Data/items/reagent/PoisonRatTooth.tres" id="1_ehpgb"]
+[ext_resource type="Script" uid="uid://bj3tpnw12ybt7" path="res://world/loot/LootEntry.gd" id="2_hguhk"]
+
+[resource]
+script = ExtResource("2_hguhk")
+id = "PoisonRatTooth_Loot"
+percent_chance = 18.0
+item_def = ExtResource("1_ehpgb")

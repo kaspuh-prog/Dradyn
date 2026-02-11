@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=3 format=3 uid="uid://dy5wcxsfmdgw3"]
+
+[ext_resource type="Script" uid="uid://2mjbmehwxafs" path="res://Data/items/equipment/ItemDef.gd" id="1_3jn6o"]
+[ext_resource type="Texture2D" uid="uid://de4kgisc0ultg" path="res://assets/sprites/items/reagents/fireflyitem.png" id="1_hi7dp"]
+
+[resource]
+script = ExtResource("1_3jn6o")
+id = &"Firefly"
+display_name = "FireFly"
+description = "Lightning bug? Fire Faerie? Probably just a firefly... "
+icon = ExtResource("1_hi7dp")
+item_type = "reagent"
+base_gold_value = 1
+metadata/_custom_type_script = "uid://2mjbmehwxafs"

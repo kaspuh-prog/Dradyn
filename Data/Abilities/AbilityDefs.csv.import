@@ -1,0 +1,15 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://bm0fwpc3kmehn"
+valid=false
+
+[deps]
+
+source_file="res://Data/Abilities/AbilityDefs.csv"
+
+[params]
+
+compress=true
+delimiter=0

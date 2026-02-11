@@ -1,0 +1,46 @@
+[gd_resource type="SpriteFrames" load_steps=7 format=3 uid="uid://cnqlwvjbqie50"]
+
+[ext_resource type="Texture2D" uid="uid://m30d84yms51y" path="res://assets/VFX/GravelBall.png" id="1_kvcrr"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_a7wa3"]
+atlas = ExtResource("1_kvcrr")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1g84f"]
+atlas = ExtResource("1_kvcrr")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ohd3b"]
+atlas = ExtResource("1_kvcrr")
+region = Rect2(128, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_l3uq4"]
+atlas = ExtResource("1_kvcrr")
+region = Rect2(192, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xrg58"]
+atlas = ExtResource("1_kvcrr")
+region = Rect2(320, 0, 64, 64)
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_a7wa3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1g84f")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ohd3b")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_l3uq4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xrg58")
+}],
+"loop": false,
+"name": &"default",
+"speed": 7.0
+}]

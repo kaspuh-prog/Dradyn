@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=4 format=3 uid="uid://pwsqr7sritwt"]
+
+[ext_resource type="Texture2D" uid="uid://dl7c4pnpp2r4e" path="res://assets/sprites/items/armor/armor_012.png" id="1_l0gn4"]
+[ext_resource type="Script" uid="uid://2mjbmehwxafs" path="res://Data/items/equipment/ItemDef.gd" id="2_1co17"]
+[ext_resource type="Resource" uid="uid://wah6ro1myvv0" path="res://Data/StatModifiers/Defense5.tres" id="3_dl7t5"]
+
+[resource]
+script = ExtResource("2_1co17")
+id = &"TatteredLeatherVest"
+display_name = "Tattered Leather Vest"
+description = "Is this made of rat hides?"
+icon = ExtResource("1_l0gn4")
+item_type = "equipment"
+equipment_class = &"leather"
+base_gold_value = 5
+equip_slot = "chest"
+stat_modifiers = Array[Resource]([ExtResource("3_dl7t5")])

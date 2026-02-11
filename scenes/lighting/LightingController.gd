@@ -11,6 +11,17 @@ signal phase_applied(is_day: bool)
 @export var torch_lit_atlas: Vector2i = Vector2i(0, 0)
 @export var torch_unlit_source_id: int = 0
 @export var torch_unlit_atlas: Vector2i = Vector2i(0, 0)
+
+# New (multi-variant): if any of these arrays are non-empty, LightingController will treat them
+# as *paired* lit/unlit variants (index-aligned).
+# - author your map with the LIT variants placed
+# - day => swaps to UNLIT
+# - night => swaps to LIT
+@export var torch_lit_source_ids: Array[int] = []
+@export var torch_lit_atlases: Array[Vector2i] = []
+@export var torch_unlit_source_ids: Array[int] = []
+@export var torch_unlit_atlases: Array[Vector2i] = []
+
 @export var torch_use_manual_cells: bool = false
 @export var torch_manual_cells: Array[Vector2i] = []
 
@@ -45,9 +56,19 @@ var _torch_cells_cache: Array[Vector2i] = []
 var _window_cells_cache: Array[Vector2i] = []
 var _fireplace_cells_cache: Array[Vector2i] = []
 
+# Multi-variant torch mapping (cell -> pair index)
+var _torch_cell_pair_index: Dictionary = {}
+
+# Resolved torch pairs used at runtime (always at least 1 entry)
+var _torch_pairs_lit_source: Array[int] = []
+var _torch_pairs_lit_atlas: Array[Vector2i] = []
+var _torch_pairs_unlit_source: Array[int] = []
+var _torch_pairs_unlit_atlas: Array[Vector2i] = []
+
 func _ready() -> void:
 	_resolve_nodes()
 	_resolve_dayandnight()
+	_resolve_torch_pairs()
 	_cache_torch_cells()
 	_cache_window_cells()
 	_cache_fireplace_cells()
@@ -110,11 +131,66 @@ func _apply_phase(is_day: bool) -> void:
 	emit_signal("phase_applied", is_day)
 
 # ============================== TORCHES ==============================
+func _resolve_torch_pairs() -> void:
+	_torch_pairs_lit_source.clear()
+	_torch_pairs_lit_atlas.clear()
+	_torch_pairs_unlit_source.clear()
+	_torch_pairs_unlit_atlas.clear()
+
+	var use_multi: bool = false
+	if not torch_lit_source_ids.is_empty():
+		use_multi = true
+	if not torch_lit_atlases.is_empty():
+		use_multi = true
+	if not torch_unlit_source_ids.is_empty():
+		use_multi = true
+	if not torch_unlit_atlases.is_empty():
+		use_multi = true
+
+	if not use_multi:
+		_torch_pairs_lit_source.append(torch_lit_source_id)
+		_torch_pairs_lit_atlas.append(torch_lit_atlas)
+		_torch_pairs_unlit_source.append(torch_unlit_source_id)
+		_torch_pairs_unlit_atlas.append(torch_unlit_atlas)
+		return
+
+	var pair_count: int = torch_lit_source_ids.size()
+	if torch_lit_atlases.size() < pair_count:
+		pair_count = torch_lit_atlases.size()
+	if torch_unlit_source_ids.size() < pair_count:
+		pair_count = torch_unlit_source_ids.size()
+	if torch_unlit_atlases.size() < pair_count:
+		pair_count = torch_unlit_atlases.size()
+
+	if pair_count <= 0:
+		# Misconfigured arrays; fall back to legacy single-pair exports.
+		_torch_pairs_lit_source.append(torch_lit_source_id)
+		_torch_pairs_lit_atlas.append(torch_lit_atlas)
+		_torch_pairs_unlit_source.append(torch_unlit_source_id)
+		_torch_pairs_unlit_atlas.append(torch_unlit_atlas)
+		if debug_logging:
+			printerr("[LightingController] Torch multi-variant arrays are empty/mismatched; falling back to legacy torch_* fields.")
+		return
+
+	var i: int = 0
+	while i < pair_count:
+		_torch_pairs_lit_source.append(torch_lit_source_ids[i])
+		_torch_pairs_lit_atlas.append(torch_lit_atlases[i])
+		_torch_pairs_unlit_source.append(torch_unlit_source_ids[i])
+		_torch_pairs_unlit_atlas.append(torch_unlit_atlases[i])
+		i += 1
+
+	if debug_logging:
+		print("[LightingController] Torch pairs resolved: ", pair_count)
+
 func _cache_torch_cells() -> void:
 	_torch_cells_cache.clear()
+	_torch_cell_pair_index.clear()
+
 	if torch_use_manual_cells:
 		for c in torch_manual_cells:
 			_torch_cells_cache.append(c)
+			_torch_cell_pair_index[c] = 0
 		if debug_logging:
 			print("[LightingController] Torch cells: manual (", _torch_cells_cache.size(), ").")
 		return
@@ -126,31 +202,40 @@ func _cache_torch_cells() -> void:
 			printerr("[LightingController] Torch layer lacks get_used_cells().")
 		return
 
-	var cells: Array = _torch_layer.call("get_used_cells")
-	for cell in cells:
-		var v: Vector2i = cell
-		if _cell_is_torch_lit(v):
-			_torch_cells_cache.append(v)
+	var used: Array = _torch_layer.call("get_used_cells")
+	for cell in used:
+		var v: Variant = cell
+		if v is Vector2i:
+			var c2: Vector2i = v
+			var pair_index: int = _torch_lit_pair_index_for_cell(c2)
+			if pair_index >= 0:
+				_torch_cells_cache.append(c2)
+				_torch_cell_pair_index[c2] = pair_index
 
 	if debug_logging:
-		print("[LightingController] Torch cells auto: ", _torch_cells_cache.size())
+		print("[LightingController] Torch cells cached: ", _torch_cells_cache.size(), ".")
 
-func _cell_is_torch_lit(cell: Vector2i) -> bool:
+func _torch_lit_pair_index_for_cell(cell: Vector2i) -> int:
 	if _torch_layer == null:
-		return false
+		return -1
 	if not _torch_layer.has_method("get_cell_source_id"):
-		return false
+		return -1
 	if not _torch_layer.has_method("get_cell_atlas_coords"):
-		return false
+		return -1
 
 	var sid: int = _torch_layer.call("get_cell_source_id", cell)
-	if sid != torch_lit_source_id:
-		return false
-
 	var coords: Vector2i = _torch_layer.call("get_cell_atlas_coords", cell)
-	if coords == torch_lit_atlas:
-		return true
-	return false
+
+	var i: int = 0
+	while i < _torch_pairs_lit_source.size():
+		var lit_sid: int = _torch_pairs_lit_source[i]
+		if sid == lit_sid:
+			var lit_coords: Vector2i = _torch_pairs_lit_atlas[i]
+			if coords == lit_coords:
+				return i
+		i += 1
+
+	return -1
 
 func _swap_torch_tiles(is_day: bool) -> void:
 	if _torch_layer == null:
@@ -162,13 +247,25 @@ func _swap_torch_tiles(is_day: bool) -> void:
 			printerr("[LightingController] Torch layer lacks set_cell().")
 		return
 
-	var target_source: int = torch_lit_source_id
-	var target_coords: Vector2i = torch_lit_atlas
-	if is_day:
-		target_source = torch_unlit_source_id
-		target_coords = torch_unlit_atlas
-
 	for cell in _torch_cells_cache:
+		var pair_index: int = 0
+		if _torch_cell_pair_index.has(cell):
+			var v: Variant = _torch_cell_pair_index[cell]
+			if v is int:
+				pair_index = v
+
+		# Clamp pair index defensively.
+		if pair_index < 0:
+			pair_index = 0
+		if pair_index >= _torch_pairs_lit_source.size():
+			pair_index = 0
+
+		var target_source: int = _torch_pairs_lit_source[pair_index]
+		var target_coords: Vector2i = _torch_pairs_lit_atlas[pair_index]
+		if is_day:
+			target_source = _torch_pairs_unlit_source[pair_index]
+			target_coords = _torch_pairs_unlit_atlas[pair_index]
+
 		_torch_layer.call("set_cell", cell, target_source, target_coords, 0)
 
 # ============================== WINDOWS ==============================
@@ -188,32 +285,16 @@ func _cache_window_cells() -> void:
 			printerr("[LightingController] Window layer lacks get_used_cells().")
 		return
 
-	# Auto-detect as either day or night tile.
-	var cells: Array = _window_layer.call("get_used_cells")
-	for cell in cells:
-		var v: Vector2i = cell
-		if _cell_is_window_day(v) or _cell_is_window_night(v):
-			_window_cells_cache.append(v)
+	var used: Array = _window_layer.call("get_used_cells")
+	for cell in used:
+		var v: Variant = cell
+		if v is Vector2i:
+			var c2: Vector2i = v
+			if _cell_is_window_night(c2):
+				_window_cells_cache.append(c2)
 
 	if debug_logging:
-		print("[LightingController] Window cells auto: ", _window_cells_cache.size())
-
-func _cell_is_window_day(cell: Vector2i) -> bool:
-	if _window_layer == null:
-		return false
-	if not _window_layer.has_method("get_cell_source_id"):
-		return false
-	if not _window_layer.has_method("get_cell_atlas_coords"):
-		return false
-
-	var sid: int = _window_layer.call("get_cell_source_id", cell)
-	if sid != window_day_source_id:
-		return false
-
-	var coords: Vector2i = _window_layer.call("get_cell_atlas_coords", cell)
-	if coords == window_day_atlas:
-		return true
-	return false
+		print("[LightingController] Window cells cached: ", _window_cells_cache.size(), ".")
 
 func _cell_is_window_night(cell: Vector2i) -> bool:
 	if _window_layer == null:
@@ -268,14 +349,16 @@ func _cache_fireplace_cells() -> void:
 			printerr("[LightingController] Fireplace layer lacks get_used_cells().")
 		return
 
-	var cells: Array = _fireplace_layer.call("get_used_cells")
-	for cell in cells:
-		var v: Vector2i = cell
-		if _cell_is_fireplace_lit(v) or _cell_is_fireplace_unlit(v):
-			_fireplace_cells_cache.append(v)
+	var used: Array = _fireplace_layer.call("get_used_cells")
+	for cell in used:
+		var v: Variant = cell
+		if v is Vector2i:
+			var c2: Vector2i = v
+			if _cell_is_fireplace_lit(c2):
+				_fireplace_cells_cache.append(c2)
 
 	if debug_logging:
-		print("[LightingController] Fireplace cells auto: ", _fireplace_cells_cache.size())
+		print("[LightingController] Fireplace cells cached: ", _fireplace_cells_cache.size(), ".")
 
 func _cell_is_fireplace_lit(cell: Vector2i) -> bool:
 	if _fireplace_layer == null:
@@ -291,23 +374,6 @@ func _cell_is_fireplace_lit(cell: Vector2i) -> bool:
 
 	var coords: Vector2i = _fireplace_layer.call("get_cell_atlas_coords", cell)
 	if coords == fireplace_lit_atlas:
-		return true
-	return false
-
-func _cell_is_fireplace_unlit(cell: Vector2i) -> bool:
-	if _fireplace_layer == null:
-		return false
-	if not _fireplace_layer.has_method("get_cell_source_id"):
-		return false
-	if not _fireplace_layer.has_method("get_cell_atlas_coords"):
-		return false
-
-	var sid: int = _fireplace_layer.call("get_cell_source_id", cell)
-	if sid != fireplace_unlit_source_id:
-		return false
-
-	var coords: Vector2i = _fireplace_layer.call("get_cell_atlas_coords", cell)
-	if coords == fireplace_unlit_atlas:
 		return true
 	return false
 

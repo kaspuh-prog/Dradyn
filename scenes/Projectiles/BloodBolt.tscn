@@ -1,0 +1,22 @@
+[gd_scene load_steps=4 format=3 uid="uid://c5ul12lwtcko3"]
+
+[ext_resource type="Script" uid="uid://ch0h6j3kga501" path="res://scenes/Projectiles/HomingDrainProjectile.gd" id="1_clyd3"]
+[ext_resource type="SpriteFrames" uid="uid://caitklnworhap" path="res://assets/VFX/BloodBolt.tres" id="2_clyd3"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_821n7"]
+radius = 6.0827627
+
+[node name="BloodBolt" type="Area2D"]
+collision_mask = 3
+script = ExtResource("1_clyd3")
+acquire_range_px = 320.0
+heal_ratio = 0.25
+metadata/_custom_type_script = "uid://ch0h6j3kga501"
+
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+sprite_frames = ExtResource("2_clyd3")
+animation = &"fly"
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+position = Vector2(5, -1)
+shape = SubResource("CircleShape2D_821n7")

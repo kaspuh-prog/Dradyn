@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=8 format=3 uid="uid://b6vu4vny84op3"]
+
+[ext_resource type="Script" uid="uid://u63t4oseank1" path="res://scenes/Actors/status/StatusApplySpec.gd" id="1_hajef"]
+[ext_resource type="Script" uid="uid://byobol8rhb4cs" path="res://scripts/stats/StatModifier.gd" id="2_mjed7"]
+[ext_resource type="Script" uid="uid://dsj3lq6kwixdp" path="res://Data/Abilities/AbilityDef.gd" id="3_jbnb0"]
+[ext_resource type="Texture2D" uid="uid://bs6rbf8vei5l8" path="res://assets/sprites/abilityicons/dualattack.png" id="3_xn5ki"]
+[ext_resource type="Script" uid="uid://c87lf672qvjv1" path="res://Data/Abilities/AbilitySfxCue.gd" id="5_huqr6"]
+[ext_resource type="Resource" uid="uid://b0fjva52c0lkp" path="res://Data/Abilities/AbilitySFXCues/Dual-attack.tres" id="6_7bqcl"]
+[ext_resource type="Resource" uid="uid://bm4277t8ahc47" path="res://Data/Abilities/AbilitySFXCues/Dual-attack2.tres" id="7_goiwl"]
+
+[resource]
+script = ExtResource("3_jbnb0")
+ability_id = "dual-attack"
+display_name = "Attack"
+icon = ExtResource("3_xn5ki")
+description = "One then the other just like they teach in the thieve's guild."
+unlock_cost = 0
+section_index = 1
+ability_type = "MELEE"
+requires_target = false
+cooldown_sec = 0.3
+scale_stat = "DEX"
+cast_anim = "attack1"
+sfx_cues = Array[ExtResource("5_huqr6")]([ExtResource("6_7bqcl"), ExtResource("7_goiwl")])
+melee_range_px = 32.0
+melee_arc_deg = 140.0
+melee_forward_offset_px = 5.0
+melee_hit_frames = null
+melee_swing_thickness_px = 8.0
+passive_gate_equipment_classes = PackedStringArray()
+passive_gate_item_ids = PackedStringArray()
+passive_proc_section_indices = PackedInt32Array()
+passive_proc_ability_types = PackedStringArray()
+passive_proc_ability_ids = PackedStringArray()
+cure_status_ids = PackedStringArray()
+cure_modifier_sources = PackedStringArray()
+cure_stacking_keys = PackedStringArray()

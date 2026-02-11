@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://b4bu7yxxuxq2o"
+
+[deps]
+
+files=["res://Data/Story/StoryState.step.translation", "res://Data/Story/StoryState.part.translation", "res://Data/Story/StoryState.story.translation", "res://Data/Story/StoryState.story.translation", "res://Data/Story/StoryState.next.translation", "res://Data/Story/StoryState.next.translation", "res://Data/Story/StoryState.next.translation", "res://Data/Story/StoryState.flags.translation", "res://Data/Story/StoryState.flags.translation", "res://Data/Story/StoryState.flags.translation", "res://Data/Story/StoryState.flags.translation"]
+
+source_file="res://Data/Story/StoryState.csv"
+dest_files=["res://Data/Story/StoryState.step.translation", "res://Data/Story/StoryState.part.translation", "res://Data/Story/StoryState.story.translation", "res://Data/Story/StoryState.story.translation", "res://Data/Story/StoryState.next.translation", "res://Data/Story/StoryState.next.translation", "res://Data/Story/StoryState.next.translation", "res://Data/Story/StoryState.flags.translation", "res://Data/Story/StoryState.flags.translation", "res://Data/Story/StoryState.flags.translation", "res://Data/Story/StoryState.flags.translation"]
+
+[params]
+
+compress=true
+delimiter=0

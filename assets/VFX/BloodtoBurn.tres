@@ -1,0 +1,46 @@
+[gd_resource type="SpriteFrames" load_steps=7 format=3 uid="uid://ceadq1lbnlwgi"]
+
+[ext_resource type="Texture2D" uid="uid://dppq7bwdu1h7h" path="res://assets/VFX/BloodtoBurn.png" id="1_2xvm8"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2xvm8"]
+atlas = ExtResource("1_2xvm8")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8coey"]
+atlas = ExtResource("1_2xvm8")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8po3f"]
+atlas = ExtResource("1_2xvm8")
+region = Rect2(128, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_umsxv"]
+atlas = ExtResource("1_2xvm8")
+region = Rect2(192, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_x0q4n"]
+atlas = ExtResource("1_2xvm8")
+region = Rect2(256, 0, 64, 64)
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2xvm8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8coey")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8po3f")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_umsxv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_x0q4n")
+}],
+"loop": false,
+"name": &"default",
+"speed": 8.0
+}]

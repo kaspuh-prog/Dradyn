@@ -18,21 +18,9 @@ const LBIT_ALLY: int = 3
 @export var dist_tie_epsilon_px: float = 12.0
 @export var randomize_tie_choice: bool = true
 
-# Attack geometry / timing (legacy melee support)
-@export var attack_range: float = 32.0
-@export var attack_arc_deg: float = 70.0
-@export var attack_forward_offset: float = 8.0
-@export var attack_cooldown_sec: float = 0.9
-@export var attack_hit_frame: int = 2
-
 # Animation names
 @export var anim_idle_prefix: String = "idle"
 @export var anim_walk_prefix: String = "walk"
-@export var anim_attack_prefix: String = "attack"
-
-# Cast (heal/buffs/projectile) animation
-@export var anim_cast_prefix: String = "cast"
-@export var cast_hit_frame: int = 3
 
 # Death VFX (SpriteFrames or file path)
 @export var death_vfx_frames: SpriteFrames
@@ -46,13 +34,6 @@ const LBIT_ALLY: int = 3
 @export var stop_buffer_px: float = 2.0
 @export var debug_prints: bool = false
 
-# Damage shaping
-@export var noncrit_variance: float = 0.15
-@export var crit_multiplier: float = 1.5
-
-# Deprecated: abilities are sourced from KnownAbilities (component) now.
-@export var known_abilities: PackedStringArray = []
-
 # Targeting mode (party-wide)
 enum TargetMode { SMART, NEAREST }
 @export var target_mode: int = TargetMode.SMART
@@ -65,48 +46,57 @@ enum TargetMode { SMART, NEAREST }
 @export var melee_hold_min_px: float = 14.0
 @export var melee_hold_max_px: float = 26.0
 
+# Threat system config
+@export var initial_threat: float = 10.0
+
+# Threat tuning coefficients (relative ordering: HEAL > direct > HOT > DOT > DEBUFF; PROJECTILE lowest)
+@export var threat_damage_coeff: float = 1.0      # direct damage (melee/basic/DAMAGE_SPELL)
+@export var threat_dot_coeff: float = 0.5         # DOT_SPELL
+@export var threat_heal_coeff: float = 1.5        # HEAL_SPELL
+@export var threat_hot_coeff: float = 0.75        # HOT_SPELL
+@export var threat_projectile_coeff: float = 0.25 # PROJECTILE attacks (ranged) – lowest damage threat
+@export var threat_debuff_flat: float = 5.0       # flat threat for debuffs (used from StatusConditions later)
+
+# Knockback receiver (for AbilityExecutor knockback)
+@export var allow_knockback: bool = true
+@export var knockback_locks_actions: bool = true
+
+# --- External motion (generic: conveyors, wind, currents, etc.) --------------
+# Contributors provide velocities in px/s while active.
+# Enemies generally should not "resist" environmental motion; keep this at 0 unless desired.
+@export var external_resist: float = 0.0 # 0 = no resist; 1 = fully cancel external when self-moving
+@export var external_resist_dot_threshold: float = -0.15
+
+var _external_vel_by_id: Dictionary = {} # Dictionary[StringName, Vector2]
+
 # --- Signals ---
 signal damaged(enemy: EnemyBase, amount: float, dmg_type: String, source: String)
 signal died(enemy: EnemyBase)
 
 # --- Runtime ---
-var _target: Node2D = null
-var _is_attacking: bool = false
-var _is_casting: bool = false
-var _attack_pending: bool = false
-var _cooldown_timer: float = 0.0
-var _attack_anim_name: String = ""
-var _cast_anim_name: String = ""
-var _post_cooldown: float = 0.0
-var _party_mgr: Node = null
-var _on_hit_cb: Callable = Callable()
-var _on_cast_cb: Callable = Callable()
+var _threat: Dictionary = {}        # Node2D -> float
+var _in_combat: bool = false
 
-# Derived Attack Speed total cooldown (computed from stats)
-var _attack_total_cd: float = 0.9
+var _target: Node2D = null
+var _party_mgr: Node = null
+var _abilitysys: Node = null
+var _known_abilities_node: Node = null   # child "KnownAbilities" component
+var _has_melee_in_kit_flag: bool = true  # computed at ready
 
 enum Facing { DOWN, UP, SIDE }
 var _facing: int = Facing.DOWN
 var _facing_left: bool = false
 
-# RNG + attack ids
+# RNG (smart targeting tiebreakers)
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
-var _attack_seq: int = 0
-var _current_attack_id: int = -1
 
-# Ability plumbing
-var _abilitysys: Node = null
-var _known_abilities_node: Node = null   # child "KnownAbilities" component
-var _has_melee_in_kit_flag: bool = true  # computed at ready
-
-# Link to EnemyAbilityAI if present (used for non-thrashy facing)
-var _enemy_ai: Node = null
-
-# NEW: time-based action lock for cast/projectile animations
+# time-based action lock for ability-driven animations
 var _action_anim_until_msec: int = 0
 
-# NEW: hit frame for current cast animation
-var _pending_cast_hit_frame: int = 0
+# Knockback runtime
+var _knockback_until_msec: int = 0
+var _knockback_velocity: Vector2 = Vector2.ZERO
+
 
 func _ready() -> void:
 	_rng.randomize()
@@ -121,8 +111,6 @@ func _ready() -> void:
 	else:
 		sprite_anchor = self
 
-	_enemy_ai = get_node_or_null("EnemyAbilityAI")
-
 	if stats == null:
 		push_warning("[EnemyBase] StatsComponent missing under " + name)
 	else:
@@ -130,15 +118,13 @@ func _ready() -> void:
 			stats.connect("died", Callable(self, "_on_died"))
 		if stats.has_signal("damage_taken") and not stats.is_connected("damage_taken", Callable(self, "_on_damage_taken")):
 			stats.connect("damage_taken", Callable(self, "_on_damage_taken"))
+		# Threat-aware damage signal from this enemy's StatsComponent
+		if stats.has_signal("damage_threat") and not stats.is_connected("damage_threat", Callable(self, "_on_damage_threat")):
+			stats.connect("damage_threat", Callable(self, "_on_damage_threat"))
 
 	get_tree().call_group("DamageNumberSpawners", "register_emitter", stats, sprite_anchor)
 
 	if anim != null:
-		if not anim.is_connected("frame_changed", Callable(self, "_on_anim_frame_changed")):
-			anim.connect("frame_changed", Callable(self, "_on_anim_frame_changed"))
-		# Extra frame listener used for cast hit-frame timing.
-		if not anim.is_connected("frame_changed", Callable(self, "_on_cast_frame_changed")):
-			anim.connect("frame_changed", Callable(self, "_on_cast_frame_changed"))
 		if not anim.is_connected("animation_finished", Callable(self, "_on_anim_finished")):
 			anim.connect("animation_finished", Callable(self, "_on_anim_finished"))
 
@@ -147,27 +133,134 @@ func _ready() -> void:
 	_known_abilities_node = _resolve_known_abilities_node()
 	_has_melee_in_kit_flag = _compute_has_melee_in_kit()
 
-	_init_attack_speed_hooks()
+	# Listen to party healing for HEAL_SPELL / HOT_SPELL threat
+	_connect_party_heal_threat_listeners()
+
 
 func _physics_process(delta: float) -> void:
-	_cooldown_timer = maxf(0.0, _cooldown_timer - delta)
 	_acquire_target()
-	_run_ai(delta)
+
+	if _is_knockback_active():
+		_run_knockback(delta)
+	else:
+		_run_ai(delta)
+
 	_update_anim()
 
+# --- External motion API ------------------------------------------------------
+
+func set_external_velocity(id: StringName, v: Vector2) -> void:
+	_external_vel_by_id[id] = v
+
+func clear_external_velocity(id: StringName) -> void:
+	if _external_vel_by_id.has(id):
+		_external_vel_by_id.erase(id)
+
+func clear_all_external_velocity() -> void:
+	_external_vel_by_id.clear()
+
+func get_external_velocity() -> Vector2:
+	var sum: Vector2 = Vector2.ZERO
+	for k in _external_vel_by_id.keys():
+		var vv: Variant = _external_vel_by_id[k]
+		if vv is Vector2:
+			sum += vv
+	return sum
+
+func _compute_external_velocity(desired_self: Vector2) -> Vector2:
+	var ext: Vector2 = get_external_velocity()
+	if ext == Vector2.ZERO:
+		return Vector2.ZERO
+
+	if external_resist <= 0.0:
+		return ext
+
+	if desired_self.length() <= 0.01:
+		return ext
+
+	var a: Vector2 = desired_self.normalized()
+	var b: Vector2 = ext.normalized()
+	var d: float = a.dot(b)
+
+	if d < external_resist_dot_threshold:
+		var t: float = clamp(external_resist, 0.0, 1.0)
+		return ext * (1.0 - t)
+
+	return ext
+
+# ---------------- Knockback receiver ----------------
+# AbilityExecutor expects: apply_knockback(dir: Vector2, speed: float, duration: float)
+func apply_knockback(dir: Vector2, speed: float, duration: float) -> void:
+	if not allow_knockback:
+		return
+
+	var d: Vector2 = dir
+	if d.length_squared() < 0.000001:
+		# Fallback: push away from current target if we can, otherwise do nothing.
+		var t: Node2D = _target
+		if t != null and is_instance_valid(t):
+			d = global_position - t.global_position
+		else:
+			return
+
+	if d.length_squared() < 0.000001:
+		return
+
+	var s: float = speed
+	if s < 0.0:
+		s = 0.0
+
+	var dur: float = duration
+	if dur < 0.0:
+		dur = 0.0
+
+	var nd: Vector2 = d.normalized()
+	_knockback_velocity = nd * s
+
+	var now: int = Time.get_ticks_msec()
+	var ms: int = int(dur * 1000.0)
+	if ms < 1:
+		# If duration is ~0, still apply a single physics tick worth of push.
+		ms = 1
+
+	_knockback_until_msec = now + ms
+
+	if knockback_locks_actions:
+		lock_action_for(ms)
+
+
+func _is_knockback_active() -> bool:
+	if Time.get_ticks_msec() < _knockback_until_msec:
+		return true
+	return false
+
+
+func _run_knockback(_delta: float) -> void:
+	# During knockback, we do not let AI overwrite velocity.
+	# External motion still applies (wind/conveyors can move a knocked enemy too).
+	var ext: Vector2 = _compute_external_velocity(_knockback_velocity)
+	velocity = _knockback_velocity + ext
+	move_and_slide()
+
+	# If the timer has expired, clear residual velocity so we don't drift.
+	if not _is_knockback_active():
+		_knockback_velocity = Vector2.ZERO
+		velocity = Vector2.ZERO
+
 # ---------------- AbilitySystem integration ----------------
+
 func is_action_locked() -> bool:
-	if _is_attacking:
-		return true
-	if _is_casting:
-		return true
+	# EnemyBase no longer owns attack/cast animations; AbilityExecutor / AnimationBridge
+	# will call lock_action / lock_action_for during ability usage.
 	if Time.get_ticks_msec() < _action_anim_until_msec:
 		return true
 	return false
 
+
 func lock_action(seconds: float) -> void:
 	var ms: int = int(max(0.0, seconds) * 1000.0)
 	lock_action_for(ms)
+
 
 func lock_action_for(ms: int) -> void:
 	var now: int = Time.get_ticks_msec()
@@ -175,8 +268,10 @@ func lock_action_for(ms: int) -> void:
 	if until > _action_anim_until_msec:
 		_action_anim_until_msec = until
 
+
 func unlock_action() -> void:
 	_action_anim_until_msec = 0
+
 
 func has_ability(ability_id: String) -> bool:
 	if ability_id == "":
@@ -194,45 +289,45 @@ func has_ability(ability_id: String) -> bool:
 				return arr.has(ability_id)
 	return false
 
-# ---------------- Attack Speed (derived) ----------------
-func _init_attack_speed_hooks() -> void:
-	if stats != null:
-		_recalc_attack_cooldown()
-		if stats.has_signal("stat_changed"):
-			stats.stat_changed.connect(_on_stat_changed_for_attack_speed)
-		if stats.has_signal("attack_speed_changed"):
-			stats.attack_speed_changed.connect(_on_attack_speed_changed)
-	else:
-		_attack_total_cd = attack_cooldown_sec
-
-func _on_attack_speed_changed(delay_sec: float, _mul: float, _aps: float) -> void:
-	_attack_total_cd = delay_sec
-
-func _recalc_attack_cooldown() -> void:
-	var r: Dictionary = DerivedFormulas.calc_attack_speed(stats)
-	_attack_total_cd = float(r["attack_delay_sec"])
-
-func _on_stat_changed_for_attack_speed(stat_name: String, _final_value: float) -> void:
-	if stat_name == "AGI" or stat_name == "STR" or stat_name == "WeaponWeight" or stat_name == "BaseAttackDelay":
-		_recalc_attack_cooldown()
-
 # ---------------- Targeting ----------------
+
 func _acquire_target() -> void:
-	var candidates: Array = _gather_party_candidates()
-	var in_range: Array = []
-	var r2: float = detection_radius * detection_radius
+	# Threat-aware targeting
+	_prune_threat_table()
 
-	for n in candidates:
-		if n == null or not is_instance_valid(n):
-			continue
-		if not _candidate_is_attackable(n):
-			continue
-		var d2: float = (n.global_position - global_position).length_squared()
-		if d2 <= r2:
-			in_range.append(n)
+	# If we already have threat information, prefer the highest-threat valid target.
+	if _threat.size() > 0:
+		_refresh_primary_target_from_threat()
 
-	var chosen: Node2D = null
-	if in_range.size() > 0:
+	# If threat did not yield a valid target, fall back to zero-threat rules (SMART/NEAREST).
+	if _target == null or not is_instance_valid(_target) or not _candidate_is_attackable(_target):
+		var candidates: Array = _gather_party_candidates()
+		if candidates.is_empty():
+			_target = null
+			_update_in_combat_state()
+			return
+
+		var in_range: Array = []
+		var r2: float = detection_radius * detection_radius
+
+		for n in candidates:
+			if n == null or not is_instance_valid(n):
+				continue
+			var n2d: Node2D = n as Node2D
+			if n2d == null:
+				continue
+			if not _candidate_is_attackable(n2d):
+				continue
+			var d2: float = (n2d.global_position - global_position).length_squared()
+			if d2 <= r2:
+				in_range.append(n2d)
+
+		if in_range.is_empty():
+			_target = null
+			_update_in_combat_state()
+			return
+
+		var chosen: Node2D = null
 		if target_mode == TargetMode.SMART:
 			chosen = _choose_smart_target(in_range)
 		else:
@@ -243,10 +338,18 @@ func _acquire_target() -> void:
 					best_d2 = dd2
 					chosen = n2 as Node2D
 
-	if chosen == self:
-		chosen = null
+		if chosen == self:
+			chosen = null
 
-	_target = chosen
+		_target = chosen
+
+		# Seed initial threat for the chosen target, so subsequent threat-based
+		# updates can take over.
+		if _target != null and not _threat.has(_target) and initial_threat > 0.0:
+			_threat[_target] = initial_threat
+
+	_update_in_combat_state()
+
 
 func _gather_party_candidates() -> Array:
 	var out: Array = []
@@ -264,6 +367,7 @@ func _gather_party_candidates() -> Array:
 				out.append(m as Node2D)
 	return out
 
+
 func _has_prop(obj: Object, prop_name: String) -> bool:
 	var plist: Array = obj.get_property_list()
 	var i: int = 0
@@ -276,9 +380,9 @@ func _has_prop(obj: Object, prop_name: String) -> bool:
 		i += 1
 	return false
 
+
 func _candidate_is_attackable(n: Node2D) -> bool:
-	# Previously: returned true if no StatsComponent was found.
-	# New: require a stats/damage interface AND verify the target is alive.
+	# Require a stats/damage interface AND verify the target is alive.
 	var st: Node = _find_stats_component(n)
 	if st == null:
 		return false
@@ -302,6 +406,7 @@ func _candidate_is_attackable(n: Node2D) -> bool:
 
 	return cur > 0.0
 
+
 func _choose_smart_target(cands: Array) -> Node2D:
 	var ratios: Dictionary = {}
 	var d2map: Dictionary = {}
@@ -309,8 +414,11 @@ func _choose_smart_target(cands: Array) -> Node2D:
 	for n in cands:
 		if n == null or not is_instance_valid(n):
 			continue
+		var n2d: Node2D = n as Node2D
+		if n2d == null:
+			continue
 		var ratio: float = 1.0
-		var st: Node = _find_stats_component(n)
+		var st: Node = _find_stats_component(n2d)
 		if st != null:
 			var cur: float = 0.0
 			var mx: float = 1.0
@@ -333,64 +441,172 @@ func _choose_smart_target(cands: Array) -> Node2D:
 			if mx <= 0.0:
 				mx = 1.0
 			ratio = clampf(cur / mx, 0.0, 1.0)
-		ratios[n] = ratio
-		d2map[n] = (n.global_position - global_position).length_squared()
+		ratios[n2d] = ratio
+		d2map[n2d] = (n2d.global_position - global_position).length_squared()
 		if ratio < min_ratio:
 			min_ratio = ratio
+
 	var near_hp: Array = []
 	for n2 in cands:
-		if not ratios.has(n2):
+		var n2d2: Node2D = n2 as Node2D
+		if n2d2 == null:
 			continue
-		var r: float = float(ratios[n2])
+		if not ratios.has(n2d2):
+			continue
+		var r: float = float(ratios[n2d2])
 		if r <= min_ratio + hp_tie_epsilon + 1e-6:
-			near_hp.append(n2)
+			near_hp.append(n2d2)
+
 	if near_hp.is_empty():
 		return null
+
 	var min_d2: float = INF
 	for n3 in near_hp:
-		var d2_n: float = float(d2map[n3])
+		var n3d: Node2D = n3 as Node2D
+		if n3d == null:
+			continue
+		var d2_n: float = float(d2map[n3d])
 		if d2_n < min_d2:
 			min_d2 = d2_n
+
 	var near_dist: Array = []
 	var eps_d2: float = dist_tie_epsilon_px * dist_tie_epsilon_px
 	for n4 in near_hp:
-		var d2_n2: float = float(d2map[n4])
+		var n4d: Node2D = n4 as Node2D
+		if n4d == null:
+			continue
+		var d2_n2: float = float(d2map[n4d])
 		if d2_n2 <= min_d2 + eps_d2:
-			near_dist.append(n4)
+			near_dist.append(n4d)
+
 	if near_dist.size() > 1 and randomize_tie_choice:
 		var idx: int = _rng.randi_range(0, near_dist.size() - 1)
 		return near_dist[idx] as Node2D
+
 	return near_dist[0] as Node2D
 
-# ---------------- Helpers: cone/aim ----------------
-func _facing_vector() -> Vector2:
-	if _facing == Facing.UP:
-		return Vector2.UP
-	if _facing == Facing.DOWN:
-		return Vector2.DOWN
-	if _facing_left:
-		return Vector2.LEFT
-	return Vector2.RIGHT
+# ---------------- Threat API & queries ----------------
 
-func _attack_origin() -> Vector2:
-	var aim: Vector2 = _facing_vector().normalized()
-	return global_position + aim * attack_forward_offset
+func add_threat(actor: Node2D, amount: float, source_type: StringName) -> void:
+	if actor == null or not is_instance_valid(actor):
+		return
+	if amount <= 0.0:
+		return
+	var current: float = 0.0
+	if _threat.has(actor):
+		var existing: Variant = _threat.get(actor, 0.0)
+		if typeof(existing) == TYPE_INT or typeof(existing) == TYPE_FLOAT:
+			current = float(existing)
+	var value: float = current + amount
+	_threat[actor] = value
+	_refresh_primary_target_from_threat()
 
-func _in_attack_cone(target_pos: Vector2) -> bool:
-	var aim: Vector2 = _facing_vector()
-	if aim == Vector2.ZERO:
-		aim = Vector2.DOWN
-	var origin: Vector2 = _attack_origin()
-	var to: Vector2 = target_pos - origin
-	var dist: float = to.length()
-	if dist > attack_range + stop_buffer_px:
+
+func add_flat_threat(actor: Node2D, amount: float, source_type: StringName) -> void:
+	add_threat(actor, amount, source_type)
+
+
+func clear_threat_for(actor: Node2D) -> void:
+	if actor == null:
+		return
+	if _threat.has(actor):
+		_threat.erase(actor)
+	if _target == actor:
+		_target = null
+	_update_in_combat_state()
+
+
+func get_primary_target() -> Node2D:
+	return _target
+
+
+func has_primary_target() -> bool:
+	var t: Node2D = _target
+	if t == null or not is_instance_valid(t):
 		return false
-	var dir: Vector2 = to / maxf(0.001, dist)
-	var dot_val: float = clampf(aim.normalized().dot(dir), -1.0, 1.0)
-	var ang: float = acos(dot_val)
-	return ang <= deg_to_rad(attack_arc_deg * 0.5)
+	if not _candidate_is_attackable(t):
+		return false
+	return true
 
-# ---------------- AI ----------------
+
+func is_in_melee_band(range_px: float) -> bool:
+	var t: Node2D = get_primary_target()
+	if t == null:
+		return false
+	var dist: float = (t.global_position - global_position).length()
+	return dist <= range_px
+
+
+func is_in_ranged_band(min_px: float, max_px: float) -> bool:
+	var t: Node2D = get_primary_target()
+	if t == null:
+		return false
+	var dist: float = (t.global_position - global_position).length()
+	if dist < min_px:
+		return false
+	if dist > max_px:
+		return false
+	return true
+
+
+func is_in_combat() -> bool:
+	return _in_combat
+
+
+func _prune_threat_table() -> void:
+	if _threat.is_empty():
+		return
+	var to_erase: Array = []
+	for k in _threat.keys():
+		var n: Node2D = k as Node2D
+		if n == null or not is_instance_valid(n):
+			to_erase.append(k)
+			continue
+		if not _candidate_is_attackable(n):
+			to_erase.append(k)
+	for rem in to_erase:
+		_threat.erase(rem)
+
+
+func _refresh_primary_target_from_threat() -> void:
+	if _threat.is_empty():
+		return
+	var best: Node2D = null
+	var best_threat: float = -INF
+	var r2: float = detection_radius * detection_radius
+	for k in _threat.keys():
+		var n: Node2D = k as Node2D
+		if n == null or not is_instance_valid(n):
+			continue
+		if not _candidate_is_attackable(n):
+			continue
+		var d2: float = (n.global_position - global_position).length_squared()
+		if d2 > r2:
+			continue
+		var v: Variant = _threat.get(n, 0.0)
+		var tval: float = 0.0
+		if typeof(v) == TYPE_INT or typeof(v) == TYPE_FLOAT:
+			tval = float(v)
+		if tval > best_threat:
+			best_threat = tval
+			best = n
+	_target = best
+
+
+func _update_in_combat_state() -> void:
+	var t: Node2D = _target
+	if t == null or not is_instance_valid(t):
+		_in_combat = false
+		return
+	if not _candidate_is_attackable(t):
+		_in_combat = false
+		return
+	var max_dist: float = detection_radius + 32.0
+	var d2: float = (t.global_position - global_position).length_squared()
+	_in_combat = d2 <= max_dist * max_dist
+
+# ---------------- AI (movement only; attacks are via AbilitySystem) ----------------
+
 func _run_ai(_delta: float) -> void:
 	var ms: float = 90.0
 	if stats != null and stats.has_method("get_final_stat"):
@@ -400,15 +616,11 @@ func _run_ai(_delta: float) -> void:
 			if f > 0.0:
 				ms = f
 
-	# Respect external animation locks (projectile/bridge casts)
+	# Respect external animation locks (ability casts / projectiles)
+	# BUT still allow external motion (conveyors/wind) to move the enemy.
 	if is_action_locked():
-		velocity = Vector2.ZERO
-		move_and_slide()
-		return
-
-	# If casting or attacking via animation handlers, hold still
-	if _is_attacking or _is_casting:
-		velocity = Vector2.ZERO
+		var ext_only: Vector2 = _compute_external_velocity(Vector2.ZERO)
+		velocity = ext_only
 		move_and_slide()
 		return
 
@@ -447,13 +659,6 @@ func _run_ai(_delta: float) -> void:
 				if outer <= inner:
 					outer = inner + 4.0
 
-				var can_swing: bool = _in_attack_cone(_target.global_position) and _can_basic_attack()
-				if can_swing:
-					velocity = Vector2.ZERO
-					move_and_slide()
-					_start_attack()
-					return
-
 				var too_close: bool = (dist < inner)
 				var too_far: bool = (dist > outer)
 
@@ -466,205 +671,124 @@ func _run_ai(_delta: float) -> void:
 				else:
 					dir = Vector2.ZERO
 
-			velocity = dir * ms
+			var desired_self: Vector2 = dir * ms
+			var ext: Vector2 = _compute_external_velocity(desired_self)
+
+			velocity = desired_self + ext
 			move_and_slide()
 
-			# Facing: only update from movement to avoid fight with EnemyAbilityAI aim
-			if velocity.length() > 0.01:
-				_set_facing_from_vector(velocity)
+			# Facing: only update from movement to avoid fighting with AnimationBridge
+			if desired_self.length() > 1.0:
+				_set_facing_from_vector(desired_self)
 	else:
-		velocity = Vector2.ZERO
+		var ext_idle: Vector2 = _compute_external_velocity(Vector2.ZERO)
+		velocity = ext_idle
 		move_and_slide()
 
-# ---------------- Ability gating for base attack ----------------
-func _can_basic_attack() -> bool:
-	if _is_casting:
-		return false
-	if not has_ability("attack"):
-		return false
-	if _abilitysys != null and _abilitysys.has_method("can_cast"):
-		var v: Variant = _abilitysys.call("can_cast", self, "attack")
-		if typeof(v) == TYPE_BOOL and not bool(v):
-			return false
-	if _cooldown_timer > 0.0:
-		return false
-	return true
+# ---------------- Threat handlers ----------------
 
-# ---------------- Ability bridges ----------------
-func get_current_target() -> Node2D:
-	return _target
-
-func get_attack_range_px() -> float:
-	return attack_range
-
-func get_attack_arc_deg() -> float:
-	return attack_arc_deg
-
-func get_attack_hit_frame() -> int:
-	return attack_hit_frame
-
-func play_melee_attack_anim(aim_dir: Vector2, _hit_frame: int, on_hit: Callable) -> void:
-	if _is_attacking:
+# Damage-based threat from this enemy's StatsComponent (damage_threat signal)
+func _on_damage_threat(amount: float, dmg_type: String, source_node: Node, ability_id: String, ability_type: String) -> void:
+	if source_node == null or not is_instance_valid(source_node):
 		return
-	_is_attacking = true
-	_attack_pending = true
-	_on_hit_cb = on_hit if on_hit.is_valid() else Callable()
-	_attack_seq += 1
-	_current_attack_id = _attack_seq
-	_set_facing_from_vector(aim_dir)
-	_attack_anim_name = _compose_anim(anim_attack_prefix)
-	_post_cooldown = _attack_total_cd
-	if anim != null and anim.sprite_frames != null and anim.sprite_frames.has_animation(_attack_anim_name):
-		anim.sprite_frames.set_animation_loop(_attack_anim_name, false)
-		anim.play(_attack_anim_name)
-		anim.frame = 0
+
+	# Only generate threat from party actors, not other enemies.
+	if not source_node.is_in_group("PartyMembers"):
+		return
+
+	# Normalize ability_type to decide DOT vs direct / projectile / other.
+	var atype: String = String(ability_type).strip_edges().to_upper()
+	var threat_amount: float = 0.0
+
+	if atype == "DOT_SPELL":
+		threat_amount = amount * threat_dot_coeff
+	elif atype == "PROJECTILE":
+		# Ranged projectiles intentionally generate the least threat among damage sources.
+		threat_amount = amount * threat_projectile_coeff
 	else:
-		if _on_hit_cb.is_valid():
-			_on_hit_cb.call()
-		else:
-			_do_attack_hit()
-		_is_attacking = false
-		_cooldown_timer = _attack_total_cd
+		# Everything else (melee/basic/DAMAGE_SPELL/etc.) uses the direct damage coeff.
+		threat_amount = amount * threat_damage_coeff
 
-func play_heal_anim(aim_dir: Vector2, hit_frame: int, on_apply: Callable) -> void:
-	play_cast_anim(aim_dir, hit_frame, on_apply)
-
-func play_cast_anim(aim_dir: Vector2, hit_frame: int, on_apply: Callable) -> void:
-	if _is_casting:
+	if threat_amount <= 0.0:
 		return
-	_is_casting = true
-	_on_cast_cb = on_apply if on_apply.is_valid() else Callable()
-	_pending_cast_hit_frame = hit_frame
-	_set_facing_from_vector(aim_dir)
-	_cast_anim_name = _compose_anim(anim_cast_prefix)
-	if anim != null and anim.sprite_frames != null and anim.sprite_frames.has_animation(_cast_anim_name):
-		anim.sprite_frames.set_animation_loop(_cast_anim_name, false)
-		anim.play(_cast_anim_name)
-		anim.frame = 0
+
+	# Prefer to treat the source_node itself as the actor if it is a Node2D.
+	if source_node is Node2D:
+		add_threat(source_node as Node2D, threat_amount, "damage")
 	else:
-		if _on_cast_cb.is_valid():
-			_on_cast_cb.call()
-		_on_cast_cb = Callable()
-		_is_casting = false
+		# Fallback: try parent as a Node2D (covers cases where StatsComponent is the source)
+		var parent: Node = source_node.get_parent()
+		if parent is Node2D:
+			add_threat(parent as Node2D, threat_amount, "damage")
 
-# ---------------- Attack (legacy EnemyBase path) ----------------
-func _start_attack() -> void:
-	if _is_attacking:
-		return
-	if _cooldown_timer > 0.0:
-		return
-	if _target == null or _target == self:
-		return
-	_is_attacking = true
-	_attack_pending = true
-	_on_hit_cb = Callable()
-	_attack_seq += 1
-	_current_attack_id = _attack_seq
-	_attack_anim_name = _compose_anim(anim_attack_prefix)
-	_post_cooldown = _attack_total_cd
-	if anim != null:
-		var frames: SpriteFrames = anim.sprite_frames
-		var has_anim: bool = false
-		if frames != null:
-			has_anim = frames.has_animation(_attack_anim_name)
-			if has_anim:
-				var cnt: int = frames.get_frame_count(_attack_anim_name)
-				var fps: float = frames.get_animation_speed(_attack_anim_name)
-				if fps <= 0.0:
-					fps = 10.0
-				var clip: float = float(cnt) / fps
-				var remain: float = _attack_total_cd - clip
-				if remain < 0.0:
-					remain = 0.0
-				_post_cooldown = remain
-				frames.set_animation_loop(_attack_anim_name, false)
-		if has_anim:
-			anim.play(_attack_anim_name)
-			anim.frame = 0
-		else:
-			if debug_prints:
-				print("[EnemyBase] Missing anim: ", _attack_anim_name)
-			_do_attack_hit()
-			_is_attacking = false
-			_cooldown_timer = _attack_total_cd
+
+# Connect to party StatsComponents' heal_threat signals
+func _connect_party_heal_threat_listeners() -> void:
+	# We want to listen to heals done by party actors, so that any enemy in combat
+	# can add threat to the healer (HEAL_SPELL / HOT_SPELL).
+	var party_nodes: Array = []
+
+	if _party_mgr != null and _party_mgr.has_method("get_members"):
+		var arr_any: Variant = _party_mgr.call("get_members")
+		if typeof(arr_any) == TYPE_ARRAY:
+			var arr: Array = arr_any
+			for n in arr:
+				if n is Node:
+					party_nodes.append(n)
 	else:
-		_do_attack_hit()
-		_is_attacking = false
-		_cooldown_timer = _attack_total_cd
+		var list: Array = get_tree().get_nodes_in_group("PartyMembers")
+		for n2 in list:
+			if n2 is Node:
+				party_nodes.append(n2)
 
-func _do_attack_hit() -> void:
-	if _target == null or not is_instance_valid(_target):
-		return
-	if not _in_attack_cone(_target.global_position):
-		if debug_prints:
-			print("[EnemyBase] Hit skipped (target left cone).")
-		return
-	var did_crit: bool = _roll_crit(stats)
-	var amt: float = _roll_noncrit_amount(stats)
-	if did_crit:
-		amt *= crit_multiplier
-	var t_stats: Node = _find_stats_component(_target)
-	if t_stats == null:
-		if debug_prints:
-			print("[EnemyBase] Target has no StatsComponent")
-		return
-	if t_stats == stats:
-		if debug_prints:
-			print("[EnemyBase] Prevented self-hit (t_stats == self.stats)")
-		return
-	var packet: Dictionary = {
-		"amount": amt,
-		"source": enemy_name,
-		"is_crit": did_crit,
-		"attack_id": _current_attack_id,
-		"source_node_path": get_path()
-	}
-	t_stats.call("apply_damage_packet", packet)
+	for actor in party_nodes:
+		var actor_node: Node = actor
+		if actor_node == null or not is_instance_valid(actor_node):
+			continue
+		var sc: Node = actor_node.find_child("StatsComponent", true, false)
+		if sc == null:
+			continue
+		if sc.has_signal("heal_threat") and not sc.is_connected("heal_threat", Callable(self, "_on_party_heal_threat")):
+			sc.connect("heal_threat", Callable(self, "_on_party_heal_threat"))
 
-# ---------------- Anim events ----------------
-func _on_anim_frame_changed() -> void:
-	if anim == null:
-		return
-	if _is_attacking and anim.animation == _attack_anim_name and anim.frame == attack_hit_frame:
-		if _attack_pending:
-			_attack_pending = false
-			if _on_hit_cb.is_valid():
-				_on_hit_cb.call()
-			else:
-				_do_attack_hit()
 
-func _on_cast_frame_changed() -> void:
-	if anim == null:
+# Healing-based threat from party StatsComponents (heal_threat signal)
+func _on_party_heal_threat(amount: float, healer_node: Node, ability_id: String, ability_type: String) -> void:
+	# Only apply healing threat to enemies that are already in combat with the party.
+	if not is_in_combat():
 		return
-	if not _is_casting:
-		return
-	if anim.animation != _cast_anim_name:
-		return
-	if anim.frame != _pending_cast_hit_frame:
-		return
-	if _on_cast_cb.is_valid():
-		var cb: Callable = _on_cast_cb
-		_on_cast_cb = Callable()
-		cb.call()
 
-func _on_anim_finished() -> void:
-	if anim == null:
+	if healer_node == null or not is_instance_valid(healer_node):
 		return
-	if _is_attacking and anim.animation == _attack_anim_name:
-		_is_attacking = false
-		_cooldown_timer = _post_cooldown
-		_on_hit_cb = Callable()
-		var idle_name: String = _compose_anim(anim_idle_prefix)
-		anim.play(idle_name)
-	elif _is_casting and anim.animation == _cast_anim_name:
-		_is_casting = false
-		_on_cast_cb = Callable()
-		var idle_name2: String = _compose_anim(anim_idle_prefix)
-		anim.play(idle_name2)
 
-# ---------------- Damage relays ----------------
+	if not healer_node.is_in_group("PartyMembers"):
+		return
+
+	var atype: String = String(ability_type).strip_edges().to_upper()
+	var threat_amount: float = 0.0
+
+	if atype == "HEAL_SPELL":
+		threat_amount = amount * threat_heal_coeff
+	elif atype == "HOT_SPELL":
+		threat_amount = amount * threat_hot_coeff
+	else:
+		# Non-healing abilities should not create heal threat here.
+		return
+
+	if threat_amount <= 0.0:
+		return
+
+	if healer_node is Node2D:
+		add_threat(healer_node as Node2D, threat_amount, "heal")
+	else:
+		var parent: Node = healer_node.get_parent()
+		if parent is Node2D:
+			add_threat(parent as Node2D, threat_amount, "heal")
+
+
 func _on_damage_taken(amount: float, dmg_type: String, source: String) -> void:
 	emit_signal("damaged", self, amount, dmg_type, source)
+
 
 func _on_died() -> void:
 	emit_signal("died", self)
@@ -672,6 +796,7 @@ func _on_died() -> void:
 	queue_free()
 
 # ---------------- Anim helpers ----------------
+
 func _compose_anim(prefix: String) -> String:
 	if _facing == Facing.DOWN:
 		return prefix + "_down"
@@ -679,6 +804,7 @@ func _compose_anim(prefix: String) -> String:
 		return prefix + "_up"
 	else:
 		return prefix + "_side"
+
 
 func _set_facing_from_vector(v: Vector2) -> void:
 	if absf(v.x) > absf(v.y):
@@ -694,13 +820,12 @@ func _set_facing_from_vector(v: Vector2) -> void:
 		if anim != null:
 			anim.flip_h = false
 
+
 func _update_anim() -> void:
 	if anim == null:
 		return
-	# Do not override active action/cast animations or external locks
+	# Do not override while an ability-driven lock is active
 	if is_action_locked():
-		return
-	if _is_attacking or _is_casting:
 		return
 	var next_name: String = ""
 	if velocity.length() > 1.0:
@@ -710,31 +835,13 @@ func _update_anim() -> void:
 	if anim.animation != next_name or not anim.is_playing():
 		anim.play(next_name)
 
-# ---------------- RNG helpers ----------------
-func _roll_noncrit_amount(attacker_stats: Node) -> float:
-	var atk: float = 10.0
-	if attacker_stats != null and attacker_stats.has_method("get_final_stat"):
-		var v: Variant = attacker_stats.call("get_final_stat", "Attack")
-		if typeof(v) == TYPE_INT or typeof(v) == TYPE_FLOAT:
-			atk = float(v)
-	var spread: float = clampf(noncrit_variance, 0.0, 0.95)
-	var mult: float = 1.0
-	if spread > 0.0:
-		mult = _rng.randf_range(1.0 - spread, 1.0 + spread)
-	return atk * mult
 
-func _roll_crit(attacker_stats: Node) -> bool:
-	var cc: float = 0.0
-	if attacker_stats != null and attacker_stats.has_method("get_final_stat"):
-		var v: Variant = attacker_stats.call("get_final_stat", "CritChance")
-		if typeof(v) == TYPE_INT or typeof(v) == TYPE_FLOAT:
-			cc = float(v)
-	if cc > 1.0:
-		cc *= 0.01
-	cc = clampf(cc, 0.0, 0.95)
-	return _rng.randf() < cc
+func _on_anim_finished() -> void:
+	# For future use if we ever wire AnimationBridge back through AnimatedSprite2D.
+	pass
 
 # ---------------- VFX helpers ----------------
+
 func _resolve_death_frames() -> SpriteFrames:
 	if death_vfx_frames != null:
 		return death_vfx_frames
@@ -743,6 +850,7 @@ func _resolve_death_frames() -> SpriteFrames:
 		if res is SpriteFrames:
 			return res as SpriteFrames
 	return null
+
 
 func _spawn_death_vfx() -> void:
 	var frames: SpriteFrames = _resolve_death_frames()
@@ -780,15 +888,18 @@ func _spawn_death_vfx() -> void:
 		var t_cb: Callable = Callable(vfx_spr, "queue_free")
 		t.timeout.connect(t_cb)
 
+
 func _on_death_vfx_anim_finished(vfx_spr: AnimatedSprite2D) -> void:
 	if is_instance_valid(vfx_spr):
 		vfx_spr.queue_free()
+
 
 func _on_death_vfx_timer_timeout(vfx_spr: AnimatedSprite2D) -> void:
 	if is_instance_valid(vfx_spr):
 		vfx_spr.queue_free()
 
 # ---------------- Utils ----------------
+
 func _resolve_known_abilities_node() -> Node:
 	var n: Node = get_node_or_null("KnownAbilities")
 	if n != null:
@@ -800,6 +911,7 @@ func _resolve_known_abilities_node() -> Node:
 	if alt != null:
 		return alt
 	return null
+
 
 func _compute_has_melee_in_kit() -> bool:
 	var kac: Node = _resolve_known_abilities_node()
@@ -861,6 +973,7 @@ func _compute_has_melee_in_kit() -> bool:
 	# No melee-like abilities found; treat as ranged-only kit.
 	return false
 
+
 func _find_stats_component(root: Node) -> Node:
 	if root == null:
 		return null
@@ -872,6 +985,7 @@ func _find_stats_component(root: Node) -> Node:
 	return null
 
 # ---------------- Collision helpers ----------------
+
 func _mask_from_bits(bits: PackedInt32Array) -> int:
 	var mask: int = 0
 	var i: int = 0
@@ -881,6 +995,7 @@ func _mask_from_bits(bits: PackedInt32Array) -> int:
 			mask |= 1 << (b - 1)
 		i += 1
 	return mask
+
 
 func _configure_as_enemy(body: CollisionObject2D) -> void:
 	if body == null:

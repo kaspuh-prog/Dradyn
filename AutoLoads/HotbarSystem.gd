@@ -27,6 +27,9 @@ var _active_actor_key: String = ""
 # Bound scene Hotbar (class_name Hotbar from your project)
 var _hotbar: Node = null
 
+# Guard to prevent UI programmatic assigns from writing back into profiles via signals.
+var _applying_profile_to_ui: bool = false
+
 func _ready() -> void:
 	_reset_model(default_slot_count)
 	_hook_party_signals()
@@ -55,6 +58,83 @@ func bind_to_hotbar(node: Node) -> void:
 	_bind_to_hotbar(node)
 
 # -------------------------------------------------------------------------
+# NEW: Save/Load helpers (stable by PARTY ORDER, not by actor key)
+# -------------------------------------------------------------------------
+func get_profile_for_actor(actor: Node) -> Array[String]:
+	var key: String = _make_actor_key(actor)
+	if key == "":
+		return _make_empty_profile(_slot_count)
+
+	if not _profiles.has(key):
+		_profiles[key] = _make_empty_profile(_slot_count)
+
+	var any: Variant = _profiles[key]
+	if typeof(any) != TYPE_ARRAY:
+		_profiles[key] = _make_empty_profile(_slot_count)
+
+	var arr: Array = _profiles[key]
+	return _copy_profile_array(_array_to_string_array(arr), _slot_count)
+
+func set_profile_for_actor(actor: Node, profile: Array[String]) -> void:
+	var key: String = _make_actor_key(actor)
+	if key == "":
+		return
+
+	_profiles[key] = _copy_profile_array(profile, _slot_count)
+
+	# If this actor is currently active, apply immediately.
+	if key == _active_actor_key:
+		var prof_any: Variant = _profiles[key]
+		var prof: Array = []
+		if typeof(prof_any) == TYPE_ARRAY:
+			prof = prof_any as Array
+		_apply_profile_to_model(prof)
+		_apply_profile_to_hotbar_ui(prof)
+
+func export_party_profiles(party_members: Array) -> Array:
+	# Returns Array where each entry is Array[String] for that party index.
+	# SaveSystem should store this array alongside the party member list/order.
+	var out: Array = []
+
+	# Make sure we persist the current active profile before exporting.
+	_save_active_profile()
+
+	var i: int = 0
+	while i < party_members.size():
+		var actor: Node = party_members[i] as Node
+		var prof: Array[String] = get_profile_for_actor(actor)
+		out.append(prof)
+		i += 1
+
+	return out
+
+func import_party_profiles(party_members: Array, saved_profiles: Array) -> void:
+	# Apply profiles by party order. Extra entries ignored. Missing entries -> empty.
+	var i: int = 0
+	while i < party_members.size():
+		var actor: Node = party_members[i] as Node
+		if actor == null:
+			i += 1
+			continue
+
+		var prof: Array[String] = _make_empty_profile(_slot_count)
+		if i < saved_profiles.size():
+			var any: Variant = saved_profiles[i]
+			if typeof(any) == TYPE_ARRAY:
+				var arr: Array = any as Array
+				prof = _copy_profile_array(_array_to_string_array(arr), _slot_count)
+
+		set_profile_for_actor(actor, prof)
+		i += 1
+
+	# Re-apply active actor to UI/model after imports.
+	var party := get_node_or_null("/root/Party")
+	if party != null and party.has_method("get_controlled"):
+		var cur_any: Variant = party.call("get_controlled")
+		var cur: Node = cur_any as Node
+		_switch_active_actor(cur)
+
+# -------------------------------------------------------------------------
 # Internal: Party wiring (follow the controlled member)
 # -------------------------------------------------------------------------
 func _hook_party_signals() -> void:
@@ -65,7 +145,8 @@ func _hook_party_signals() -> void:
 			party.connect("controlled_changed", Callable(self, "_on_party_controlled_changed"))
 		# Initialize from current controlled if available
 		if party.has_method("get_controlled"):
-			var cur: Node = party.call("get_controlled")
+			var cur_any: Variant = party.call("get_controlled")
+			var cur: Node = cur_any as Node
 			_switch_active_actor(cur)
 	else:
 		# Fallback: try group lookup if autoload not ready yet
@@ -74,7 +155,8 @@ func _hook_party_signals() -> void:
 			if not pm.is_connected("controlled_changed", Callable(self, "_on_party_controlled_changed")):
 				pm.connect("controlled_changed", Callable(self, "_on_party_controlled_changed"))
 			if pm.has_method("get_controlled"):
-				var cur2: Node = pm.call("get_controlled")
+				var cur2_any: Variant = pm.call("get_controlled")
+				var cur2: Node = cur2_any as Node
 				_switch_active_actor(cur2)
 
 func _on_party_controlled_changed(current: Node) -> void:
@@ -93,6 +175,7 @@ func _switch_active_actor(actor: Node) -> void:
 	# Load or init the new actor's profile
 	if not _profiles.has(_active_actor_key):
 		_profiles[_active_actor_key] = _make_empty_profile(_slot_count)
+
 	var prof: Array = _profiles[_active_actor_key]
 	_apply_profile_to_model(prof)
 	_apply_profile_to_hotbar_ui(prof)
@@ -103,7 +186,7 @@ func _switch_active_actor(actor: Node) -> void:
 func _make_actor_key(actor: Node) -> String:
 	if actor == null:
 		return "GLOBAL"
-	# Prefer something stable if present; otherwise fall back to name + instance id
+	# Unique per instance (correct gameplay behavior). SaveSystem will store hotbars by party order.
 	var name_part: String = actor.name
 	var iid_part: String = str(actor.get_instance_id())
 	return "Actor:" + name_part + "#iid:" + iid_part
@@ -131,6 +214,14 @@ func _copy_profile_array(src: Array[String], count: int) -> Array[String]:
 	# Pad if needed
 	while i < count:
 		out.append("")
+		i += 1
+	return out
+
+func _array_to_string_array(arr: Array) -> Array[String]:
+	var out: Array[String] = []
+	var i: int = 0
+	while i < arr.size():
+		out.append(String(arr[i]))
 		i += 1
 	return out
 
@@ -263,6 +354,8 @@ func _apply_profile_to_hotbar_ui(profile: Array) -> void:
 			print("[HotbarSys] Hotbar lacks _assign/_clear; UI won’t reflect profile programmatically.")
 		return
 
+	_applying_profile_to_ui = true
+
 	var i: int = 0
 	while i < _slot_count:
 		var id_str: String = ""
@@ -270,17 +363,22 @@ func _apply_profile_to_hotbar_ui(profile: Array) -> void:
 			var v: Variant = profile[i]
 			if typeof(v) == TYPE_STRING:
 				id_str = String(v)
-		# Avoid infinite loops: only call when a change is needed.
+
 		if id_str == "":
 			_hotbar.call("_clear", i)
 		else:
 			_hotbar.call("_assign", i, "ability", id_str)
 		i += 1
 
+	_applying_profile_to_ui = false
+
 # -------------------------------------------------------------------------
 # Hotbar signal handlers
 # -------------------------------------------------------------------------
 func _on_hotbar_slot_assigned(slot_index: int, entry_type: String, entry_id: String) -> void:
+	if _applying_profile_to_ui:
+		return
+
 	if debug_log:
 		print("[HotbarSys] assigned idx=", slot_index, " type=", entry_type, " id=", entry_id)
 	if slot_index < 0:
@@ -302,6 +400,9 @@ func _on_hotbar_slot_assigned(slot_index: int, entry_type: String, entry_id: Str
 	slot_changed.emit(slot_index, entry_type, entry_id)
 
 func _on_hotbar_slot_cleared(slot_index: int) -> void:
+	if _applying_profile_to_ui:
+		return
+
 	if debug_log:
 		print("[HotbarSys] cleared idx=", slot_index)
 	if slot_index < 0:

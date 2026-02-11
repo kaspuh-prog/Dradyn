@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=8 format=3 uid="uid://cm8h3txqowe5h"]
+
+[ext_resource type="Script" uid="uid://u63t4oseank1" path="res://scenes/Actors/status/StatusApplySpec.gd" id="1_hv601"]
+[ext_resource type="Resource" uid="uid://bg8dh0uk2oab6" path="res://Data/Abilities/StatusApplySpecs/Slowed.tres" id="2_hyir0"]
+[ext_resource type="Script" uid="uid://byobol8rhb4cs" path="res://scripts/stats/StatModifier.gd" id="2_pv201"]
+[ext_resource type="Script" uid="uid://dsj3lq6kwixdp" path="res://Data/Abilities/AbilityDef.gd" id="3_hyir0"]
+[ext_resource type="Texture2D" uid="uid://dtl0a7x8vojr8" path="res://assets/sprites/abilityicons/Spout.png" id="4_hyir0"]
+[ext_resource type="Script" uid="uid://c87lf672qvjv1" path="res://Data/Abilities/AbilitySfxCue.gd" id="6_68vsd"]
+[ext_resource type="Resource" uid="uid://drxp5yptchpya" path="res://Data/Abilities/AbilitySFXCues/Spout.tres" id="7_uxu4d"]
+
+[resource]
+script = ExtResource("3_hyir0")
+ability_id = "Spout"
+display_name = "Spout"
+icon = ExtResource("4_hyir0")
+description = "There is something to be said about the ability to manifest pressurized water. So many applications�"
+section_index = 2
+ability_type = "DAMAGE_SPELL"
+target_rule = "ENEMY_SINGLE"
+mp_cost = 15.0
+gcd_sec = 1.0
+cooldown_sec = 2.0
+power = 27.0
+scale_stat = "INT"
+cast_anim = "cast1"
+vfx_hint = "Spout"
+sfx_cues = Array[ExtResource("6_68vsd")]([ExtResource("7_uxu4d")])
+melee_hit_frames = null
+passive_gate_equipment_classes = null
+passive_gate_item_ids = null
+passive_proc_section_indices = null
+passive_proc_ability_types = null
+passive_proc_ability_ids = null
+cure_status_ids = PackedStringArray()
+cure_modifier_sources = PackedStringArray()
+cure_stacking_keys = PackedStringArray()
+applies_status = Array[ExtResource("1_hv601")]([ExtResource("2_hyir0")])

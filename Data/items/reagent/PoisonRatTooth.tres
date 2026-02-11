@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=3 format=3 uid="uid://1aclrnqowl4h"]
+
+[ext_resource type="Script" uid="uid://2mjbmehwxafs" path="res://Data/items/equipment/ItemDef.gd" id="1_7tncm"]
+[ext_resource type="Texture2D" uid="uid://d33d61078deog" path="res://assets/sprites/items/reagents/poison rat tooth.png" id="1_g4bgq"]
+
+[resource]
+script = ExtResource("1_7tncm")
+id = &"PoisonRatTooth"
+display_name = "Poison Rat Tooth"
+description = "Someone forgot to floss!"
+icon = ExtResource("1_g4bgq")
+item_type = "reagent"
+base_gold_value = 1
+metadata/_custom_type_script = "uid://2mjbmehwxafs"

@@ -12,9 +12,15 @@ signal hint_forwarded(name: StringName, data: Dictionary)
 @export var use_self_modulate: bool = true
 @export var debug_prints: bool = true
 
-const COLOR_POISONED: Color = Color8(0xA6, 0x4B, 0xD6, 0xFF)
-const COLOR_BURNING: Color  = Color8(0xFF, 0x8A, 0x00, 0xFF)
-const COLOR_FROZEN: Color   = Color8(0x66, 0xCC, 0xFF, 0xFF)
+# Godot 4.x: Color8 is deprecated. Keep hex as const, convert to linear at runtime.
+const COLOR_POISONED_SRGB: Color = Color("#a64bd6")
+const COLOR_BURNING_SRGB: Color = Color("#e44a00")
+const COLOR_FROZEN_SRGB:  Color = Color("#66ccff")
+
+# Runtime (linear) equivalents (cannot be const because srgb_to_linear() is not const-evaluable)
+var COLOR_POISONED: Color = Color(1, 1, 1, 1)
+var COLOR_BURNING: Color  = Color(1, 1, 1, 1)
+var COLOR_FROZEN: Color   = Color(1, 1, 1, 1)
 
 var _status: Node = null
 var _animator: Node = null
@@ -38,6 +44,11 @@ var is_snared_visual: bool = false
 var is_slowed_visual: bool = false
 
 func _ready() -> void:
+	# Compute linear tint colors once (fixes "weird" look under linear rendering).
+	COLOR_POISONED = COLOR_POISONED_SRGB.srgb_to_linear()
+	COLOR_BURNING = COLOR_BURNING_SRGB.srgb_to_linear()
+	COLOR_FROZEN = COLOR_FROZEN_SRGB.srgb_to_linear()
+
 	_autowire_nodes()
 	_try_connect_signals()
 	_debug_report("ready() initial")
@@ -123,13 +134,10 @@ func _on_dead_changed(dead_now: bool) -> void:
 	emit_signal("visual_flags_changed")
 
 	# When entering the dead/ghost state, clear any active status tints
-	# (burning, poison, frozen, etc.) so the ghost palette is clean.
-	# We keep the logical StatusConditions entries; this is purely visual.
 	if dead_now:
 		_active_tints.clear()
 		_refresh_tint()
 	else:
-		# On revive, recompute tint from whatever statuses remain.
 		_refresh_tint()
 
 	if debug_prints:
@@ -250,17 +258,25 @@ func _refresh_tint() -> void:
 		var amt: float = clampf(tint_strength, 0.0, 1.0)
 		target_col = _base_modulate.lerp(tint_col, amt)
 
+	# IMPORTANT: avoid double-tinting by setting BOTH modulate and self_modulate
 	var tw: Tween = create_tween()
 	if tw == null:
-		_sprite.modulate = target_col
 		if use_self_modulate:
+			_sprite.modulate = _base_modulate
 			_sprite.self_modulate = target_col
+		else:
+			_sprite.modulate = target_col
+			_sprite.self_modulate = _base_self_modulate
 	else:
 		tw.set_trans(Tween.TRANS_SINE)
 		tw.set_ease(Tween.EASE_IN_OUT)
-		tw.tween_property(_sprite, "modulate", target_col, max(0.0, tint_fade_time))
+
 		if use_self_modulate:
+			tw.tween_property(_sprite, "modulate", _base_modulate, max(0.0, tint_fade_time))
 			tw.tween_property(_sprite, "self_modulate", target_col, max(0.0, tint_fade_time))
+		else:
+			tw.tween_property(_sprite, "modulate", target_col, max(0.0, tint_fade_time))
+			tw.tween_property(_sprite, "self_modulate", _base_self_modulate, max(0.0, tint_fade_time))
 
 	if debug_prints:
 		print("[SVP] tint target =", target_col, " actives=", _active_tints)

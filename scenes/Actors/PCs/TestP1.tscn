@@ -1,12 +1,12 @@
-[gd_scene load_steps=76 format=3 uid="uid://bv1umfw753ett"]
+[gd_scene load_steps=77 format=3 uid="uid://bv1umfw753ett"]
 
 [ext_resource type="Script" uid="uid://dny6lg25m75y7" path="res://scripts/player.gd" id="1_fnt11"]
 [ext_resource type="Texture2D" uid="uid://y3r8jjrvlkp2" path="res://assets/sprites/characters/TestP1attack.png" id="3_fnt11"]
-[ext_resource type="AudioStream" uid="uid://dtgs8hm2cwwxh" path="res://assets/audio/sfx/grass/grassy-footstep3.wav" id="4_63ih6"]
+[ext_resource type="AudioStream" uid="uid://dtgs8hm2cwwxh" path="res://assets/audio/sfx/grass/grass_footstep3.wav" id="4_63ih6"]
 [ext_resource type="Texture2D" uid="uid://dfd0ye5yfykm2" path="res://assets/sprites/characters/TestP1walkdead.png" id="4_nmu5u"]
 [ext_resource type="Texture2D" uid="uid://bmi5wongnexqj" path="res://assets/sprites/characters/TestP1walk.png" id="4_pfmu7"]
 [ext_resource type="Texture2D" uid="uid://cgq721aiex0f2" path="res://assets/sprites/characters/TestP1idledead.png" id="4_s3sqe"]
-[ext_resource type="AudioStream" uid="uid://dnxdxonett0a1" path="res://assets/audio/sfx/grass/grassy-footstep4.wav" id="5_isw50"]
+[ext_resource type="AudioStream" uid="uid://dnxdxonett0a1" path="res://assets/audio/sfx/grass/grass_footstep4.wav" id="5_isw50"]
 [ext_resource type="Script" uid="uid://scndil1j0hdu" path="res://scripts/stats/StatsComponent.gd" id="6_83j1v"]
 [ext_resource type="Script" uid="uid://b77n5fh85lvtw" path="res://scenes/Actors/status/AnimatedSpriteStatusShim.gd" id="6_dvehx"]
 [ext_resource type="Script" uid="uid://bqtthbimi2o3t" path="res://scripts/resources/CompanionFollow.gd" id="9_63ih6"]
@@ -18,6 +18,7 @@
 [ext_resource type="Script" uid="uid://b2r744xdpepb6" path="res://scenes/Actors/status/StatusConditions.gd" id="16_o68yg"]
 [ext_resource type="Script" uid="uid://0cb22lkxb2rs" path="res://scenes/Actors/status/StatusVisualProxy.gd" id="17_dvehx"]
 [ext_resource type="Script" uid="uid://d4anrr3pv4crd" path="res://scripts/PassiveAbilityApplier.gd" id="18_gexvd"]
+[ext_resource type="Script" uid="uid://3iudrjaxi7sd" path="res://scenes/Actors/KnownAbilitiesComponent.gd" id="19_pv08u"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_hh3hb"]
 atlas = ExtResource("3_fnt11")
@@ -476,26 +477,26 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="1"]
-size = Vector2(11, 14)
+size = Vector2(11, 11)
 
 [sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_6eyey"]
 streams_count = 2
 stream_0/stream = ExtResource("4_63ih6")
 stream_1/stream = ExtResource("5_isw50")
 
-[node name="TestP1" type="CharacterBody2D"]
+[node name="TestP1" type="CharacterBody2D" groups=["PartyMembers"]]
 script = ExtResource("1_fnt11")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 light_mask = 2
 position = Vector2(0, -8)
 sprite_frames = SubResource("SpriteFrames_cw2d6")
-animation = &"walk_up_dead"
+animation = &"attack1_up"
 offset = Vector2(0, -8)
 script = ExtResource("6_dvehx")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(-0.5, -13)
+position = Vector2(-3, -13)
 shape = SubResource("1")
 
 [node name="Footstep" type="AudioStreamPlayer2D" parent="."]
@@ -535,5 +536,8 @@ animator_path = NodePath("../AnimatedSprite2D")
 
 [node name="PassiveAbilityApplier" type="Node" parent="."]
 script = ExtResource("18_gexvd")
+
+[node name="KnownAbilitiesComponent" type="Node" parent="."]
+script = ExtResource("19_pv08u")
 
 [connection signal="frame_changed" from="AnimatedSprite2D" to="." method="_on_animated_sprite_2d_frame_changed"]

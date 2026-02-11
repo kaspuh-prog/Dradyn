@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=5 format=3 uid="uid://d1grtdpwq122t"]
+
+[ext_resource type="Script" uid="uid://u63t4oseank1" path="res://scenes/Actors/status/StatusApplySpec.gd" id="1_cw3vd"]
+[ext_resource type="Script" uid="uid://byobol8rhb4cs" path="res://scripts/stats/StatModifier.gd" id="2_8l1sw"]
+[ext_resource type="Script" uid="uid://dsj3lq6kwixdp" path="res://Data/Abilities/AbilityDef.gd" id="3_2glun"]
+[ext_resource type="Texture2D" uid="uid://dxelmya6q187x" path="res://assets/sprites/abilityicons/blank.png" id="3_8l1sw"]
+
+[resource]
+script = ExtResource("3_2glun")
+ability_id = "CurePoison"
+display_name = "N/a"
+icon = ExtResource("3_8l1sw")
+required_item_id = &"&\"AntiPoison\""
+unlock_cost = 0
+ability_type = "CURE_SPELL"
+target_rule = "SELF"
+vfx_hint = "potionbubbles"
+passive_gate_equipment_classes = null
+passive_gate_item_ids = null
+passive_proc_section_indices = null
+passive_proc_ability_types = null
+passive_proc_ability_ids = null
+cure_status_ids = PackedStringArray("poisoned")
+cure_modifier_sources = null
+cure_stacking_keys = null
+metadata/_custom_type_script = "uid://dsj3lq6kwixdp"

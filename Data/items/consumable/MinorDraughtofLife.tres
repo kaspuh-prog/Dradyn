@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=3 format=3 uid="uid://1b6nwvtpbjgr"]
+
+[ext_resource type="Texture2D" uid="uid://d0xdkml7abfaw" path="res://assets/sprites/items/potions/MinorDraughtofLife.png" id="1_t6xu1"]
+[ext_resource type="Script" uid="uid://2mjbmehwxafs" path="res://Data/items/equipment/ItemDef.gd" id="2_dj0po"]
+
+[resource]
+script = ExtResource("2_dj0po")
+id = &"MinorDraughtofLife"
+display_name = "Minor Draught of Life"
+description = "Just a wee bit o' healin!"
+icon = ExtResource("1_t6xu1")
+base_gold_value = 10
+restore_hp = 30

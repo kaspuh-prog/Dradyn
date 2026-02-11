@@ -13,7 +13,7 @@ signal interaction_failed(actor: Node)
 @export var max_facing_angle_deg: float = 90.0
 @export var facing_weight: float = 0.35
 
-@export var highlight_enabled: bool = true
+@export var highlight_enabled: bool = false
 @export var highlight_refresh_hz: float = 8.0  # 0 = off
 
 # NEW: safety net + diagnostics
@@ -111,17 +111,25 @@ func find_best_target(actor: Node, facing_dir: Vector2 = Vector2.ZERO) -> Node:
 		i += 1
 
 	# ---------- Pass 2: physics probe fallback (wider circle) ----------
+	# IMPORTANT: Only accept a probed candidate if it's still within *that candidate's* radius.
+	# This keeps doors "easy to grab" (their radius can be 48), but prevents "open a door somewhere in the room" prompts.
 	if best == null and fallback_probe_scale > 1.0:
 		var probe_r: float = interact_radius * fallback_probe_scale
 		var prox: Array = _physics_probe_interactables(origin, probe_r)
 		if debug_prints:
 			print("[InteractionSys] fallback probe hits=", prox.size(), " @r=", probe_r)
+
 		var j: int = 0
 		while j < prox.size():
 			var k: Node = prox[j]
 			if _is_valid_interactable(k):
-				best = k
-				break
+				var kp: Vector2 = _global_pos(k)
+				var kdist: float = (kp - origin).length()
+				var kr: float = _candidate_radius(k)
+
+				if kdist > 0.0001 and kdist <= kr:
+					best = k
+					break
 			j += 1
 
 	# Update highlight
@@ -198,7 +206,6 @@ func _physics_probe_interactables(center: Vector2, radius: float) -> Array:
 		i += 1
 
 	return out
-
 
 func _on_highlight_tick() -> void:
 	var pm: PartyManager = get_tree().get_first_node_in_group("PartyManager") as PartyManager

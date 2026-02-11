@@ -33,6 +33,14 @@ var _current_target: Node = null
 @export var interact_cooldown_ms: int = 160
 var _can_interact_at_msec: int = 0
 
+# --- External motion (generic: conveyors, wind, currents, etc.) --------------
+# Contributors provide velocities in px/s for this frame (or continuously while in an area).
+# Movers can fight against it if desired.
+@export var external_resist_when_inputting: float = 0.5 # 0 = no resist, 1 = fully cancel external when moving
+@export var external_resist_dot_threshold: float = -0.15 # resist applies mostly when input opposes external (dot < threshold)
+
+var _external_vel_by_id: Dictionary = {} # Dictionary[StringName, Vector2]
+
 # State
 var _controlled: bool = false
 var _is_sprinting: bool = false
@@ -118,8 +126,12 @@ func _physics_process(delta: float) -> void:
 				speed = base_move_speed * sprint_mul
 				_spend_endurance_tick(delta)
 
-			var desired: Vector2 = dir * speed
-			velocity = velocity.lerp(desired, clamp(accel_lerp, 0.0, 1.0))
+			var desired_self: Vector2 = dir * speed
+			var ext: Vector2 = _compute_external_velocity(desired_self)
+
+			# Lerp only the self-driven portion for nice controls; then add external directly.
+			var self_vel: Vector2 = velocity.lerp(desired_self, clamp(accel_lerp, 0.0, 1.0))
+			velocity = self_vel + ext
 			move_and_slide()
 	else:
 		if velocity.length() > MOVE_DIR_THRESHOLD:
@@ -134,6 +146,49 @@ func _physics_process(delta: float) -> void:
 		_last_move_dir = dir
 
 	_pick_target_if_none()
+
+# --- External motion API ------------------------------------------------------
+
+func set_external_velocity(id: StringName, v: Vector2) -> void:
+	_external_vel_by_id[id] = v
+
+func clear_external_velocity(id: StringName) -> void:
+	if _external_vel_by_id.has(id):
+		_external_vel_by_id.erase(id)
+
+func clear_all_external_velocity() -> void:
+	_external_vel_by_id.clear()
+
+func get_external_velocity() -> Vector2:
+	var sum: Vector2 = Vector2.ZERO
+	for k in _external_vel_by_id.keys():
+		var vv: Variant = _external_vel_by_id[k]
+		if vv is Vector2:
+			sum += vv
+	return sum
+
+func _compute_external_velocity(desired_self: Vector2) -> Vector2:
+	var ext: Vector2 = get_external_velocity()
+	if ext == Vector2.ZERO:
+		return Vector2.ZERO
+
+	# Optional resistance when the player is actively inputting.
+	# Only applies primarily when input is opposing the external velocity (negative dot).
+	if external_resist_when_inputting <= 0.0:
+		return ext
+
+	if desired_self.length() <= 0.01:
+		return ext
+
+	var a: Vector2 = desired_self.normalized()
+	var b: Vector2 = ext.normalized()
+	var d: float = a.dot(b)
+
+	if d < external_resist_dot_threshold:
+		var t: float = clamp(external_resist_when_inputting, 0.0, 1.0)
+		return ext * (1.0 - t)
+
+	return ext
 
 # --- Interaction helpers -----------------------------------------------------
 
