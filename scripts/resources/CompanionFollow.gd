@@ -728,6 +728,8 @@ func _physics_process(delta: float) -> void:
 			else:
 				away = away / away.length()
 			var desired_unstick: Vector2 = away * unstick_push
+			if _is_confused():
+				desired_unstick = -desired_unstick
 			var ext_unstick: Vector2 = _compute_external_velocity(desired_unstick)
 			_owner_body.velocity = desired_unstick + ext_unstick
 			_owner_body.move_and_slide()
@@ -737,6 +739,8 @@ func _physics_process(delta: float) -> void:
 		_stuck_timer = 0.0
 
 	var desired_self: Vector2 = dir * speed + sep + bubble
+	if _is_confused():
+		desired_self = -desired_self
 	var ext: Vector2 = _compute_external_velocity(desired_self)
 
 	_owner_body.velocity = desired_self + ext
@@ -962,6 +966,26 @@ func _find_stats_like(root: Node) -> Node:
 			return s
 		i += 1
 	return null
+
+func _is_confused() -> bool:
+	if _status != null and _status.has_method("is_confused"):
+		var sv: Variant = _status.call("is_confused")
+		if typeof(sv) == TYPE_BOOL:
+			return bool(sv)
+
+	if _owner_body != null:
+		if _owner_body.has_method("is_confused"):
+			var ov: Variant = _owner_body.call("is_confused")
+			if typeof(ov) == TYPE_BOOL:
+				return bool(ov)
+
+		var sc: Node = _owner_body.find_child("StatusConditions", true, false)
+		if sc != null and sc.has_method("is_confused"):
+			var cv: Variant = sc.call("is_confused")
+			if typeof(cv) == TYPE_BOOL:
+				return bool(cv)
+
+	return false
 
 func _is_dead() -> bool:
 	if _owner_body != null and _owner_body.has_method("is_dead"):

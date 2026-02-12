@@ -562,6 +562,8 @@ func _read_move_dir() -> Vector2:
 	var v: Vector2 = Vector2(x, y)
 	if v.length() > 1.0:
 		v = v.normalized()
+	if _is_confused():
+		v = -v
 	return v
 
 func _should_sprint(dir: Vector2) -> bool:
@@ -789,6 +791,17 @@ func _ability_system() -> Node:
 	if n == null:
 		n = root.get_node_or_null("AbilitySystem")
 	return n
+
+func _is_confused() -> bool:
+	var sc: Node = get_node_or_null("StatusConditions")
+	if sc == null:
+		return false
+	if not sc.has_method("is_confused"):
+		return false
+	var v: Variant = sc.call("is_confused")
+	if typeof(v) == TYPE_BOOL:
+		return bool(v)
+	return false
 
 # ---- Dead check (no recursion) ----
 func _is_dead() -> bool:

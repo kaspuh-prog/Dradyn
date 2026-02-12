@@ -606,7 +606,17 @@ func _update_in_combat_state() -> void:
 	_in_combat = d2 <= max_dist * max_dist
 
 # ---------------- AI (movement only; attacks are via AbilitySystem) ----------------
-
+func _is_confused() -> bool:
+	var sc: Node = find_child("StatusConditions", true, false)
+	if sc == null:
+		return false
+	if not sc.has_method("is_confused"):
+		return false
+	var v: Variant = sc.call("is_confused")
+	if typeof(v) == TYPE_BOOL:
+		return bool(v)
+	return false
+	
 func _run_ai(_delta: float) -> void:
 	var ms: float = 90.0
 	if stats != null and stats.has_method("get_final_stat"):
@@ -672,6 +682,8 @@ func _run_ai(_delta: float) -> void:
 					dir = Vector2.ZERO
 
 			var desired_self: Vector2 = dir * ms
+			if _is_confused():
+				desired_self = -desired_self
 			var ext: Vector2 = _compute_external_velocity(desired_self)
 
 			velocity = desired_self + ext
