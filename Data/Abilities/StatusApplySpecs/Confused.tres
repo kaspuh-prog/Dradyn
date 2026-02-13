@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="StatusApplySpec" load_steps=2 format=3 uid="uid://jao8kfwbg43p"]
+
+[ext_resource type="Script" uid="uid://u63t4oseank1" path="res://scenes/Actors/status/StatusApplySpec.gd" id="1_ll7mb"]
+
+[resource]
+script = ExtResource("1_ll7mb")
+status_id = &"confused"
+duration_sec = 15.0
+metadata/_custom_type_script = "uid://u63t4oseank1"

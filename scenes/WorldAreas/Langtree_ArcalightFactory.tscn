@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=4 uid="uid://krqs2836y8xm"]
+[gd_scene load_steps=14 format=4 uid="uid://krqs2836y8xm"]
 
 [ext_resource type="Script" uid="uid://bm1dpu20h5tgk" path="res://scripts/AreaTemplate.gd" id="1_w36eu"]
 [ext_resource type="Script" uid="uid://c3v3pby11hsgf" path="res://scenes/WorldAreas/TileTorchLights.gd" id="2_dhf0h"]
@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" uid="uid://etewtcga6yax" path="res://assets/tilesets/ConveyorArea2D.tscn" id="9_f7akw"]
 [ext_resource type="Script" uid="uid://bwayymdj2s753" path="res://scripts/EnemySpawner.gd" id="10_vl7ls"]
 [ext_resource type="PackedScene" uid="uid://cse8svk4sr81y" path="res://scenes/Actors/Enemies/ArcaSlime.tscn" id="11_sb165"]
+[ext_resource type="PackedScene" uid="uid://t1rjjb2r248m" path="res://scenes/Actors/Enemies/Automaton.tscn" id="12_vl7ls"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_f7akw"]
 size = Vector2(815, 30)
@@ -108,7 +109,7 @@ shape = SubResource("RectangleShape2D_f7akw")
 
 [node name="EnemySpawner" type="Node2D" parent="."]
 script = ExtResource("10_vl7ls")
-enemy_scenes = Array[PackedScene]([ExtResource("11_sb165")])
+enemy_scenes = Array[PackedScene]([ExtResource("11_sb165"), ExtResource("12_vl7ls")])
 max_alive = 3
 respawn_delay_sec = 45.0
 max_alive_per_extra_member = 2
@@ -124,5 +125,8 @@ position = Vector2(-200, -136)
 
 [node name="Marker2D2" type="Marker2D" parent="EnemySpawner"]
 position = Vector2(-297, -425)
+
+[node name="Automaton" parent="." instance=ExtResource("12_vl7ls")]
+position = Vector2(-467, -56)
 
 [editable path="ConveyorArea2d"]

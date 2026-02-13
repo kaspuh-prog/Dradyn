@@ -1,4 +1,4 @@
-[gd_scene load_steps=62 format=3 uid="uid://t1rjjb2r248m"]
+[gd_scene load_steps=63 format=3 uid="uid://t1rjjb2r248m"]
 
 [ext_resource type="Script" uid="uid://c0yx8i83evrk1" path="res://scripts/EnemyBase.gd" id="1_cfbav"]
 [ext_resource type="SpriteFrames" uid="uid://c4n1ut7rnlblj" path="res://assets/VFX/EnemyDead.tres" id="2_xiocq"]
@@ -6,7 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://bvcgpve7twd6v" path="res://assets/sprites/enemies/AutomatonWalk.png" id="4_xiocq"]
 [ext_resource type="Script" uid="uid://b77n5fh85lvtw" path="res://scenes/Actors/status/AnimatedSpriteStatusShim.gd" id="5_s1u4l"]
 [ext_resource type="Script" uid="uid://scndil1j0hdu" path="res://scripts/stats/StatsComponent.gd" id="6_ig1eb"]
-[ext_resource type="Resource" uid="uid://crgjrbire7mva" path="res://scenes/Actors/Enemies/EnemyMeleeBasicStatRes.tres" id="7_63p0y"]
+[ext_resource type="Script" uid="uid://bu1fg0bjwbliq" path="res://scripts/resources/StatsResource.gd" id="7_cfbav"]
 [ext_resource type="Script" uid="uid://blmmka7g27x6n" path="res://scenes/Actors/Enemies/GiveXPOnDeath.gd" id="8_2yf14"]
 [ext_resource type="Script" uid="uid://drthpqd6ey43v" path="res://AI/Enemy/EnemyAbilityAI.gd" id="9_bdtkp"]
 [ext_resource type="Script" uid="uid://blvyq0nyp35lh" path="res://scripts/stats/LevelComponent.gd" id="10_mvm2c"]
@@ -363,6 +363,44 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(15, 14.5)
 
+[sub_resource type="Resource" id="Resource_xiocq"]
+script = ExtResource("7_cfbav")
+base_stats = {
+"AGI": 10.0,
+"Attack": 4.0,
+"BaseAttackDelay": 0.5,
+"BlockChance": 0.5,
+"BluntRes": 0.0,
+"CHA": 10.0,
+"CritChance": 0.0,
+"CritHealChance": 0.0,
+"DEX": 7.0,
+"DarknessRes": 0.0,
+"Defense": 8.0,
+"END": 10.0,
+"EarthRes": 0.0,
+"Evasion": 0.0,
+"FireRes": 0.0,
+"HP": 90.0,
+"INT": 10.0,
+"IceRes": 0.0,
+"LCK": 10.0,
+"LightRes": 0.0,
+"MP": 30.0,
+"MagicRes": 0.0,
+"MoveSpeed": 90.0,
+"ParryChance": 0.0,
+"PierceRes": 0.0,
+"PoisonRes": 0.0,
+"STA": 10.0,
+"STR": 4.0,
+"SlashRes": 0.0,
+"WIS": 10.0,
+"WeaponWeight": 1.0,
+"WindRes": 0.0
+}
+metadata/_custom_type_script = "uid://bu1fg0bjwbliq"
+
 [node name="Automaton" type="CharacterBody2D"]
 script = ExtResource("1_cfbav")
 enemy_name = "ArcaSlime"
@@ -370,6 +408,7 @@ death_vfx_frames = ExtResource("2_xiocq")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 light_mask = 2
+position = Vector2(1, 6)
 sprite_frames = SubResource("SpriteFrames_0outh")
 animation = &"walk_up"
 frame_progress = 0.570872
@@ -383,7 +422,7 @@ shape = SubResource("1")
 [node name="StatsComponent" type="Node" parent="."]
 script = ExtResource("6_ig1eb")
 debug_damage_log = true
-stats = ExtResource("7_63p0y")
+stats = SubResource("Resource_xiocq")
 auto_tick_modifiers = true
 end_regen_per_sec = 1.0
 metadata/_custom_type_script = "uid://scndil1j0hdu"
@@ -430,4 +469,4 @@ stats_path = NodePath("../StatsComponent")
 
 [node name="KnownAbilities" type="Node" parent="."]
 script = ExtResource("17_l7dfj")
-known_abilities = ["SlimeAttack"]
+known_abilities = ["SpinPunch"]
