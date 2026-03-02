@@ -27,7 +27,7 @@ class_name AnimationBridge
 @export var trail_anchor_path: NodePath = NodePath("")
 @export var motion_player_path: NodePath = NodePath("") # optional AnimationPlayer
 
-# NEW: AnimationLibrary name used by MotionPlayer (Godot 4 Animation Libraries)
+# AnimationLibrary name used by MotionPlayer (Godot 4 Animation Libraries)
 @export var motion_anim_library: String = "CombatAnimations"
 
 # --- Footsteps (centralized; walk* only; NO interval gating) ---
@@ -140,10 +140,22 @@ var _prefix: Dictionary = {
 	"projectile": ""
 }
 
+# NEW: desired left-mirroring for side-single body anims
+var _want_weapon_mirror_left: bool = false
+
+# NEW: post-mix weapon mirror (built from current MotionPlayer animation tracks)
+var _weapon_mirror_active: bool = false
+var _weapon_mirror_anim: String = ""
+var _weapon_mirror_nodes: Array[Node] = []
+var _weapon_mirror_props: Array[StringName] = []
+
 # ----------------------------------------------------------------------------- #
 # Lifecycle
 # ----------------------------------------------------------------------------- #
 func _ready() -> void:
+	# Ensure our mirror post-step runs late in the frame.
+	process_priority = 100
+
 	_actor_node = _find_actor_node2d()
 	_actor_body = _find_actor_body()
 
@@ -159,6 +171,14 @@ func _ready() -> void:
 	_set_prefix_if_empty("cast", default_cast_prefix)
 	_set_prefix_if_empty("buff", default_buff_prefix)
 	_set_prefix_if_empty("projectile", default_projectile_prefix)
+
+	# Only process when mirroring is active.
+	set_process(false)
+
+func _process(_delta: float) -> void:
+	# Mirror after MotionPlayer has mixed track values.
+	if _weapon_mirror_active:
+		_apply_weapon_mirror_post_mix()
 
 func _find_actor_node2d() -> Node2D:
 	var p: Node = self
@@ -192,6 +212,9 @@ func _resolve_rig_targets() -> void:
 	_anim_name_lut.clear()
 	_hair_behind = null
 	_cloak_behind = null
+
+	_want_weapon_mirror_left = false
+	_stop_weapon_mirror(false)
 
 	var explicit_sprite: AnimatedSprite2D = null
 	if sprite_path != NodePath(""):
@@ -505,17 +528,12 @@ func set_movement(dir: Vector2, moving: bool) -> void:
 	else:
 		use_dir = _last_dir
 
-	# We still measure actual speed, but ONLY use it for action-lock override and dead-walk.
 	var actual_speed: float = 0.0
 	if _actor_body != null:
 		actual_speed = _actor_body.velocity.length()
 
-	# IMPORTANT FIX:
-	# Do NOT force walk just because velocity is decaying.
-	# Rely on the caller's "moving" flag for walk/idle, so you don't "walk in place" after input stops.
 	var moving_eff: bool = moving
 
-	# Existing dead-walk visuals: only kick in if not already moving and actor is dead.
 	if not moving_eff and allow_dead_walk_visuals and dead_now:
 		var speed_mag: float = actual_speed
 
@@ -533,7 +551,6 @@ func set_movement(dir: Vector2, moving: bool) -> void:
 		elif use_dir.length() >= dead_walk_dir_threshold:
 			moving_eff = true
 
-	# Action lock normally prevents movement anims, but if the body is actually moving, allow walking to override.
 	if Time.get_ticks_msec() < _action_lock_until_msec:
 		var speed_eps: float = action_lock_walk_override_speed_epsilon
 		if speed_eps < 0.0:
@@ -690,13 +707,14 @@ func _has_any(names: Array) -> bool:
 func _apply_horizontal_flip(dir: Vector2, chosen_anim: String) -> void:
 	if _sprite == null:
 		return
+
 	var should_flip: bool = false
+	var is_side_anim: bool = false
 
 	if supports_side_anims and _has_side_split:
 		should_flip = false
 	else:
 		if supports_side_anims and _has_side_single and auto_flip_for_side_single:
-			var is_side_anim: bool = false
 			if chosen_anim == anim_walk_side or chosen_anim == anim_idle_side:
 				is_side_anim = true
 			elif chosen_anim == "walk_side_dead" or chosen_anim == "idle_side_dead":
@@ -715,13 +733,15 @@ func _apply_horizontal_flip(dir: Vector2, chosen_anim: String) -> void:
 
 	if should_flip:
 		var want_left: bool = (dir.x < 0.0)
+
+		# Body layers still flip for side-single.
 		_set_flip_h_all_layers(want_left)
-		_set_flip_h_sprite2d(_mainhand, want_left)
-		_set_flip_h_sprite2d(_offhand, want_left)
+
+		# NEW: weapon mirroring is handled post-mix from MotionPlayer tracks (for left).
+		_want_weapon_mirror_left = want_left
 	else:
 		_set_flip_h_all_layers(false)
-		_set_flip_h_sprite2d(_mainhand, false)
-		_set_flip_h_sprite2d(_offhand, false)
+		_want_weapon_mirror_left = false
 
 func _set_flip_h_all_layers(left: bool) -> void:
 	var i: int = 0
@@ -732,19 +752,6 @@ func _set_flip_h_all_layers(left: bool) -> void:
 		i += 1
 
 func _set_flip_h_one(s: AnimatedSprite2D, left: bool) -> void:
-	if s == null:
-		return
-	if _has_property(s, "flip_h"):
-		s.set("flip_h", left)
-	else:
-		var sc: Vector2 = s.scale
-		if left and sc.x > 0.0:
-			sc.x = -sc.x
-		elif not left and sc.x < 0.0:
-			sc.x = -sc.x
-		s.scale = sc
-
-func _set_flip_h_sprite2d(s: Sprite2D, left: bool) -> void:
 	if s == null:
 		return
 	if _has_property(s, "flip_h"):
@@ -802,31 +809,39 @@ func _first_existing(candidates: Array) -> String:
 # ----------------------------------------------------------------------------- #
 func _play_motion_weapon_for_body_anim(body_anim_name: String) -> void:
 	if _motion_player == null:
+		_stop_weapon_mirror(false)
 		return
 	if body_anim_name == "":
+		_stop_weapon_mirror(false)
 		return
 
 	var base_weapon_anim: String = body_anim_name + "_weapon"
+	var played_name: String = ""
 
 	# 1) Try unqualified (default library)
 	if _motion_player.has_animation(base_weapon_anim):
-		if _motion_player.current_animation == base_weapon_anim and _motion_player.is_playing():
-			return
-		_motion_player.play(base_weapon_anim)
+		if not (_motion_player.current_animation == base_weapon_anim and _motion_player.is_playing()):
+			_motion_player.play(base_weapon_anim)
+		played_name = base_weapon_anim
+	else:
+		# 2) Try qualified by library
+		var lib: String = motion_anim_library
+		if lib != "":
+			var qualified: String = lib + "/" + base_weapon_anim
+			if _motion_player.has_animation(qualified):
+				if not (_motion_player.current_animation == qualified and _motion_player.is_playing()):
+					_motion_player.play(qualified)
+				played_name = qualified
+
+	if played_name == "":
+		_stop_weapon_mirror(false)
 		return
 
-	# 2) Try qualified by library (Godot 4 Animation Libraries)
-	var lib: String = motion_anim_library
-	if lib == "":
-		return
+	# Apply first-frame values so our post-mix mirror has something to mirror immediately.
+	if _motion_player.has_method("advance"):
+		_motion_player.advance(0.0)
 
-	var qualified: String = lib + "/" + base_weapon_anim
-	if not _motion_player.has_animation(qualified):
-		return
-
-	if _motion_player.current_animation == qualified and _motion_player.is_playing():
-		return
-	_motion_player.play(qualified)
+	_configure_weapon_mirror_for_motion_anim(played_name)
 
 func _play_all_layers(anim_name: String) -> void:
 	if anim_name == "":
@@ -878,9 +893,7 @@ func _play_all_layers(anim_name: String) -> void:
 
 		i += 1
 
-	# Mirror to MotionPlayer with "_weapon" suffix (and optional library prefix).
 	_play_motion_weapon_for_body_anim(resolved)
-
 	_sync_layers_to_master()
 
 func _sync_layers_to_master() -> void:
@@ -896,6 +909,170 @@ func _sync_layers_to_master() -> void:
 			s.frame_progress = master_progress
 		i += 1
 
+# ----------------------------------------------------------------------------- #
+# Weapon post-mix mirroring (fixes "plays both directions" bug)
+# ----------------------------------------------------------------------------- #
+func _configure_weapon_mirror_for_motion_anim(played_anim: String) -> void:
+	# Only mirror when:
+	# - we are facing left for a side-single body anim, AND
+	# - the weapon motion animation is a *_side_weapon animation.
+	var want_left: bool = _want_weapon_mirror_left
+	var lower_anim: String = played_anim.to_lower()
+	var is_side_weapon: bool = (lower_anim.find("_side_weapon") != -1)
+
+	if not want_left or not is_side_weapon:
+		_stop_weapon_mirror(false)
+		return
+
+	if _weapon_mirror_active and _weapon_mirror_anim == played_anim:
+		# Already configured.
+		return
+
+	_weapon_mirror_anim = played_anim
+	_weapon_mirror_nodes.clear()
+	_weapon_mirror_props.clear()
+
+	var anim: Animation = null
+	if _motion_player != null:
+		if _motion_player.has_animation(played_anim):
+			anim = _motion_player.get_animation(played_anim)
+
+	if anim == null:
+		_stop_weapon_mirror(false)
+		return
+
+	var root: Node = _motion_player
+	if _motion_player != null:
+		var rn: NodePath = _motion_player.root_node
+		if rn != NodePath(""):
+			var rr: Node = _motion_player.get_node_or_null(rn)
+			if rr != null:
+				root = rr
+
+	var seen: Dictionary = {}
+
+	var tcount: int = anim.get_track_count()
+	var ti: int = 0
+	while ti < tcount:
+		var tp: NodePath = anim.track_get_path(ti)
+		var pstr: String = String(tp)
+		var colon: int = pstr.rfind(":")
+		if colon != -1:
+			var node_path_str: String = pstr.substr(0, colon)
+			var prop_str: String = pstr.substr(colon + 1, pstr.length() - colon - 1)
+
+			# Only touch weapon rig tracks.
+			if node_path_str.find("WeaponRoot") != -1:
+				var prop_sn: StringName = StringName(prop_str)
+				var accept: bool = false
+				if prop_sn == &"position":
+					accept = true
+				elif prop_sn == &"rotation":
+					accept = true
+				elif prop_sn == &"rotation_degrees":
+					accept = true
+				elif prop_sn == &"scale":
+					accept = true
+				elif prop_sn == &"flip_h":
+					accept = true
+
+				if accept:
+					var target: Node = null
+					if root != null:
+						target = root.get_node_or_null(NodePath(node_path_str))
+					if target == null and _visual_root != null:
+						target = _visual_root.get_node_or_null(NodePath(node_path_str))
+					if target == null and _motion_player != null:
+						target = _motion_player.get_node_or_null(NodePath(node_path_str))
+
+					if target != null:
+						var key: String = String(target.get_path()) + ":" + String(prop_sn)
+						if not seen.has(key):
+							seen[key] = true
+							_weapon_mirror_nodes.append(target)
+							_weapon_mirror_props.append(prop_sn)
+		ti += 1
+
+	_weapon_mirror_active = true
+	set_process(true)
+
+	# Apply immediately for the current frame.
+	_apply_weapon_mirror_post_mix()
+
+func _stop_weapon_mirror(unmirror_if_safe: bool) -> void:
+	if not _weapon_mirror_active:
+		_weapon_mirror_anim = ""
+		_weapon_mirror_nodes.clear()
+		_weapon_mirror_props.clear()
+		set_process(false)
+		return
+
+	# Only unmirror when MotionPlayer is not actively driving values anymore.
+	var safe_to_unmirror: bool = unmirror_if_safe
+	if _motion_player != null:
+		if _motion_player.is_playing():
+			safe_to_unmirror = false
+
+	if safe_to_unmirror:
+		# Mirroring twice restores original (reflection is an involution).
+		_apply_weapon_mirror_post_mix()
+
+	_weapon_mirror_active = false
+	_weapon_mirror_anim = ""
+	_weapon_mirror_nodes.clear()
+	_weapon_mirror_props.clear()
+	set_process(false)
+
+func _apply_weapon_mirror_post_mix() -> void:
+	if not _weapon_mirror_active:
+		return
+
+	var i: int = 0
+	while i < _weapon_mirror_nodes.size():
+		var n: Node = _weapon_mirror_nodes[i]
+		if n == null or not is_instance_valid(n):
+			i += 1
+			continue
+
+		var prop: StringName = _weapon_mirror_props[i]
+
+		if prop == &"position":
+			var n2d: Node2D = n as Node2D
+			if n2d != null:
+				var p: Vector2 = n2d.position
+				p.x = -p.x
+				n2d.position = p
+
+		elif prop == &"rotation":
+			var r2d: Node2D = n as Node2D
+			if r2d != null:
+				r2d.rotation = PI - r2d.rotation
+
+		elif prop == &"rotation_degrees":
+			var rd2d: Node2D = n as Node2D
+			if rd2d != null:
+				rd2d.rotation_degrees = 180.0 - rd2d.rotation_degrees
+
+		elif prop == &"scale":
+			var s2d: Node2D = n as Node2D
+			if s2d != null:
+				var sc: Vector2 = s2d.scale
+				sc.x = -sc.x
+				s2d.scale = sc
+
+		elif prop == &"flip_h":
+			if n is Sprite2D:
+				var sp: Sprite2D = n as Sprite2D
+				sp.flip_h = not sp.flip_h
+			elif n is AnimatedSprite2D:
+				var asp: AnimatedSprite2D = n as AnimatedSprite2D
+				asp.flip_h = not asp.flip_h
+
+		i += 1
+
+# ----------------------------------------------------------------------------- #
+# Z ordering for weapon
+# ----------------------------------------------------------------------------- #
 func _apply_weapon_z_for_dir(dir: Vector2) -> void:
 	if _weapon_root == null:
 		return
@@ -932,6 +1109,9 @@ func _apply_weapon_z_for_dir(dir: Vector2) -> void:
 	else:
 		_weapon_root.z_index = base_z - 1
 
+# ----------------------------------------------------------------------------- #
+# Public action entrypoints
+# ----------------------------------------------------------------------------- #
 func play_attack_with_prefix(prefix: String, aim_dir: Vector2, hit_frame: int, on_hit: Callable) -> void:
 	_play_action_internal("attack", prefix, aim_dir, hit_frame, on_hit, 0.9)
 
@@ -1206,6 +1386,10 @@ func _on_sprite_anim_finished() -> void:
 	_pending_hit_frame = -1
 	_pending_hit_callable = Callable()
 	_action_lock_until_msec = 0
+
+	# Safe to unmirror here (we're leaving the action).
+	_stop_weapon_mirror(true)
+
 	var lock_target: Node = _actor_body
 	if lock_target == null:
 		lock_target = _actor_node
@@ -1219,6 +1403,9 @@ func set_attack_phase(phase: String) -> void:
 		return
 	attack_phase_changed.emit(phase)
 
+# ----------------------------------------------------------------------------- #
+# VFX (unchanged)
+# ----------------------------------------------------------------------------- #
 func play_heal_vfx(amount: int = 0) -> void:
 	if _sprite == null:
 		return

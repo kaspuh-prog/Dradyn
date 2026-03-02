@@ -50,7 +50,6 @@ enum SaveSelectIntent {
 @export var portrait_center_y_px: int = 32
 @export var portrait_vertical_offset_px: int = 0
 
-# NEW: Rig-based portraits (VisualRoot) with saved equipment applied
 @export_group("Party Preview — VisualRoot")
 @export var use_visualroot_subviewport: bool = true
 @export var visualroot_node_name: String = "VisualRoot"
@@ -60,6 +59,14 @@ enum SaveSelectIntent {
 @export var portrait_viewport_offset_px: Vector2 = Vector2(0.0, 10.0)
 @export var hide_weapon_nodes_in_portrait: bool = true
 @export var weapon_node_names_to_hide: PackedStringArray = PackedStringArray(["WeaponRoot", "Mainhand", "Offhand", "WeaponTrail"])
+
+# Apply saved leader customization (gender + hair) before applying equipment.
+@export_group("Party Preview — Saved Customization")
+@export var apply_player_customization_to_leader: bool = true
+
+# Slot names in the equipment dict
+@export var equipment_slot_chest_name: String = "chest"
+@export var equipment_slot_back_name: String = "back"
 
 @export_group("Selection Border")
 @export var selection_border_enabled: bool = true
@@ -493,7 +500,7 @@ func _update_border_for_button(btn: Button, slot_index: int) -> void:
 	border.visible = (slot_index == _selected_slot)
 
 # ---------------------------------------------------------------------
-# Party strip (RIGHT -> LEFT), cropped
+# Party strip (RIGHT -> LEFT)
 # ---------------------------------------------------------------------
 func _build_party_preview_strip(payload: Dictionary) -> Control:
 	var strip: HBoxContainer = HBoxContainer.new()
@@ -506,10 +513,9 @@ func _build_party_preview_strip(payload: Dictionary) -> Control:
 	var h: int = max(row_height_px, portrait_box_height_px)
 	strip.custom_minimum_size = Vector2(float(reserved_w), float(h))
 
-	# NEW: pull member dicts from save payload so we can apply their saved equipment before rendering.
-	var ordered_members: Array[Dictionary] = _extract_party_members_ordered(payload)
+	var ordered_members: Array[Dictionary] = _extract_party_members_ordered_marked(payload)
 
-	# Render RIGHT->LEFT
+	# Render RIGHT -> LEFT (reverse)
 	var render_members: Array[Dictionary] = []
 	var i_rev: int = ordered_members.size() - 1
 	while i_rev >= 0:
@@ -521,8 +527,7 @@ func _build_party_preview_strip(payload: Dictionary) -> Control:
 	while i < render_members.size():
 		if shown >= portrait_max_members:
 			break
-		var md: Dictionary = render_members[i]
-		strip.add_child(_build_member_box_for_member_dict(md))
+		strip.add_child(_build_member_box_for_member_dict(render_members[i], payload))
 		shown += 1
 		i += 1
 
@@ -538,8 +543,7 @@ func _reserved_strip_width_px() -> int:
 		gaps = 0
 	return (portrait_box_width_px * portrait_max_members) + (portrait_member_gap_px * gaps)
 
-# NEW: Build using the member dict (scene_path + equipment)
-func _build_member_box_for_member_dict(member_dict: Dictionary) -> Control:
+func _build_member_box_for_member_dict(member_dict: Dictionary, payload: Dictionary) -> Control:
 	var box: Control = Control.new()
 	box.custom_minimum_size = Vector2(float(portrait_box_width_px), float(portrait_box_height_px))
 	box.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -552,11 +556,11 @@ func _build_member_box_for_member_dict(member_dict: Dictionary) -> Control:
 		scene_path = str(member_dict["scene_path"]).strip_edges()
 
 	if use_visualroot_subviewport and scene_path != "":
-		var ok: bool = _try_build_member_visualroot_viewport(box, scene_path, member_dict)
+		var ok: bool = _try_build_member_visualroot_viewport(box, scene_path, member_dict, payload)
 		if ok:
 			return box
 
-	# Legacy fallback path (kept): single frame from AnimatedSprite2D
+	# Fallback: legacy single-frame
 	var tex: Texture2D = _get_idle_frame_for_scene(scene_path)
 	if tex == null:
 		if portrait_show_placeholder_when_missing:
@@ -590,7 +594,7 @@ func _build_member_box_for_member_dict(member_dict: Dictionary) -> Control:
 	box.add_child(tr)
 	return box
 
-func _try_build_member_visualroot_viewport(parent_box: Control, scene_path: String, member_dict: Dictionary) -> bool:
+func _try_build_member_visualroot_viewport(parent_box: Control, scene_path: String, member_dict: Dictionary, payload: Dictionary) -> bool:
 	if parent_box == null:
 		return false
 	if scene_path.strip_edges() == "":
@@ -607,9 +611,18 @@ func _try_build_member_visualroot_viewport(parent_box: Control, scene_path: Stri
 	if inst == null:
 		return false
 
-	# Apply saved equipment (chest/back) onto EquipmentVisuals before cloning VisualRoot
+	# 1) Apply leader customization (gender + hair) BEFORE equipment.
+	if apply_player_customization_to_leader:
+		var is_leader: bool = false
+		if member_dict.has("__is_leader"):
+			is_leader = bool(member_dict["__is_leader"])
+		if is_leader:
+			_apply_player_customization_to_actor_instance(inst, payload)
+
+	# 2) Apply saved equipment (chest/back) onto EquipmentVisuals before cloning VisualRoot.
 	_apply_saved_equipment_to_actor_instance(inst, member_dict)
 
+	# 3) Clone VisualRoot.
 	var vr: Node = _find_visual_root(inst)
 	if vr == null:
 		inst.queue_free()
@@ -621,6 +634,7 @@ func _try_build_member_visualroot_viewport(parent_box: Control, scene_path: Stri
 	if clone == null:
 		return false
 
+	# 4) Viewport
 	var sv: SubViewport = SubViewport.new()
 	sv.name = "PortraitViewport"
 	sv.transparent_bg = true
@@ -640,17 +654,15 @@ func _try_build_member_visualroot_viewport(parent_box: Control, scene_path: Stri
 	if hide_weapon_nodes_in_portrait:
 		_hide_named_nodes_recursive(clone, weapon_node_names_to_hide)
 
-	# Force idle_side, case-insensitive, on all AnimatedSprite2D layers.
+	# Force idle_side case-insensitive.
 	_force_animation_on_all_animated_sprites(clone, prefer_idle_side_name)
 
-	# Position/scale inside viewport.
 	var center: Vector2 = Vector2(float(sv.size.x) * 0.5, float(sv.size.y) * 0.5)
 	var n2d: Node2D = clone as Node2D
 	if n2d != null:
 		n2d.position = center + portrait_viewport_offset_px
 		n2d.scale = Vector2(portrait_viewport_scale, portrait_viewport_scale)
 
-	# Display viewport texture with nearest filtering.
 	var tr: TextureRect = TextureRect.new()
 	tr.texture = sv.get_texture()
 	tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -680,15 +692,15 @@ func _apply_saved_equipment_to_actor_instance(actor_inst: Node, member_dict: Dic
 		return
 
 	# Chest
-	var chest_path: String = _get_equipment_path_case_insensitive(equip, "chest")
+	var chest_path: String = _get_equipment_path_case_insensitive(equip, equipment_slot_chest_name)
 	var chest_item: Resource = null
 	if chest_path != "" and ResourceLoader.exists(chest_path):
 		chest_item = ResourceLoader.load(chest_path)
 	if ev.has_method("_apply_chest_item"):
 		ev.call("_apply_chest_item", chest_item)
 
-	# Back (cloak)
-	var back_path: String = _get_equipment_path_case_insensitive(equip, "back")
+	# Back
+	var back_path: String = _get_equipment_path_case_insensitive(equip, equipment_slot_back_name)
 	var back_item: Resource = null
 	if back_path != "" and ResourceLoader.exists(back_path):
 		back_item = ResourceLoader.load(back_path)
@@ -711,6 +723,102 @@ func _get_equipment_path_case_insensitive(equip: Dictionary, slot_name: String) 
 			return str(equip[k_any]).strip_edges()
 
 	return ""
+
+func _apply_player_customization_to_actor_instance(actor_inst: Node, payload: Dictionary) -> void:
+	if actor_inst == null:
+		return
+	if payload.is_empty():
+		return
+	if not payload.has("player_customization"):
+		return
+
+	var pc_any: Variant = payload["player_customization"]
+	if typeof(pc_any) != TYPE_DICTIONARY:
+		return
+	var pc: Dictionary = pc_any
+
+	var gender_str: String = str(pc.get("gender", "male")).strip_edges().to_lower()
+	var gender_folder: String = "Male"
+	if gender_str == "female":
+		gender_folder = "Female"
+
+	var hair_id: String = str(pc.get("hair_id", "")).strip_edges()
+	if hair_id == "":
+		hair_id = "Short"
+
+	var vr: Node = _find_visual_root(actor_inst)
+	if vr == null:
+		return
+
+	var body: AnimatedSprite2D = vr.get_node_or_null("BodySprite") as AnimatedSprite2D
+	var armor: AnimatedSprite2D = vr.get_node_or_null("ArmorSprite") as AnimatedSprite2D
+	var hair: AnimatedSprite2D = vr.get_node_or_null("HairSprite") as AnimatedSprite2D
+	var hair_behind: AnimatedSprite2D = vr.get_node_or_null("HairBehindSprite") as AnimatedSprite2D
+
+	# Ensure EquipmentVisuals uses correct gender for later equipment swaps.
+	var eqv: Node = actor_inst.find_child(equipment_visuals_node_name, true, false)
+	if eqv != null and ("gender_folder" in eqv):
+		if gender_folder == "Female":
+			eqv.set("gender_folder", StringName("female"))
+		else:
+			eqv.set("gender_folder", StringName("male"))
+
+	var root_dir: String = "res://assets/sprites/characters/%s" % gender_folder
+
+	if body != null:
+		var body_frames: SpriteFrames = _load_frames_ci("%s/BodySprites" % root_dir, "Body")
+		if body_frames != null:
+			body.sprite_frames = body_frames
+
+	if armor != null:
+		var cloth_frames: SpriteFrames = _load_frames_ci("%s/ArmorSprites" % root_dir, "Cloth")
+		if cloth_frames != null:
+			armor.sprite_frames = cloth_frames
+
+	if hair != null:
+		var hair_frames: SpriteFrames = _load_frames_ci("%s/HairSprites" % root_dir, hair_id)
+		if hair_frames != null:
+			hair.sprite_frames = hair_frames
+
+	# Important: if no behind frames exist, hide the behind layer so it doesn't keep some default (e.g. Braids).
+	if hair_behind != null:
+		var behind_id: String = hair_id + "_behind"
+		var behind_frames: SpriteFrames = _load_frames_ci("%s/HairSprites" % root_dir, behind_id)
+		if behind_frames != null:
+			hair_behind.visible = true
+			hair_behind.sprite_frames = behind_frames
+		else:
+			hair_behind.visible = false
+
+func _load_frames_ci(dir_path: String, base_name: String) -> SpriteFrames:
+	if dir_path.strip_edges() == "":
+		return null
+	if base_name.strip_edges() == "":
+		return null
+
+	var da: DirAccess = DirAccess.open(dir_path)
+	if da == null:
+		return null
+
+	var want: String = base_name.to_lower()
+
+	da.list_dir_begin()
+	var fn: String = da.get_next()
+	while fn != "":
+		if not da.current_is_dir():
+			var lower: String = fn.to_lower()
+			var ok: bool = lower.ends_with(".res") or lower.ends_with(".tres")
+			if ok:
+				var base: String = fn.get_basename()
+				if base.to_lower() == want:
+					var full_path: String = "%s/%s" % [dir_path, fn]
+					if ResourceLoader.exists(full_path):
+						var r: Resource = load(full_path)
+						return r as SpriteFrames
+		fn = da.get_next()
+	da.list_dir_end()
+
+	return null
 
 func _find_visual_root(root: Node) -> Node:
 	if root == null:
@@ -806,52 +914,7 @@ func _build_empty_member_box() -> Control:
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return box
 
-# Legacy helper kept (do not remove): some callers might still use it later.
-func _extract_party_scene_paths_ordered(payload: Dictionary) -> Array[String]:
-	var out: Array[String] = []
-	if not payload.has("party"):
-		return out
-
-	var party_any: Variant = payload["party"]
-	if typeof(party_any) != TYPE_DICTIONARY:
-		return out
-	var party: Dictionary = party_any
-
-	if not party.has("members"):
-		return out
-
-	var members_any: Variant = party["members"]
-	if typeof(members_any) != TYPE_ARRAY:
-		return out
-	var members: Array = members_any
-
-	var controlled_idx: int = 0
-	if party.has("controlled_index"):
-		controlled_idx = int(party["controlled_index"])
-	if controlled_idx < 0:
-		controlled_idx = 0
-	if controlled_idx >= members.size():
-		controlled_idx = 0
-
-	var count: int = members.size()
-	var step: int = 0
-	while step < count and out.size() < portrait_max_members:
-		var idx: int = controlled_idx + step
-		if idx >= count:
-			idx -= count
-
-		var m_any: Variant = members[idx]
-		if typeof(m_any) == TYPE_DICTIONARY:
-			var md: Dictionary = m_any
-			if md.has("scene_path"):
-				var sp: String = str(md["scene_path"]).strip_edges()
-				if sp != "":
-					out.append(sp)
-		step += 1
-
-	return out
-
-func _extract_party_members_ordered(payload: Dictionary) -> Array[Dictionary]:
+func _extract_party_members_ordered_marked(payload: Dictionary) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	if not payload.has("party"):
 		return out
@@ -886,15 +949,16 @@ func _extract_party_members_ordered(payload: Dictionary) -> Array[Dictionary]:
 
 		var m_any: Variant = members[idx]
 		if typeof(m_any) == TYPE_DICTIONARY:
-			var md: Dictionary = m_any
-			if md.has("scene_path"):
-				var sp: String = str(md["scene_path"]).strip_edges()
-				if sp != "":
-					out.append(md)
+			var md: Dictionary = (m_any as Dictionary).duplicate(true)
+			md["__is_leader"] = (idx == controlled_idx)
+			out.append(md)
 		step += 1
 
 	return out
 
+# ---------------------------------------------------------------------
+# Legacy idle-frame cache (kept)
+# ---------------------------------------------------------------------
 func _get_idle_frame_for_scene(scene_path: String) -> Texture2D:
 	if _scene_idle_frame_cache.has(scene_path):
 		var v_any: Variant = _scene_idle_frame_cache[scene_path]
@@ -1001,9 +1065,11 @@ func _pick_idle_anim_name(sf: SpriteFrames) -> String:
 	var idle_left_ci: String = _find_anim_name_case_insensitive(sf, "idle_left")
 	if idle_left_ci != "":
 		return idle_left_ci
+
 	var idle_down_ci: String = _find_anim_name_case_insensitive(sf, "idle_down")
 	if idle_down_ci != "":
 		return idle_down_ci
+
 	var idle_up_ci: String = _find_anim_name_case_insensitive(sf, "idle_up")
 	if idle_up_ci != "":
 		return idle_up_ci
@@ -1025,7 +1091,7 @@ func _apply_ellipsis_label(label: Label) -> void:
 	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 
 # ---------------------------------------------------------------------
-# 4-line text
+# 4-line text (unchanged from your file)
 # ---------------------------------------------------------------------
 func _get_slot_name_line(slot_index: int) -> String:
 	if _save_sys == null:
@@ -1178,9 +1244,6 @@ func _load_class_title_for_scene(scene_path: String) -> String:
 	inst.queue_free()
 	return out
 
-# ---------------------------------------------------------------------
-# Act/story line (now 4th line)
-# ---------------------------------------------------------------------
 func _get_slot_sub_line(slot_index: int) -> String:
 	if _save_sys == null:
 		return ""
