@@ -2,7 +2,10 @@ extends CharacterBody2D
 
 # --- References ---
 @onready var stats: Node = $StatsComponent
-@onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
+
+# NEW (Choice B): no dependency on $AnimatedSprite2D
+var _bridge: Node = null
+var _legacy_sprite: AnimatedSprite2D = null
 
 # --- Debug ---
 @export var debug_log: bool = false
@@ -60,15 +63,23 @@ var _legacy_attack_anim: String = "attack1_down"
 const MOVE_DIR_THRESHOLD: float = 0.05
 const HOTBAR_DEFAULT_SLOTS: int = 8
 
+# NEW: if any rig sprite is authored with speed_scale = 0, it will freeze.
+@export var force_rig_sprite_speed_scale: float = 1.0
+
 # --- Lifecycle ----------------------------------------------------------------
 
 func _ready() -> void:
 	set_physics_process(true)
 	set_process_unhandled_input(true)
 
-	if is_instance_valid(sprite):
-		sprite.frame_changed.connect(Callable(self, "_on_sprite_frame_changed"))
-		sprite.animation_finished.connect(Callable(self, "_on_sprite_animation_finished"))
+	_bridge = _animation_bridge()
+
+	# NEW: ensure rig sprites are not paused / speed_scale != 0 (prevents 1-frame freeze)
+	call_deferred("_ensure_rig_sprites_can_animate")
+
+	# NOTE: We no longer bind sprite signals up-front.
+	# - Normal path: AnimationBridge owns hit-frames and animation-finished unlocking.
+	# - Legacy fallback: we bind when/if we actually need to play legacy melee anims.
 
 	var party: Node = get_node_or_null("/root/Party")
 	if party != null and party.has_signal("controlled_changed"):
@@ -81,6 +92,9 @@ func _ready() -> void:
 	call_deferred("_ensure_hotbar_bound")
 
 	call_deferred("_join_party")
+
+	# NEW: after join/spawn settles, do it again (some scenes instantiate VisualRoot late)
+	call_deferred("_ensure_rig_sprites_can_animate")
 
 	if is_instance_valid(stats) and stats.has_signal("healed"):
 		stats.healed.connect(_on_self_healed)
@@ -395,6 +409,9 @@ func _try_hotbar(index: int) -> void:
 
 	ctx["aim_dir"] = aim
 
+	# Keep the bridge facing in sync even for lock-only actions
+	_seed_bridge_facing(aim)
+
 	if ability_id == "heal":
 		var heal_tgt: Node = _pick_heal_target_or_self()
 		ctx["manual_target"] = heal_tgt
@@ -447,28 +464,33 @@ func is_action_locked() -> bool:
 # --- Legacy melee anim fallback ----------------------------------------------
 
 func play_melee_attack_anim(aim_dir: Vector2, hit_frame: int, on_hit: Callable) -> void:
-	if sprite == null:
+	var s: AnimatedSprite2D = _resolve_legacy_sprite()
+	if s == null:
 		return
+
 	lock_action_for(400)
 	_pending_hit_frame = max(0, hit_frame)
 	_pending_hit_callable = on_hit
 
+	# Ensure our facing is set for other systems even if legacy anim runs.
+	_last_move_dir = aim_dir
+
 	var use_side: bool = false
-	if use_side_anims and sprite.sprite_frames != null:
-		if sprite.sprite_frames.has_animation("attack1_side"):
+	if use_side_anims and s.sprite_frames != null:
+		if s.sprite_frames.has_animation("attack1_side"):
 			use_side = true
 
 	var name: String = "attack1_down"
 	if use_side:
 		if absf(aim_dir.x) >= absf(aim_dir.y):
 			name = "attack1_side"
-			sprite.flip_h = aim_dir.x < 0.0
+			s.flip_h = aim_dir.x < 0.0
 		else:
 			if aim_dir.y >= 0.0:
 				name = "attack1_down"
 			else:
 				name = "attack1_up"
-			sprite.flip_h = false
+			s.flip_h = false
 	else:
 		if absf(aim_dir.x) > absf(aim_dir.y):
 			if aim_dir.x > 0.0:
@@ -481,10 +503,41 @@ func play_melee_attack_anim(aim_dir: Vector2, hit_frame: int, on_hit: Callable) 
 			else:
 				name = "attack1_up"
 
-	if sprite.sprite_frames != null and sprite.sprite_frames.has_animation(name):
-		sprite.sprite_frames.set_animation_loop(name, false)
-	sprite.frame = 0
-	sprite.play(name)
+	if s.sprite_frames != null and s.sprite_frames.has_animation(name):
+		s.sprite_frames.set_animation_loop(name, false)
+	s.frame = 0
+	s.play(name)
+
+func _resolve_legacy_sprite() -> AnimatedSprite2D:
+	if is_instance_valid(_legacy_sprite):
+		return _legacy_sprite
+
+	# Find first AnimatedSprite2D with frames under this actor
+	var stack: Array[Node] = [self]
+	while stack.size() > 0:
+		var n: Node = stack.pop_back()
+		if n == null:
+			continue
+		var spr: AnimatedSprite2D = n as AnimatedSprite2D
+		if spr != null and spr.sprite_frames != null:
+			_legacy_sprite = spr
+			_bind_legacy_sprite_signals_if_needed(_legacy_sprite)
+			return _legacy_sprite
+		var i: int = 0
+		while i < n.get_child_count():
+			stack.push_back(n.get_child(i))
+			i += 1
+
+	return null
+
+func _bind_legacy_sprite_signals_if_needed(s: AnimatedSprite2D) -> void:
+	if s == null:
+		return
+	# Avoid double connect
+	if not s.frame_changed.is_connected(Callable(self, "_on_sprite_frame_changed")):
+		s.frame_changed.connect(Callable(self, "_on_sprite_frame_changed"))
+	if not s.animation_finished.is_connected(Callable(self, "_on_sprite_animation_finished")):
+		s.animation_finished.connect(Callable(self, "_on_sprite_animation_finished"))
 
 # --- Input / Hotbar mapping ---------------------------------------------------
 
@@ -639,28 +692,47 @@ func _find_nearest_enemy() -> Node:
 # --- Animations --------------------------------------------------------------
 
 func _set_move_anim(dir: Vector2) -> void:
-	if sprite == null:
-		return
 	if is_action_locked():
 		return
 	if _is_dead():
 		return
 
+	# Prefer AnimationBridge if present (Choice B)
+	var bridge: Node = _bridge
+	if bridge == null:
+		bridge = _animation_bridge()
+
+	# NEW: If we have a bridge, make sure the rig isn't speed_scale=0/paused.
+	if bridge != null:
+		_ensure_rig_sprites_can_animate()
+
+	if bridge != null and bridge.has_method("set_movement"):
+		bridge.call("set_movement", dir, dir.length() >= MOVE_DIR_THRESHOLD)
+		return
+
+	# No bridge? Use legacy movement anims on first discovered sprite.
+	_set_move_anim_legacy(dir)
+
+func _set_move_anim_legacy(dir: Vector2) -> void:
+	var s: AnimatedSprite2D = _resolve_legacy_sprite()
+	if s == null:
+		return
+
 	if dir.length() < MOVE_DIR_THRESHOLD:
 		var idle_name: String = _idle_anim_name()
-		if idle_name != "" and sprite.animation != idle_name:
-			if sprite.sprite_frames != null and sprite.sprite_frames.has_animation(idle_name):
-				sprite.play(idle_name)
+		if idle_name != "" and s.animation != idle_name:
+			if s.sprite_frames != null and s.sprite_frames.has_animation(idle_name):
+				s.play(idle_name)
 		if use_side_anims:
-			_apply_side_flip_for_idle()
+			_apply_side_flip_for_idle_legacy(s)
 		return
 
 	var anim_name: String = _walk_anim_name(dir)
-	if anim_name != "" and sprite.animation != anim_name:
-		sprite.play(anim_name)
+	if anim_name != "" and s.animation != anim_name:
+		s.play(anim_name)
 
 	if use_side_anims:
-		_apply_side_flip_for_move(dir)
+		_apply_side_flip_for_move_legacy(s, dir)
 
 func _idle_anim_name() -> String:
 	if use_side_anims:
@@ -702,32 +774,43 @@ func _walk_anim_name(dir: Vector2) -> String:
 		else:
 			return "walk_up"
 
-func _apply_side_flip_for_move(dir: Vector2) -> void:
-	if not is_instance_valid(sprite):
+func _apply_side_flip_for_move_legacy(s: AnimatedSprite2D, dir: Vector2) -> void:
+	if s == null:
 		return
 	if absf(dir.x) >= absf(dir.y):
 		if dir.x < 0.0:
-			sprite.flip_h = true
+			s.flip_h = true
 		else:
-			sprite.flip_h = false
+			s.flip_h = false
 
-func _apply_side_flip_for_idle() -> void:
-	if not is_instance_valid(sprite):
+func _apply_side_flip_for_idle_legacy(s: AnimatedSprite2D) -> void:
+	if s == null:
 		return
 	if absf(_last_move_dir.x) > 0.01:
 		if _last_move_dir.x < 0.0:
-			sprite.flip_h = true
+			s.flip_h = true
 		else:
-			sprite.flip_h = false
+			s.flip_h = false
+
+func _seed_bridge_facing(dir: Vector2) -> void:
+	var bridge: Node = _bridge
+	if bridge == null:
+		bridge = _animation_bridge()
+	if bridge == null:
+		return
+	if bridge.has_method("set_facing"):
+		bridge.call("set_facing", dir)
 
 func _on_sprite_frame_changed() -> void:
-	if _pending_hit_frame >= 0 and sprite != null and sprite.frame == _pending_hit_frame:
+	# Only used by legacy melee fallback path
+	if _pending_hit_frame >= 0 and _legacy_sprite != null and _legacy_sprite.frame == _pending_hit_frame:
 		if _pending_hit_callable.is_valid():
 			_pending_hit_callable.call()
 		_pending_hit_frame = -1
 		_pending_hit_callable = Callable()
 
 func _on_sprite_animation_finished() -> void:
+	# Only used by legacy melee fallback path
 	_action_anim_until_msec = 0
 
 # --- Heal VFX bridge ---------------------------------------------------------
@@ -830,6 +913,85 @@ func _is_dead() -> bool:
 
 func is_dead() -> bool:
 	return _is_dead()
+
+# NEW: ensure VisualRoot sprite layers are unpaused and have non-zero speed_scale.
+# FIXED: never call spr.play() when the current animation name is "" (that was your crash).
+func _ensure_rig_sprites_can_animate() -> void:
+	var vr: Node = get_node_or_null("VisualRoot")
+	if vr == null:
+		vr = find_child("VisualRoot", true, false)
+	if vr == null:
+		return
+
+	var target_speed: float = force_rig_sprite_speed_scale
+	if target_speed <= 0.0:
+		target_speed = 1.0
+
+	var stack: Array[Node] = [vr]
+	while stack.size() > 0:
+		var n: Node = stack.pop_back()
+		if n == null:
+			continue
+
+		var spr: AnimatedSprite2D = n as AnimatedSprite2D
+		if spr != null:
+			# If authored with speed_scale = 0, it will "play" but never advance.
+			if spr.speed_scale <= 0.0:
+				spr.speed_scale = target_speed
+
+			# Must have frames + at least one animation.
+			if spr.sprite_frames == null:
+				if debug_log:
+					_printd("[PLAYER] rig sprite has no SpriteFrames: ", spr.get_path())
+				# keep scanning children
+			else:
+				var names: PackedStringArray = spr.sprite_frames.get_animation_names()
+				if names.size() <= 0:
+					if debug_log:
+						_printd("[PLAYER] rig SpriteFrames has 0 animations: ", spr.get_path())
+				else:
+					# Determine a safe animation name to play.
+					var anim: String = spr.animation
+
+					# If current anim is blank or missing, choose a fallback that exists.
+					if anim.strip_edges() == "" or not spr.sprite_frames.has_animation(anim):
+						# Prefer common idles if present.
+						var preferred: PackedStringArray = PackedStringArray([
+							"idle_down", "Idle_down",
+							"idle_side", "Idle_side",
+							"idle_up", "Idle_up",
+							"walk_down", "Walk_down"
+						])
+						var found: String = ""
+						var i_pref: int = 0
+						while i_pref < preferred.size():
+							var p: String = preferred[i_pref]
+							if spr.sprite_frames.has_animation(p):
+								found = p
+								break
+							i_pref += 1
+
+						if found != "":
+							anim = found
+						else:
+							# Last resort: first available animation name.
+							anim = String(names[0])
+
+						if debug_log:
+							_printd("[PLAYER] rig sprite had empty/missing anim; set to '", anim, "' on ", spr.get_path())
+
+					# Only play if we have a non-empty name.
+					if anim.strip_edges() != "":
+						if spr.animation != anim:
+							spr.play(anim)
+						else:
+							if not spr.is_playing():
+								spr.play(anim)
+
+		var i: int = 0
+		while i < n.get_child_count():
+			stack.push_back(n.get_child(i))
+			i += 1
 
 # --- Debug helper -------------------------------------------------------------
 

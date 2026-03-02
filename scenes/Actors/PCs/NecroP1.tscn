@@ -591,8 +591,6 @@ stats_path = NodePath("../StatsComponent")
 
 [node name="StatusVisualProxy" type="Node" parent="."]
 script = ExtResource("21_jvt6u")
-status_path = NodePath("../StatusConditions")
-animator_path = NodePath("../AnimatedSprite2D")
 
 [node name="PassiveAbilityApplier" type="Node" parent="."]
 script = ExtResource("22_0ogvq")

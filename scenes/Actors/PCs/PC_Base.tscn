@@ -1,0 +1,85 @@
+[gd_scene load_steps=19 format=3 uid="uid://cvv5ldql4m6er"]
+
+[ext_resource type="Script" uid="uid://dny6lg25m75y7" path="res://scripts/player.gd" id="1_7ykoq"]
+[ext_resource type="AudioStream" uid="uid://dtgs8hm2cwwxh" path="res://assets/audio/sfx/grass/grass_footstep3.wav" id="2_pid10"]
+[ext_resource type="AudioStream" uid="uid://dnxdxonett0a1" path="res://assets/audio/sfx/grass/grass_footstep4.wav" id="3_uip3v"]
+[ext_resource type="Script" uid="uid://scndil1j0hdu" path="res://scripts/stats/StatsComponent.gd" id="4_xvd3a"]
+[ext_resource type="Resource" uid="uid://bghemwh4kaevo" path="res://scenes/Actors/PCs/TestP1StatRes.tres" id="5_yc341"]
+[ext_resource type="Script" uid="uid://bqtthbimi2o3t" path="res://scripts/resources/CompanionFollow.gd" id="6_0yk38"]
+[ext_resource type="Script" uid="uid://blvyq0nyp35lh" path="res://scripts/stats/LevelComponent.gd" id="7_0i1yr"]
+[ext_resource type="Script" uid="uid://dseyxpw7thnq6" path="res://Actors/AnimationBridge.gd" id="9_brgln"]
+[ext_resource type="Script" uid="uid://ckl353a2k5wbo" path="res://AI/CompanionAbilityAI.gd" id="10_ddfsr"]
+[ext_resource type="Script" uid="uid://b2r744xdpepb6" path="res://scenes/Actors/status/StatusConditions.gd" id="11_2757j"]
+[ext_resource type="Script" uid="uid://0cb22lkxb2rs" path="res://scenes/Actors/status/StatusVisualProxy.gd" id="12_r215x"]
+[ext_resource type="Script" uid="uid://d4anrr3pv4crd" path="res://scripts/PassiveAbilityApplier.gd" id="13_bs60p"]
+[ext_resource type="Script" uid="uid://3iudrjaxi7sd" path="res://scenes/Actors/KnownAbilitiesComponent.gd" id="14_rrsc5"]
+[ext_resource type="PackedScene" uid="uid://bvavr1dm1a14h" path="res://scenes/Actors/PCs/VisualRoot.tscn" id="15_8igol"]
+[ext_resource type="SpriteFrames" uid="uid://cgu0gvewrmi8w" path="res://assets/sprites/characters/Female/CloakSprites/Cloak.res" id="17_7ykoq"]
+[ext_resource type="Script" uid="uid://c58r62il0syvn" path="res://scenes/Actors/PCs/EquipmentVisuals.gd" id="18_vgfwb"]
+
+[sub_resource type="RectangleShape2D" id="1"]
+size = Vector2(11, 11)
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_6eyey"]
+streams_count = 2
+stream_0/stream = ExtResource("2_pid10")
+stream_1/stream = ExtResource("3_uip3v")
+
+[node name="Nameless" type="CharacterBody2D" groups=["PartyMembers"]]
+script = ExtResource("1_7ykoq")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("1")
+
+[node name="Footstep" type="AudioStreamPlayer2D" parent="."]
+stream = SubResource("AudioStreamRandomizer_6eyey")
+
+[node name="StatsComponent" type="Node" parent="."]
+script = ExtResource("4_xvd3a")
+stats = ExtResource("5_yc341")
+auto_tick_modifiers = true
+end_regen_per_sec = 1.0
+metadata/_custom_type_script = "uid://scndil1j0hdu"
+
+[node name="CompanionFollow" type="Node2D" parent="."]
+script = ExtResource("6_0yk38")
+status_path = NodePath("../StatusConditions")
+
+[node name="LevelComponent" type="Node" parent="."]
+script = ExtResource("7_0i1yr")
+stats_component_path = NodePath("../StatsComponent")
+
+[node name="AnimationBridge" type="Node" parent="."]
+script = ExtResource("9_brgln")
+sprite_path = NodePath("")
+
+[node name="CompanionAbilityAI" type="Node" parent="."]
+script = ExtResource("10_ddfsr")
+
+[node name="StatusConditions" type="Node" parent="."]
+script = ExtResource("11_2757j")
+stats_path = NodePath("../StatsComponent")
+
+[node name="StatusVisualProxy" type="Node" parent="."]
+script = ExtResource("12_r215x")
+status_path = NodePath("../StatusConditions")
+
+[node name="PassiveAbilityApplier" type="Node" parent="."]
+script = ExtResource("13_bs60p")
+
+[node name="KnownAbilitiesComponent" type="Node" parent="."]
+script = ExtResource("14_rrsc5")
+
+[node name="EquipmentVisuals" type="Node" parent="."]
+script = ExtResource("18_vgfwb")
+
+[node name="VisualRoot" parent="." instance=ExtResource("15_8igol")]
+
+[node name="CloakSprite" parent="VisualRoot" index="5"]
+sprite_frames = ExtResource("17_7ykoq")
+animation = &"2Hattack_down"
+
+[node name="Mainhand" parent="VisualRoot/WeaponRoot/MainhandPivot" index="0"]
+visible = false
+
+[editable path="VisualRoot"]

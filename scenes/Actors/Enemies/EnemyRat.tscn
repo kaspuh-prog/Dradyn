@@ -290,8 +290,6 @@ script = ExtResource("11_ph7pc")
 
 [node name="StatusVisualProxy" type="Node" parent="."]
 script = ExtResource("12_o7rgw")
-status_path = NodePath("../StatusConditions")
-animator_path = NodePath("../AnimatedSprite2D")
 tint_strength = 1.0
 tint_fade_time = 1.0
 debug_prints = false

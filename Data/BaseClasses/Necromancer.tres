@@ -6,7 +6,8 @@
 [resource]
 script = ExtResource("2_fijc1")
 class_title = "Necromancer"
-description = "There is magic in blood, magic in bone, magic in sickness, and magic in the very soul. The necromancer knows this, and through their arts shape both life and death. "
+description = "A grim practitioner of forbidden craft—less about showy explosions, more about inevitability. Necromancers weaken enemies with curses and attrition, then press the advantage with summons and life-drain tactics that let them win battles by outlasting them.
+Best for: players who want minions to do their bidding, and a bag of tricks that even the odds and turn the tides."
 gr_STA = 0.8
 gr_INT = 1.0
 allowed_point_targets = PackedStringArray()

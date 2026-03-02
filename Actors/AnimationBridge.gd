@@ -5,6 +5,31 @@ class_name AnimationBridge
 @export var sprite_path: NodePath = NodePath("../AnimatedSprite2D")
 @export var supports_side_anims: bool = true
 
+# --- Rig Contract v1 (optional; auto-discovered if not set) ---
+@export_group("Party Rig (Optional)")
+@export var visual_root_path: NodePath = NodePath("")
+@export var body_sprite_path: NodePath = NodePath("")
+@export var armor_sprite_path: NodePath = NodePath("")
+@export var hair_sprite_path: NodePath = NodePath("")
+@export var cloak_sprite_path: NodePath = NodePath("")
+
+# optional behind layers (recommended node names in VisualRoot)
+@export var hair_behind_sprite_path: NodePath = NodePath("")
+@export var cloak_behind_sprite_path: NodePath = NodePath("")
+
+# HeadSprite (preferred). HoodSprite kept as legacy support.
+@export var head_sprite_path: NodePath = NodePath("") # optional
+@export var hood_sprite_path: NodePath = NodePath("") # optional (legacy)
+
+@export var weapon_root_path: NodePath = NodePath("")
+@export var mainhand_path: NodePath = NodePath("")
+@export var offhand_path: NodePath = NodePath("")
+@export var trail_anchor_path: NodePath = NodePath("")
+@export var motion_player_path: NodePath = NodePath("") # optional AnimationPlayer
+
+# NEW: AnimationLibrary name used by MotionPlayer (Godot 4 Animation Libraries)
+@export var motion_anim_library: String = "CombatAnimations"
+
 # --- Footsteps (centralized; walk* only; NO interval gating) ---
 @export_group("Footsteps")
 @export var enable_footsteps: bool = true
@@ -55,10 +80,35 @@ class_name AnimationBridge
 @export var dead_walk_min_speed: float = 1.0
 @export var dead_walk_min_dist_px: float = 0.5
 
+# Prevent tiny residual velocities from interrupting lock-only actions (casts/buffs/projectiles).
+# If actual_speed is below this, we treat the actor as "not actually moving" for action-lock override purposes.
+@export var action_lock_walk_override_speed_epsilon: float = 10.0
+
+# ----------------------------------------------------------------------------- #
+# Signals
+# ----------------------------------------------------------------------------- #
+signal facing_changed(dir: Vector2)
+signal action_started(kind: String, anim_name: String)
+signal action_finished(kind: String, anim_name: String)
+signal attack_phase_changed(phase: String)
+
 # ----------------------------------------------------------------------------- #
 # State
 # ----------------------------------------------------------------------------- #
-var _sprite: AnimatedSprite2D = null
+var _sprite: AnimatedSprite2D = null # master / body
+var _layers: Array[AnimatedSprite2D] = [] # includes master (index 0 when present)
+var _layer_names: Array[String] = [] # parallel for debugging (not exported)
+var _weapon_root: Node2D = null
+var _mainhand: Sprite2D = null
+var _offhand: Sprite2D = null
+var _trail_anchor: Marker2D = null
+var _motion_player: AnimationPlayer = null
+var _visual_root: Node2D = null
+
+# Behind layers (optional)
+var _hair_behind: AnimatedSprite2D = null
+var _cloak_behind: AnimatedSprite2D = null
+
 var _pending_hit_frame: int = -1
 var _pending_hit_callable: Callable = Callable()
 var _last_dir: Vector2 = Vector2.RIGHT
@@ -79,6 +129,9 @@ var _action_lock_until_msec: int = 0
 var _footstep_last_pos: Vector2 = Vector2.ZERO
 var _footstep_was_moving: bool = false
 
+# Case-insensitive animation lookup: lower_name -> actual_name
+var _anim_name_lut: Dictionary = {}
+
 # Action prefix registry (runtime-tweakable; keys: "attack","cast","buff","projectile")
 var _prefix: Dictionary = {
 	"attack": "",
@@ -91,19 +144,17 @@ var _prefix: Dictionary = {
 # Lifecycle
 # ----------------------------------------------------------------------------- #
 func _ready() -> void:
-	var n: Node = get_node_or_null(sprite_path)
-	if n != null:
-		_sprite = n as AnimatedSprite2D
-
 	_actor_node = _find_actor_node2d()
 	_actor_body = _find_actor_body()
+
+	_resolve_rig_targets()
 
 	if _sprite != null:
 		_sprite.frame_changed.connect(Callable(self, "_on_sprite_frame_changed"))
 		_sprite.animation_finished.connect(Callable(self, "_on_sprite_anim_finished"))
+		_rebuild_anim_name_lut()
 		_autodetect_sets()
 
-	# Seed runtime registry with exports
 	_set_prefix_if_empty("attack", default_attack_prefix)
 	_set_prefix_if_empty("cast", default_cast_prefix)
 	_set_prefix_if_empty("buff", default_buff_prefix)
@@ -126,6 +177,281 @@ func _find_actor_body() -> CharacterBody2D:
 	return null
 
 # ----------------------------------------------------------------------------- #
+# Rig resolution
+# ----------------------------------------------------------------------------- #
+func _resolve_rig_targets() -> void:
+	_layers.clear()
+	_layer_names.clear()
+	_sprite = null
+	_visual_root = null
+	_weapon_root = null
+	_mainhand = null
+	_offhand = null
+	_trail_anchor = null
+	_motion_player = null
+	_anim_name_lut.clear()
+	_hair_behind = null
+	_cloak_behind = null
+
+	var explicit_sprite: AnimatedSprite2D = null
+	if sprite_path != NodePath(""):
+		var n_exp: Node = get_node_or_null(sprite_path)
+		if n_exp != null:
+			explicit_sprite = n_exp as AnimatedSprite2D
+
+	_visual_root = _resolve_visual_root()
+
+	var body: AnimatedSprite2D = _resolve_layer_sprite("BodySprite", body_sprite_path)
+	var armor: AnimatedSprite2D = _resolve_layer_sprite("ArmorSprite", armor_sprite_path)
+
+	var hair: AnimatedSprite2D = _resolve_layer_sprite("HairSprite", hair_sprite_path)
+	var cloak: AnimatedSprite2D = _resolve_layer_sprite("CloakSprite", cloak_sprite_path)
+
+	_hair_behind = _resolve_layer_sprite("HairBehindSprite", hair_behind_sprite_path)
+	_cloak_behind = _resolve_layer_sprite("CloakBehindSprite", cloak_behind_sprite_path)
+
+	var head: AnimatedSprite2D = _resolve_layer_sprite("HeadSprite", head_sprite_path)
+	var hood_legacy: AnimatedSprite2D = null
+	if head == null:
+		hood_legacy = _resolve_layer_sprite("HoodSprite", hood_sprite_path)
+
+	if body != null:
+		_sprite = body
+	elif explicit_sprite != null:
+		_sprite = explicit_sprite
+	else:
+		_sprite = _find_first_actor_sprite()
+
+	if _sprite != null:
+		_layers.append(_sprite)
+		_layer_names.append("Master")
+
+		_add_layer_if_valid(_cloak_behind, "CloakBehindSprite")
+		_add_layer_if_valid(_hair_behind, "HairBehindSprite")
+
+		_add_layer_if_valid(armor, "ArmorSprite")
+		_add_layer_if_valid(cloak, "CloakSprite")
+		_add_layer_if_valid(hair, "HairSprite")
+		_add_layer_if_valid(head, "HeadSprite")
+		_add_layer_if_valid(hood_legacy, "HoodSprite (Legacy)")
+
+		_rebuild_anim_name_lut()
+
+	_weapon_root = _resolve_weapon_root()
+	_mainhand = _resolve_sprite2d_child("Mainhand", mainhand_path)
+	_offhand = _resolve_sprite2d_child("Offhand", offhand_path)
+	_trail_anchor = _resolve_trail_anchor()
+	_motion_player = _resolve_motion_player()
+
+func _resolve_visual_root() -> Node2D:
+	if visual_root_path != NodePath(""):
+		var n: Node = get_node_or_null(visual_root_path)
+		if n != null and n is Node2D:
+			return n as Node2D
+
+	var actor: Node = _actor_node
+	if actor == null:
+		actor = _actor_body
+	if actor != null:
+		var vr: Node = actor.find_child("VisualRoot", true, false)
+		if vr != null and vr is Node2D:
+			return vr as Node2D
+
+	return null
+
+func _resolve_layer_sprite(expected_name: String, explicit_path: NodePath) -> AnimatedSprite2D:
+	if explicit_path != NodePath(""):
+		var n: Node = get_node_or_null(explicit_path)
+		if n != null:
+			var s: AnimatedSprite2D = n as AnimatedSprite2D
+			if s != null:
+				return s
+
+	if _visual_root != null:
+		var child: Node = _visual_root.get_node_or_null(NodePath(expected_name))
+		if child != null:
+			var s2: AnimatedSprite2D = child as AnimatedSprite2D
+			if s2 != null:
+				return s2
+
+		var found: Node = _visual_root.find_child(expected_name, true, false)
+		if found != null:
+			var s3: AnimatedSprite2D = found as AnimatedSprite2D
+			if s3 != null:
+				return s3
+
+	return null
+
+func _find_first_actor_sprite() -> AnimatedSprite2D:
+	var actor: Node = _actor_node
+	if actor == null:
+		actor = _actor_body
+	if actor == null:
+		return null
+
+	var stack: Array[Node] = [actor]
+	while stack.size() > 0:
+		var n: Node = stack.pop_back()
+		if n == null:
+			continue
+
+		var s: AnimatedSprite2D = n as AnimatedSprite2D
+		if s != null:
+			if s.sprite_frames != null:
+				return s
+
+		var i: int = 0
+		while i < n.get_child_count():
+			stack.push_back(n.get_child(i))
+			i += 1
+
+	return null
+
+func _add_layer_if_valid(layer: AnimatedSprite2D, name: String) -> void:
+	if layer == null:
+		return
+	if _sprite != null and layer == _sprite:
+		return
+	_layers.append(layer)
+	_layer_names.append(name)
+
+func _resolve_weapon_root() -> Node2D:
+	if weapon_root_path != NodePath(""):
+		var n: Node = get_node_or_null(weapon_root_path)
+		if n != null and n is Node2D:
+			return n as Node2D
+
+	if _visual_root != null:
+		var wr: Node = _visual_root.get_node_or_null(NodePath("WeaponRoot"))
+		if wr != null and wr is Node2D:
+			return wr as Node2D
+		var wr2: Node = _visual_root.find_child("WeaponRoot", true, false)
+		if wr2 != null and wr2 is Node2D:
+			return wr2 as Node2D
+
+	var actor: Node = _actor_node
+	if actor == null:
+		actor = _actor_body
+	if actor != null:
+		var wr3: Node = actor.find_child("WeaponRoot", true, false)
+		if wr3 != null and wr3 is Node2D:
+			return wr3 as Node2D
+
+	return null
+
+func _resolve_sprite2d_child(expected_name: String, explicit_path: NodePath) -> Sprite2D:
+	if explicit_path != NodePath(""):
+		var n: Node = get_node_or_null(explicit_path)
+		if n != null:
+			var s: Sprite2D = n as Sprite2D
+			if s != null:
+				return s
+
+	if _weapon_root != null:
+		var c: Node = _weapon_root.get_node_or_null(NodePath(expected_name))
+		if c != null:
+			var s2: Sprite2D = c as Sprite2D
+			if s2 != null:
+				return s2
+		var f: Node = _weapon_root.find_child(expected_name, true, false)
+		if f != null:
+			var s3: Sprite2D = f as Sprite2D
+			if s3 != null:
+				return s3
+
+	return null
+
+func _resolve_trail_anchor() -> Marker2D:
+	if trail_anchor_path != NodePath(""):
+		var n: Node = get_node_or_null(trail_anchor_path)
+		if n != null:
+			var m: Marker2D = n as Marker2D
+			if m != null:
+				return m
+
+	if _visual_root != null:
+		var t: Node = _visual_root.find_child("TrailAnchor", true, false)
+		if t != null:
+			var m2: Marker2D = t as Marker2D
+			if m2 != null:
+				return m2
+
+	return null
+
+func _resolve_motion_player() -> AnimationPlayer:
+	if motion_player_path != NodePath(""):
+		var n: Node = get_node_or_null(motion_player_path)
+		if n != null:
+			var ap: AnimationPlayer = n as AnimationPlayer
+			if ap != null:
+				return ap
+
+	if _visual_root != null:
+		var mp: Node = _visual_root.find_child("MotionPlayer", true, false)
+		if mp != null:
+			var ap2: AnimationPlayer = mp as AnimationPlayer
+			if ap2 != null:
+				return ap2
+
+	var actor: Node = _actor_node
+	if actor == null:
+		actor = _actor_body
+	if actor != null:
+		var mp2: Node = actor.find_child("MotionPlayer", true, false)
+		if mp2 != null:
+			var ap3: AnimationPlayer = mp2 as AnimationPlayer
+			if ap3 != null:
+				return ap3
+
+	return null
+
+# ----------------------------------------------------------------------------- #
+# Animation name resolution (case-insensitive)
+# ----------------------------------------------------------------------------- #
+func _rebuild_anim_name_lut() -> void:
+	_anim_name_lut.clear()
+	if _sprite == null:
+		return
+	if _sprite.sprite_frames == null:
+		return
+
+	var names: PackedStringArray = _sprite.sprite_frames.get_animation_names()
+	var i: int = 0
+	while i < names.size():
+		var actual: String = String(names[i])
+		var key: String = actual.to_lower()
+		_anim_name_lut[key] = actual
+		i += 1
+
+func _resolve_anim_name(requested: String) -> String:
+	if requested == "":
+		return ""
+	if _sprite == null:
+		return ""
+	if _sprite.sprite_frames == null:
+		return ""
+
+	if _sprite.sprite_frames.has_animation(requested):
+		return requested
+
+	if _anim_name_lut.is_empty():
+		_rebuild_anim_name_lut()
+
+	var key: String = requested.to_lower()
+	if _anim_name_lut.has(key):
+		var v: Variant = _anim_name_lut[key]
+		if typeof(v) == TYPE_STRING:
+			return String(v)
+
+	_rebuild_anim_name_lut()
+	if _anim_name_lut.has(key):
+		var v2: Variant = _anim_name_lut[key]
+		if typeof(v2) == TYPE_STRING:
+			return String(v2)
+
+	return ""
+
+# ----------------------------------------------------------------------------- #
 # Prefix registry (public helpers)
 # ----------------------------------------------------------------------------- #
 func set_action_prefix(kind: String, prefix: String) -> void:
@@ -142,7 +468,6 @@ func get_action_prefix(kind: String) -> String:
 			var s: String = v
 			if s != "":
 				return s
-	# fall back to exports
 	if kind == "attack":
 		return default_attack_prefix
 	if kind == "cast":
@@ -161,13 +486,16 @@ func _set_prefix_if_empty(kind: String, prefix: String) -> void:
 			_prefix[kind] = prefix
 
 # ----------------------------------------------------------------------------- #
-# Movement driving (unchanged; supports *_dead)
+# Movement driving
 # ----------------------------------------------------------------------------- #
 func set_movement(dir: Vector2, moving: bool) -> void:
 	if _sprite == null or _sprite.sprite_frames == null:
 		return
 	if _pending_hit_frame >= 0:
 		return
+
+	if _anim_name_lut.is_empty():
+		_rebuild_anim_name_lut()
 
 	var dead_now: bool = _is_dead()
 
@@ -177,24 +505,19 @@ func set_movement(dir: Vector2, moving: bool) -> void:
 	else:
 		use_dir = _last_dir
 
-	# NEW: detect actual movement from the body, not just the flag.
-	var movement_epsilon: float = 0.05
+	# We still measure actual speed, but ONLY use it for action-lock override and dead-walk.
 	var actual_speed: float = 0.0
 	if _actor_body != null:
 		actual_speed = _actor_body.velocity.length()
 
+	# IMPORTANT FIX:
+	# Do NOT force walk just because velocity is decaying.
+	# Rely on the caller's "moving" flag for walk/idle, so you don't "walk in place" after input stops.
 	var moving_eff: bool = moving
-
-	# If the body is really moving, force locomotion animations to be considered "moving",
-	# even if an action (attack / cast) recently locked the animator.
-	if actual_speed > movement_epsilon:
-		moving_eff = true
 
 	# Existing dead-walk visuals: only kick in if not already moving and actor is dead.
 	if not moving_eff and allow_dead_walk_visuals and dead_now:
-		var speed_mag: float = 0.0
-		if _actor_body != null:
-			speed_mag = _actor_body.velocity.length()
+		var speed_mag: float = actual_speed
 
 		var moved_dist: float = 0.0
 		if _actor_node != null:
@@ -210,11 +533,12 @@ func set_movement(dir: Vector2, moving: bool) -> void:
 		elif use_dir.length() >= dead_walk_dir_threshold:
 			moving_eff = true
 
-	# Action lock normally prevents movement anims (so attacks/casts play fully),
-	# but if the body is actually moving, we allow walking to override the lock
-	# to prevent "gliding while attacking".
+	# Action lock normally prevents movement anims, but if the body is actually moving, allow walking to override.
 	if Time.get_ticks_msec() < _action_lock_until_msec:
-		var is_actually_moving: bool = actual_speed > movement_epsilon
+		var speed_eps: float = action_lock_walk_override_speed_epsilon
+		if speed_eps < 0.0:
+			speed_eps = 0.0
+		var is_actually_moving: bool = actual_speed > speed_eps
 		if not is_actually_moving and not (dead_now and moving_eff):
 			return
 
@@ -227,21 +551,30 @@ func set_movement(dir: Vector2, moving: bool) -> void:
 	if dead_now:
 		target = _dead_variant_for_palettes(target, use_dir, moving_eff)
 
-	if target == "" or not _has_anim(target):
+	if target == "":
 		return
+
+	var resolved: String = _resolve_anim_name(target)
+	if resolved == "":
+		return
+	target = resolved
 
 	_apply_horizontal_flip(use_dir, target)
+	_apply_weapon_z_for_dir(use_dir)
 
 	if _sprite.animation == target and _sprite.is_playing():
+		_sync_layers_to_master()
 		return
-	_sprite.play(target)
+
+	_play_all_layers(target)
 
 # ----------------------------------------------------------------------------- #
-# NEW: Explicit facing seed for lock-only actions (no animation kick)
+# Explicit facing seed (no animation kick)
 # ----------------------------------------------------------------------------- #
 func set_facing(dir: Vector2) -> void:
 	if dir.length() > 0.001:
 		_last_dir = dir.normalized()
+		facing_changed.emit(_last_dir)
 
 func _pick_idle(dir: Vector2) -> String:
 	var ax: float = absf(dir.x)
@@ -285,7 +618,6 @@ func _pick_walk(dir: Vector2) -> String:
 
 	return _first_existing([anim_walk_up, anim_walk_down, anim_walk_left, anim_walk_right, anim_walk_side])
 
-# ----------------------------- dead variant logic -----------------------------
 func _dead_variant_for_palettes(alive_choice: String, dir: Vector2, moving: bool) -> String:
 	if alive_choice == "":
 		return alive_choice
@@ -298,8 +630,8 @@ func _dead_variant_for_palettes(alive_choice: String, dir: Vector2, moving: bool
 				return walk_same
 		return direct
 
-	var use_split: bool = _has_any(["walk_left_dead","idle_left_dead"]) or _has_any(["walk_right_dead","idle_right_dead"])
-	var use_side: bool = _has_any(["walk_side_dead","idle_side_dead"])
+	var use_split: bool = _has_any(["walk_left_dead", "idle_left_dead"]) or _has_any(["walk_right_dead", "idle_right_dead"])
+	var use_side: bool = _has_any(["walk_side_dead", "idle_side_dead"])
 
 	var horizontal: bool = (absf(dir.x) >= absf(dir.y))
 	var left_facing: bool = (dir.x < 0.0)
@@ -319,7 +651,7 @@ func _dead_variant_for_palettes(alive_choice: String, dir: Vector2, moving: bool
 		if _has_anim("walk_down_dead"):
 			return "walk_down_dead"
 		var any_walk: String = _first_existing([
-			"walk_left_dead","walk_right_dead","walk_side_dead","walk_up_dead","walk_down_dead"
+			"walk_left_dead", "walk_right_dead", "walk_side_dead", "walk_up_dead", "walk_down_dead"
 		])
 		if any_walk != "":
 			return any_walk
@@ -338,8 +670,8 @@ func _dead_variant_for_palettes(alive_choice: String, dir: Vector2, moving: bool
 		return "idle_down_dead"
 
 	var any_dead: String = _first_existing([
-		"idle_left_dead","idle_right_dead","idle_side_dead","idle_up_dead","idle_down_dead",
-		"walk_left_dead","walk_right_dead","walk_side_dead","walk_up_dead","walk_down_dead"
+		"idle_left_dead", "idle_right_dead", "idle_side_dead", "idle_up_dead", "idle_down_dead",
+		"walk_left_dead", "walk_right_dead", "walk_side_dead", "walk_up_dead", "walk_down_dead"
 	])
 	if any_dead != "":
 		return any_dead
@@ -355,7 +687,6 @@ func _has_any(names: Array) -> bool:
 		i += 1
 	return false
 
-# ----------------------------- sprite / flip utils ----------------------------
 func _apply_horizontal_flip(dir: Vector2, chosen_anim: String) -> void:
 	if _sprite == null:
 		return
@@ -365,7 +696,6 @@ func _apply_horizontal_flip(dir: Vector2, chosen_anim: String) -> void:
 		should_flip = false
 	else:
 		if supports_side_anims and _has_side_single and auto_flip_for_side_single:
-			# PATCH: flip for ANY "*_side" action anim too (attack/cast/buff/projectile).
 			var is_side_anim: bool = false
 			if chosen_anim == anim_walk_side or chosen_anim == anim_idle_side:
 				is_side_anim = true
@@ -385,22 +715,47 @@ func _apply_horizontal_flip(dir: Vector2, chosen_anim: String) -> void:
 
 	if should_flip:
 		var want_left: bool = (dir.x < 0.0)
-		_set_flip_h(want_left)
+		_set_flip_h_all_layers(want_left)
+		_set_flip_h_sprite2d(_mainhand, want_left)
+		_set_flip_h_sprite2d(_offhand, want_left)
 	else:
-		_set_flip_h(false)
+		_set_flip_h_all_layers(false)
+		_set_flip_h_sprite2d(_mainhand, false)
+		_set_flip_h_sprite2d(_offhand, false)
 
-func _set_flip_h(left: bool) -> void:
-	if _sprite == null:
+func _set_flip_h_all_layers(left: bool) -> void:
+	var i: int = 0
+	while i < _layers.size():
+		var s: AnimatedSprite2D = _layers[i]
+		if s != null:
+			_set_flip_h_one(s, left)
+		i += 1
+
+func _set_flip_h_one(s: AnimatedSprite2D, left: bool) -> void:
+	if s == null:
 		return
-	if _has_property(_sprite, "flip_h"):
-		_sprite.set("flip_h", left)
+	if _has_property(s, "flip_h"):
+		s.set("flip_h", left)
 	else:
-		var sc: Vector2 = _sprite.scale
+		var sc: Vector2 = s.scale
 		if left and sc.x > 0.0:
 			sc.x = -sc.x
 		elif not left and sc.x < 0.0:
 			sc.x = -sc.x
-		_sprite.scale = sc
+		s.scale = sc
+
+func _set_flip_h_sprite2d(s: Sprite2D, left: bool) -> void:
+	if s == null:
+		return
+	if _has_property(s, "flip_h"):
+		s.set("flip_h", left)
+	else:
+		var sc: Vector2 = s.scale
+		if left and sc.x > 0.0:
+			sc.x = -sc.x
+		elif not left and sc.x < 0.0:
+			sc.x = -sc.x
+		s.scale = sc
 
 func _has_property(obj: Object, prop: String) -> bool:
 	var plist: Array = obj.get_property_list()
@@ -423,9 +778,10 @@ func _autodetect_sets() -> void:
 			supports_side_anims = true
 
 func _has_anim(name_str: String) -> bool:
-	if _sprite == null or _sprite.sprite_frames == null:
+	if name_str == "":
 		return false
-	return _sprite.sprite_frames.has_animation(name_str)
+	var resolved: String = _resolve_anim_name(name_str)
+	return resolved != ""
 
 func _first_existing(candidates: Array) -> String:
 	if _sprite == null or _sprite.sprite_frames == null:
@@ -435,50 +791,147 @@ func _first_existing(candidates: Array) -> String:
 		var c: Variant = candidates[i]
 		if typeof(c) == TYPE_STRING:
 			var s: String = String(c)
-			if _sprite.sprite_frames.has_animation(s):
-				return s
+			var resolved: String = _resolve_anim_name(s)
+			if resolved != "":
+				return resolved
 		i += 1
 	return ""
 
-# ------------------------------ dead-state check ------------------------------
-func _is_dead() -> bool:
-	var root: Node = self
-	while root != null and is_instance_valid(root):
-		var sc: Node = root.get_node_or_null("StatusConditions")
-		if sc != null and sc.has_method("is_dead"):
-			var sv: Variant = sc.call("is_dead")
-			if typeof(sv) == TYPE_BOOL and bool(sv):
-				return true
-		var stats: Node = root.get_node_or_null("StatsComponent")
-		if stats == null:
-			stats = root.get_node_or_null("Stats")
-		if stats != null:
-			if stats.has_method("is_dead"):
-				var d: Variant = stats.call("is_dead")
-				if typeof(d) == TYPE_BOOL and bool(d):
-					return true
-			if stats.has_method("get_hp"):
-				var gh: Variant = stats.call("get_hp")
-				if (typeof(gh) == TYPE_INT or typeof(gh) == TYPE_FLOAT) and float(gh) <= 0.0:
-					return true
-			if stats.has_method("current_hp"):
-				var ch: Variant = stats.call("current_hp")
-				if (typeof(ch) == TYPE_INT or typeof(ch) == TYPE_FLOAT) and float(ch) <= 0.0:
-					return true
-		if root is Node and root.has_method("is_dead"):
-			var dv: Variant = root.call("is_dead")
-			if typeof(dv) == TYPE_BOOL and bool(dv):
-				return true
-		if "dead" in root:
-			var df: Variant = root.get("dead")
-			if typeof(df) == TYPE_BOOL and bool(df):
-				return true
-		root = root.get_parent()
-	return false
+# ----------------------------------------------------------------------------- #
+# MotionPlayer weapon animation mapping
+# ----------------------------------------------------------------------------- #
+func _play_motion_weapon_for_body_anim(body_anim_name: String) -> void:
+	if _motion_player == null:
+		return
+	if body_anim_name == "":
+		return
 
-# ----------------------------------------------------------------------------- #
-# Generic action resolvers (NEW)
-# ----------------------------------------------------------------------------- #
+	var base_weapon_anim: String = body_anim_name + "_weapon"
+
+	# 1) Try unqualified (default library)
+	if _motion_player.has_animation(base_weapon_anim):
+		if _motion_player.current_animation == base_weapon_anim and _motion_player.is_playing():
+			return
+		_motion_player.play(base_weapon_anim)
+		return
+
+	# 2) Try qualified by library (Godot 4 Animation Libraries)
+	var lib: String = motion_anim_library
+	if lib == "":
+		return
+
+	var qualified: String = lib + "/" + base_weapon_anim
+	if not _motion_player.has_animation(qualified):
+		return
+
+	if _motion_player.current_animation == qualified and _motion_player.is_playing():
+		return
+	_motion_player.play(qualified)
+
+func _play_all_layers(anim_name: String) -> void:
+	if anim_name == "":
+		return
+	if _layers.is_empty():
+		return
+	if _sprite == null:
+		return
+
+	var resolved: String = _resolve_anim_name(anim_name)
+	if resolved == "":
+		return
+
+	_sprite.play(resolved)
+
+	var i: int = 0
+	while i < _layers.size():
+		var s: AnimatedSprite2D = _layers[i]
+		if s == null:
+			i += 1
+			continue
+		if s == _sprite:
+			i += 1
+			continue
+
+		var can_play: bool = false
+		if s.sprite_frames != null:
+			if s.sprite_frames.has_animation(resolved):
+				can_play = true
+			else:
+				var lut: Dictionary = {}
+				var names: PackedStringArray = s.sprite_frames.get_animation_names()
+				var j: int = 0
+				while j < names.size():
+					var actual: String = String(names[j])
+					lut[actual.to_lower()] = actual
+					j += 1
+				var key: String = resolved.to_lower()
+				if lut.has(key):
+					var vv: Variant = lut[key]
+					if typeof(vv) == TYPE_STRING:
+						var actual2: String = String(vv)
+						if actual2 != "":
+							s.play(actual2)
+							can_play = false
+
+		if can_play:
+			s.play(resolved)
+
+		i += 1
+
+	# Mirror to MotionPlayer with "_weapon" suffix (and optional library prefix).
+	_play_motion_weapon_for_body_anim(resolved)
+
+	_sync_layers_to_master()
+
+func _sync_layers_to_master() -> void:
+	if _sprite == null:
+		return
+	var master_frame: int = _sprite.frame
+	var master_progress: float = _sprite.frame_progress
+	var i: int = 0
+	while i < _layers.size():
+		var s: AnimatedSprite2D = _layers[i]
+		if s != null and s != _sprite:
+			s.frame = master_frame
+			s.frame_progress = master_progress
+		i += 1
+
+func _apply_weapon_z_for_dir(dir: Vector2) -> void:
+	if _weapon_root == null:
+		return
+
+	var use_dir: Vector2 = dir
+	if use_dir.length() <= 0.001:
+		use_dir = _last_dir
+	if use_dir.length() <= 0.001:
+		use_dir = Vector2.DOWN
+	use_dir = use_dir.normalized()
+
+	var ax: float = absf(use_dir.x)
+	var ay: float = absf(use_dir.y)
+
+	var front: bool = true
+	if ay > ax:
+		if use_dir.y < 0.0:
+			front = false
+		else:
+			front = true
+	else:
+		front = true
+
+	var base_z: int = 0
+	if _visual_root != null:
+		base_z = _visual_root.z_index
+	elif _actor_node != null:
+		base_z = _actor_node.z_index
+	elif _actor_body != null:
+		base_z = _actor_body.z_index
+
+	if front:
+		_weapon_root.z_index = base_z + 1
+	else:
+		_weapon_root.z_index = base_z - 1
+
 func play_attack_with_prefix(prefix: String, aim_dir: Vector2, hit_frame: int, on_hit: Callable) -> void:
 	_play_action_internal("attack", prefix, aim_dir, hit_frame, on_hit, 0.9)
 
@@ -486,7 +939,6 @@ func play_cast_with_prefix(prefix: String, cast_time_sec: float) -> void:
 	_play_lock_only("cast", prefix, cast_time_sec)
 
 func play_buff_with_prefix(prefix: String, dur_sec: float = 0.0) -> void:
-	# Buffs typically have no lock, but we allow a tiny visual lock if needed.
 	_play_lock_only("buff", prefix, minf(dur_sec, 0.2))
 
 func play_projectile_with_prefix(prefix: String, windup_sec: float = 0.0) -> void:
@@ -496,6 +948,9 @@ func _play_action_internal(kind: String, prefix: String, aim_dir: Vector2, hit_f
 	if _sprite == null or _sprite.sprite_frames == null:
 		return
 
+	if _anim_name_lut.is_empty():
+		_rebuild_anim_name_lut()
+
 	var use_prefix: String = prefix
 	if use_prefix == "":
 		use_prefix = get_action_prefix(kind)
@@ -504,12 +959,19 @@ func _play_action_internal(kind: String, prefix: String, aim_dir: Vector2, hit_f
 	if anim_name == "":
 		return
 
-	# PATCH: seed facing + apply flip for side-only sets on actions too.
+	var resolved: String = _resolve_anim_name(anim_name)
+	if resolved == "":
+		return
+	anim_name = resolved
+
 	var dir_for_flip: Vector2 = _last_dir
 	if aim_dir.length() > 0.001:
 		dir_for_flip = aim_dir.normalized()
 		_last_dir = dir_for_flip
+	facing_changed.emit(_last_dir)
+
 	_apply_horizontal_flip(dir_for_flip, anim_name)
+	_apply_weapon_z_for_dir(dir_for_flip)
 
 	_pending_hit_frame = hit_frame
 	_pending_hit_callable = on_hit
@@ -521,11 +983,46 @@ func _play_action_internal(kind: String, prefix: String, aim_dir: Vector2, hit_f
 	if lock_target != null and lock_target.has_method("lock_action"):
 		lock_target.call("lock_action", lock_sec)
 
-	_sprite.play(anim_name)
+	action_started.emit(kind, anim_name)
+	_play_all_layers(anim_name)
+
+func _anim_length_seconds(anim_name: String) -> float:
+	if _sprite == null:
+		return 0.0
+	if _sprite.sprite_frames == null:
+		return 0.0
+	if anim_name == "":
+		return 0.0
+
+	var resolved: String = _resolve_anim_name(anim_name)
+	if resolved == "":
+		return 0.0
+
+	var speed: float = _sprite.sprite_frames.get_animation_speed(resolved)
+	if speed <= 0.0:
+		speed = 1.0
+
+	var count: int = _sprite.sprite_frames.get_frame_count(resolved)
+	if count <= 0:
+		return 0.0
+
+	var total_units: float = 0.0
+	var i: int = 0
+	while i < count:
+		var dur: float = _sprite.sprite_frames.get_frame_duration(resolved, i)
+		if dur <= 0.0:
+			dur = 1.0
+		total_units += dur
+		i += 1
+
+	return total_units / speed
 
 func _play_lock_only(kind: String, prefix: String, lock_sec: float) -> void:
 	if _sprite == null:
 		return
+
+	if _anim_name_lut.is_empty():
+		_rebuild_anim_name_lut()
 
 	var use_prefix: String = prefix
 	if use_prefix == "":
@@ -538,25 +1035,34 @@ func _play_lock_only(kind: String, prefix: String, lock_sec: float) -> void:
 	if anim_name == "":
 		return
 
-	_action_lock_until_msec = Time.get_ticks_msec() + int(maxf(0.0, lock_sec) * 1000.0)
+	var resolved: String = _resolve_anim_name(anim_name)
+	if resolved == "":
+		return
+	anim_name = resolved
+
+	var anim_len_sec: float = _anim_length_seconds(anim_name)
+	var effective_lock_sec: float = lock_sec
+	if anim_len_sec > effective_lock_sec:
+		effective_lock_sec = anim_len_sec
+
+	_action_lock_until_msec = Time.get_ticks_msec() + int(maxf(0.0, effective_lock_sec) * 1000.0)
 
 	var lock_target: Node = _actor_body
 	if lock_target == null:
 		lock_target = _actor_node
 	if lock_target != null and lock_target.has_method("lock_action"):
-		lock_target.call("lock_action", lock_sec)
+		lock_target.call("lock_action", effective_lock_sec)
 
-	# PATCH: apply flip for lock-only actions too.
 	_apply_horizontal_flip(aim, anim_name)
+	_apply_weapon_z_for_dir(aim)
 
-	_sprite.play(anim_name)
+	action_started.emit(kind, anim_name)
+	_play_all_layers(anim_name)
 
-# Resolve "<prefix>_(down/up/left/right/side)" based on available sets and aim
 func _resolve_anim_for_prefix(prefix: String, aim: Vector2) -> String:
 	if _sprite == null or _sprite.sprite_frames == null:
 		return ""
 
-	# Normalize aim; if tiny, default to DOWN.
 	var dir: Vector2 = aim
 	if dir.length() <= 0.001:
 		dir = Vector2.DOWN
@@ -572,7 +1078,6 @@ func _resolve_anim_for_prefix(prefix: String, aim: Vector2) -> String:
 	var down_name: String = prefix + "_down"
 	var side_name: String = prefix + "_side"
 
-	# Prefer explicit L/R when horizontal is dominant
 	if ax >= ay:
 		if dir.x < 0.0:
 			if _has_anim(left_name):
@@ -580,18 +1085,14 @@ func _resolve_anim_for_prefix(prefix: String, aim: Vector2) -> String:
 		else:
 			if _has_anim(right_name):
 				return right_name
-		# fallback: single-side if present
 		if supports_side_anims and _has_anim(side_name):
 			return side_name
-		# fallback: use vertical that exists
 		if dir.y < 0.0 and _has_anim(up_name):
 			return up_name
 		if _has_anim(down_name):
 			return down_name
-		# last resort: any of the four
 		return _first_existing([left_name, right_name, up_name, down_name, side_name])
 
-	# Prefer explicit U/D when vertical is dominant
 	if dir.y < 0.0:
 		if _has_anim(up_name):
 			return up_name
@@ -599,7 +1100,6 @@ func _resolve_anim_for_prefix(prefix: String, aim: Vector2) -> String:
 		if _has_anim(down_name):
 			return down_name
 
-	# fallback: try explicit L/R
 	if dir.x < 0.0:
 		if _has_anim(left_name):
 			return left_name
@@ -607,18 +1107,12 @@ func _resolve_anim_for_prefix(prefix: String, aim: Vector2) -> String:
 		if _has_anim(right_name):
 			return right_name
 
-	# fallback: single-side if present
 	if supports_side_anims and _has_anim(side_name):
 		return side_name
 
-	# last resort
 	return _first_existing([up_name, down_name, left_name, right_name, side_name])
 
-# ----------------------------------------------------------------------------- #
-# Back-compat shims (existing API kept)
-# ----------------------------------------------------------------------------- #
 func play_melee_attack(aim_dir: Vector2, hit_frame: int, on_hit: Callable) -> void:
-	# Uses current "attack" prefix from registry (default_attack_prefix unless overridden)
 	play_attack_with_prefix(get_action_prefix("attack"), aim_dir, hit_frame, on_hit)
 
 func play_cast(cast_time_sec: float) -> void:
@@ -627,23 +1121,23 @@ func play_cast(cast_time_sec: float) -> void:
 func play_death() -> void:
 	if _sprite == null:
 		return
-	if _sprite.sprite_frames != null and _sprite.sprite_frames.has_animation("death"):
-		_sprite.play("death")
+	var resolved: String = _resolve_anim_name("death")
+	if resolved != "":
+		_play_all_layers(resolved)
 
 func play_hit_react() -> void:
 	if _sprite == null:
 		return
-	if _sprite.sprite_frames != null and _sprite.sprite_frames.has_animation("hit"):
-		_sprite.play("hit")
+	var resolved: String = _resolve_anim_name("hit")
+	if resolved != "":
+		_play_all_layers(resolved)
 
-# ----------------------------------------------------------------------------- #
-# Hit-frame + footsteps + lock lifecycle
-# ----------------------------------------------------------------------------- #
 func _on_sprite_frame_changed() -> void:
 	if _sprite == null:
 		return
 
-	# Hit-frame callback
+	_sync_layers_to_master()
+
 	if _pending_hit_frame >= 0:
 		if _sprite.frame == _pending_hit_frame:
 			if _pending_hit_callable.is_valid():
@@ -651,7 +1145,6 @@ func _on_sprite_frame_changed() -> void:
 			_pending_hit_frame = -1
 			_pending_hit_callable = Callable()
 
-	# Footsteps (walk* only)
 	_maybe_play_footstep()
 
 func _maybe_play_footstep() -> void:
@@ -678,14 +1171,11 @@ func _maybe_play_footstep() -> void:
 		_footstep_was_moving = false
 		return
 
-	# Reset distance baseline when movement starts
 	if not _footstep_was_moving:
 		_footstep_was_moving = true
 		_footstep_last_pos = _actor_body.global_position
 
 	var frame_index: int = _sprite.frame
-
-	# Frame gate (optional)
 	if footstep_frames.is_empty():
 		_try_play_footstep()
 		return
@@ -709,6 +1199,10 @@ func _try_play_footstep() -> void:
 	_footstep_last_pos = pos
 
 func _on_sprite_anim_finished() -> void:
+	var finished_anim: String = ""
+	if _sprite != null:
+		finished_anim = _sprite.animation
+
 	_pending_hit_frame = -1
 	_pending_hit_callable = Callable()
 	_action_lock_until_msec = 0
@@ -718,9 +1212,13 @@ func _on_sprite_anim_finished() -> void:
 	if lock_target != null and lock_target.has_method("unlock_action"):
 		lock_target.call("unlock_action")
 
-# ----------------------------------------------------------------------------- #
-# VFX (Heal / Revive) — unchanged from your version
-# ----------------------------------------------------------------------------- #
+	action_finished.emit("", finished_anim)
+
+func set_attack_phase(phase: String) -> void:
+	if phase == "":
+		return
+	attack_phase_changed.emit(phase)
+
 func play_heal_vfx(amount: int = 0) -> void:
 	if _sprite == null:
 		return
@@ -892,3 +1390,38 @@ func _spawn_centered_vfx(
 		if is_instance_valid(anim):
 			anim.queue_free()
 	)
+
+func _is_dead() -> bool:
+	var root: Node = self
+	while root != null and is_instance_valid(root):
+		var sc: Node = root.get_node_or_null("StatusConditions")
+		if sc != null and sc.has_method("is_dead"):
+			var sv: Variant = sc.call("is_dead")
+			if typeof(sv) == TYPE_BOOL and bool(sv):
+				return true
+		var stats: Node = root.get_node_or_null("StatsComponent")
+		if stats == null:
+			stats = root.get_node_or_null("Stats")
+		if stats != null:
+			if stats.has_method("is_dead"):
+				var d: Variant = stats.call("is_dead")
+				if typeof(d) == TYPE_BOOL and bool(d):
+					return true
+			if stats.has_method("get_hp"):
+				var gh: Variant = stats.call("get_hp")
+				if (typeof(gh) == TYPE_INT or typeof(gh) == TYPE_FLOAT) and float(gh) <= 0.0:
+					return true
+			if stats.has_method("current_hp"):
+				var ch: Variant = stats.call("current_hp")
+				if (typeof(ch) == TYPE_INT or typeof(ch) == TYPE_FLOAT) and float(ch) <= 0.0:
+					return true
+		if root is Node and root.has_method("is_dead"):
+			var dv: Variant = root.call("is_dead")
+			if typeof(dv) == TYPE_BOOL and bool(dv):
+				return true
+		if "dead" in root:
+			var df: Variant = root.get("dead")
+			if typeof(df) == TYPE_BOOL and bool(df):
+				return true
+		root = root.get_parent()
+	return false

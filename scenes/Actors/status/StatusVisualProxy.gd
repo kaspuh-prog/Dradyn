@@ -7,10 +7,33 @@ signal hint_forwarded(name: StringName, data: Dictionary)
 @export var status_path: NodePath
 @export var animator_path: NodePath
 
+# NEW (Choice B + layered rig):
+# If set, StatusVisualProxy tints ONLY this node.
+# Leave empty to auto-discover (VisualRoot/BodySprite preferred).
+@export var tint_target_path: NodePath
+
+# Optional: if you decide a name later, you can set this and leave tint_target_path empty.
+# Example: "BodySprite"
+@export var tint_target_name: StringName = StringName("BodySprite")
+
 @export var tint_strength: float = 0.80
 @export var tint_fade_time: float = 0.15
 @export var use_self_modulate: bool = true
 @export var debug_prints: bool = true
+
+# -----------------------------
+# Hit flash (on damage taken)
+# -----------------------------
+@export var hit_flash_enabled: bool = true
+@export var hit_flash_color: Color = Color(1.0, 0.0, 0.0, 1.0) # red
+@export var hit_flash_time_sec: float = 0.08
+
+# Filter out DoT/status tick sources (StatusConditions uses "Status:...")
+@export var hit_flash_on_status_ticks: bool = false
+@export var hit_flash_status_source_prefix: String = "Status:"
+
+# Optional: explicit stats path (leave empty to auto-find)
+@export var stats_path: NodePath
 
 # Godot 4.x: Color8 is deprecated. Keep hex as const, convert to linear at runtime.
 const COLOR_POISONED_SRGB: Color = Color("#a64bd6")
@@ -24,7 +47,12 @@ var COLOR_FROZEN: Color   = Color(1, 1, 1, 1)
 
 var _status: Node = null
 var _animator: Node = null
+
+# NOTE:
+# _sprite is now the SINGLE target that we tint/flash (Body layer preferred).
 var _sprite: AnimatedSprite2D = null
+
+var _stats: Node = null
 
 var _base_modulate: Color = Color(1, 1, 1, 1)
 var _base_self_modulate: Color = Color(1, 1, 1, 1)
@@ -43,6 +71,9 @@ var is_transformed_visual: bool = false
 var is_snared_visual: bool = false
 var is_slowed_visual: bool = false
 
+var _hit_flash_seq: int = 0
+var _is_flashing: bool = false
+
 func _ready() -> void:
 	# Compute linear tint colors once (fixes "weird" look under linear rendering).
 	COLOR_POISONED = COLOR_POISONED_SRGB.srgb_to_linear()
@@ -57,12 +88,21 @@ func _ready() -> void:
 	var tree: SceneTree = get_tree()
 	if tree != null:
 		tree.create_timer(0.01).timeout.connect(func() -> void:
+			# FIX: timer can fire after we got freed / removed from tree.
+			if not is_instance_valid(self):
+				return
+			if not is_inside_tree():
+				return
 			_autowire_nodes()
 			_try_connect_signals()
 			_debug_report("ready() post-timer")
 		)
 
 func _autowire_nodes() -> void:
+	# FIX: never probe paths when not inside the tree (prevents get_path assertions + stale nodes).
+	if not is_inside_tree():
+		return
+
 	if status_path != NodePath():
 		_status = get_node_or_null(status_path)
 	else:
@@ -73,12 +113,21 @@ func _autowire_nodes() -> void:
 	else:
 		_animator = _find_animator()
 
-	_sprite = _find_sprite()
+	if stats_path != NodePath():
+		_stats = get_node_or_null(stats_path)
+	else:
+		_stats = _find_stats_node()
+
+	_sprite = _find_tint_sprite()
 
 	# Cache base colors
 	if _sprite != null:
 		_base_modulate = _sprite.modulate
 		_base_self_modulate = _sprite.self_modulate
+		if _base_modulate == null:
+			_base_modulate = Color(1.0, 1.0, 1.0, 1.0)
+		if _base_self_modulate == null:
+			_base_self_modulate = Color(1.0, 1.0, 1.0, 1.0)
 
 	# Prime flags if status exposes helpers
 	if _status != null:
@@ -106,13 +155,30 @@ func _try_connect_signals() -> void:
 		if not _status.is_connected("dead_state_changed", c3):
 			_status.connect("dead_state_changed", c3)
 
+	# Connect to damage signals for hit flash
+	if _stats != null and hit_flash_enabled:
+		if _stats.has_signal("damage_taken_ex"):
+			var c4: Callable = Callable(self, "_on_damage_taken_ex")
+			if not _stats.is_connected("damage_taken_ex", c4):
+				_stats.connect("damage_taken_ex", c4)
+		if _stats.has_signal("damage_taken"):
+			var c5: Callable = Callable(self, "_on_damage_taken")
+			if not _stats.is_connected("damage_taken", c5):
+				_stats.connect("damage_taken", c5)
+
 func _debug_report(tag: String) -> void:
 	if not debug_prints:
 		return
+	# FIX: get_path() asserts when not inside tree
+	var path_str: String = "<not-in-tree>"
+	if is_inside_tree():
+		path_str = String(self.get_path())
+
 	print("[SVP]", tag,
-		" node=", self.get_path(),
+		" node=", path_str,
 		" status=", (_status if _status != null else "null"),
 		" animator=", (_animator if _animator != null else "null"),
+		" stats=", (_stats if _stats != null else "null"),
 		" sprite=", (_sprite if _sprite != null else "null"))
 	if _status != null:
 		print("[SVP] signals:",
@@ -120,6 +186,10 @@ func _debug_report(tag: String) -> void:
 			" has_applied=", _status.has_signal("status_applied"),
 			" connected_hint=", _status.is_connected("animation_state_hint", Callable(self, "_on_anim_hint")),
 			" connected_applied=", _status.is_connected("status_applied", Callable(self, "_on_status_applied")))
+	if _stats != null:
+		print("[SVP] stats signals:",
+			" has_damage_ex=", _stats.has_signal("damage_taken_ex"),
+			" has_damage=", _stats.has_signal("damage_taken"))
 
 # ----------------------------------------------------------------------------- #
 # Signal handlers
@@ -227,6 +297,68 @@ func _on_anim_hint(name: StringName, data: Dictionary) -> void:
 	emit_signal("hint_forwarded", name, data)
 
 # ----------------------------------------------------------------------------- #
+# Damage-driven hit flash
+# ----------------------------------------------------------------------------- #
+func _on_damage_taken_ex(amount: float, _dmg_type: String, source: String, _is_crit: bool) -> void:
+	if amount <= 0.0:
+		return
+	if not hit_flash_on_status_ticks:
+		if hit_flash_status_source_prefix != "":
+			if source.begins_with(hit_flash_status_source_prefix):
+				return
+	_do_hit_flash()
+
+func _on_damage_taken(amount: float, _dmg_type: String, source: String) -> void:
+	if amount <= 0.0:
+		return
+	if not hit_flash_on_status_ticks:
+		if hit_flash_status_source_prefix != "":
+			if source.begins_with(hit_flash_status_source_prefix):
+				return
+	_do_hit_flash()
+
+func _do_hit_flash() -> void:
+	if not hit_flash_enabled:
+		return
+	if _sprite == null:
+		return
+
+	_hit_flash_seq += 1
+	var seq: int = _hit_flash_seq
+	_is_flashing = true
+
+	_apply_flash_now(hit_flash_color)
+
+	var tree: SceneTree = get_tree()
+	if tree == null:
+		return
+
+	var t: float = max(0.01, hit_flash_time_sec)
+	tree.create_timer(t).timeout.connect(func() -> void:
+		if not is_instance_valid(self):
+			return
+		if not is_inside_tree():
+			return
+		if seq != _hit_flash_seq:
+			return
+		_is_flashing = false
+		_refresh_tint_immediate()
+	)
+
+func _apply_flash_now(col: Color) -> void:
+	var safe_col: Color = col
+	if safe_col == null:
+		safe_col = Color(1.0, 0.0, 0.0, 1.0)
+
+	# Flash should be “unsticky”: use self_modulate if possible.
+	if use_self_modulate:
+		_sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
+		_sprite.self_modulate = safe_col
+	else:
+		_sprite.modulate = safe_col
+		_sprite.self_modulate = Color(1.0, 1.0, 1.0, 1.0)
+
+# ----------------------------------------------------------------------------- #
 # Tint stack helpers
 # ----------------------------------------------------------------------------- #
 func _push_tint(key: StringName, color: Color) -> void:
@@ -239,12 +371,16 @@ func _pop_tint(key: StringName) -> void:
 	_refresh_tint()
 
 func _refresh_tint() -> void:
+	# If we're mid-flash, don't fight it. We'll restore after the flash ends.
+	if _is_flashing:
+		return
+
 	# Prefer animator override
 	if _animator != null and _animator.has_method("set_status_tint_stack"):
 		_animator.call("set_status_tint_stack", _active_tints.duplicate(true), tint_strength, tint_fade_time)
 		return
 
-	# Sprite fallback
+	# Sprite fallback (single-layer target)
 	if _sprite == null:
 		return
 
@@ -280,6 +416,32 @@ func _refresh_tint() -> void:
 
 	if debug_prints:
 		print("[SVP] tint target =", target_col, " actives=", _active_tints)
+
+func _refresh_tint_immediate() -> void:
+	# Immediate restore (no tween). This prevents “stuck red”.
+	if _sprite == null:
+		return
+
+	# If animator override exists, reapply instantly through it (zero fade).
+	if _animator != null and _animator.has_method("set_status_tint_stack"):
+		_animator.call("set_status_tint_stack", _active_tints.duplicate(true), tint_strength, 0.0)
+		return
+
+	var target_col: Color = _base_modulate
+	var last_key: StringName = StringName("")
+	for k in _active_tints.keys():
+		last_key = k
+	if String(last_key) != "":
+		var tint_col: Color = _active_tints[last_key]
+		var amt: float = clampf(tint_strength, 0.0, 1.0)
+		target_col = _base_modulate.lerp(tint_col, amt)
+
+	if use_self_modulate:
+		_sprite.modulate = _base_modulate
+		_sprite.self_modulate = target_col
+	else:
+		_sprite.modulate = target_col
+		_sprite.self_modulate = _base_self_modulate
 
 # ----------------------------------------------------------------------------- #
 # Animator flag hooks
@@ -329,26 +491,86 @@ func _find_animator() -> Node:
 		var i: int = 0
 		while i < p.get_child_count():
 			var c: Node = p.get_child(i)
-			if c != null and c.get_class() == "AnimationBridge":
+			if c != null and c.name == "AnimationBridge":
 				return c
 			i += 1
 		p = p.get_parent()
 	return null
 
-func _find_sprite() -> AnimatedSprite2D:
+func _find_stats_node() -> Node:
 	var p: Node = self
 	while p != null:
-		if p.has_node("Anim"):
-			var n: Node = p.get_node("Anim")
-			if n is AnimatedSprite2D:
-				return n as AnimatedSprite2D
+		if p.has_node("StatsComponent"):
+			return p.get_node("StatsComponent")
 		var i: int = 0
 		while i < p.get_child_count():
 			var c: Node = p.get_child(i)
-			if c != null and c is AnimatedSprite2D:
-				return c as AnimatedSprite2D
+			if c != null:
+				if c.has_signal("damage_taken_ex") or c.has_signal("damage_taken"):
+					return c
 			i += 1
 		p = p.get_parent()
+	return null
+
+# Find the SINGLE sprite to tint (body layer preferred)
+func _find_tint_sprite() -> AnimatedSprite2D:
+	# 1) explicit override
+	if tint_target_path != NodePath():
+		var n0: Node = get_node_or_null(tint_target_path)
+		if n0 != null:
+			var s0: AnimatedSprite2D = n0 as AnimatedSprite2D
+			if s0 != null:
+				return s0
+
+	# Find actor root (walk parents until Node2D/CharacterBody2D)
+	var actor: Node = self
+	var pp: Node = self
+	while pp != null:
+		if pp is Node2D:
+			actor = pp
+		if pp is CharacterBody2D:
+			actor = pp
+			break
+		pp = pp.get_parent()
+
+	# 2) Rig contract: VisualRoot + (tint_target_name)
+	var vr: Node = null
+	if actor != null:
+		vr = actor.find_child("VisualRoot", true, false)
+	if vr != null:
+		if tint_target_name != StringName(""):
+			var by_name: Node = (vr as Node).find_child(String(tint_target_name), true, false)
+			if by_name != null:
+				var sbn: AnimatedSprite2D = by_name as AnimatedSprite2D
+				if sbn != null:
+					return sbn
+
+		# 3) VisualRoot fallback: first AnimatedSprite2D under VisualRoot
+		var found_vr: AnimatedSprite2D = _find_first_sprite_under(vr)
+		if found_vr != null:
+			return found_vr
+
+	# 4) Legacy fallback: first AnimatedSprite2D under actor
+	if actor != null:
+		return _find_first_sprite_under(actor)
+
+	return null
+
+func _find_first_sprite_under(root: Node) -> AnimatedSprite2D:
+	if root == null:
+		return null
+	var stack: Array[Node] = [root]
+	while stack.size() > 0:
+		var n: Node = stack.pop_back()
+		if n == null:
+			continue
+		var s: AnimatedSprite2D = n as AnimatedSprite2D
+		if s != null and s.sprite_frames != null:
+			return s
+		var i: int = 0
+		while i < n.get_child_count():
+			stack.push_back(n.get_child(i))
+			i += 1
 	return null
 
 # ----------------------------------------------------------------------------- #

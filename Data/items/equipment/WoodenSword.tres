@@ -16,3 +16,4 @@ base_gold_value = 5
 equip_slot = "mainhand"
 stat_modifiers = Array[Resource]([ExtResource("3_mtbfs")])
 weapon_weight = 2.0
+weapon_sprite_name = "woodensword"

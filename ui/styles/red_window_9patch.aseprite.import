@@ -1,0 +1,14 @@
+[remap]
+
+importer="aseprite_wizard.plugin.noop"
+type="PackedDataContainer"
+uid="uid://bbf3sswlb3nio"
+path="res://.godot/imported/red_window_9patch.aseprite-45bcf365c6237cc999569a69ebe05b7c.res"
+
+[deps]
+
+source_file="res://ui/styles/red_window_9patch.aseprite"
+dest_files=["res://.godot/imported/red_window_9patch.aseprite-45bcf365c6237cc999569a69ebe05b7c.res"]
+
+[params]
+

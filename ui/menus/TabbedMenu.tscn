@@ -244,6 +244,8 @@ offset_top = 32.0
 offset_right = 252.0
 offset_bottom = 112.0
 script = ExtResource("16_o06wl")
+viewport_size_px = Vector2i(64, 64)
+portrait_zoom = 1.0
 
 [node name="Portrait" type="TextureRect" parent="Content/InventorySheet/PortraitCluster"]
 custom_minimum_size = Vector2(64, 64)

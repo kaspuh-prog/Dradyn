@@ -305,8 +305,6 @@ allow_dead_walk_visuals = false
 
 [node name="StatusVisualProxy" type="Node" parent="."]
 script = ExtResource("12_58ux4")
-status_path = NodePath("../StatusConditions")
-animator_path = NodePath("../AnimatedSprite2D")
 tint_strength = 1.0
 tint_fade_time = 1.0
 

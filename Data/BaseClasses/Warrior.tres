@@ -6,6 +6,8 @@
 [resource]
 script = ExtResource("1_4nkfv")
 class_title = "Warrior"
+description = "A hardened front-liner who solves problems the honest way: close the distance and hit first. Warriors thrive on weapon discipline, wide cleaves, brutal overheads, and punishing single blows that can stagger foes and open them up for the party. Oh, and getting hit in the face.
+Best for: players who want direct melee, chunky hits, and “stand your ground” momentum."
 mp_source = "none"
 mp_weight_INT = 0.0
 mp_weight_WIS = 0.0

@@ -12,6 +12,12 @@ const GROUP_LEADER := "PartyLeader"
 var _members: Array[Node] = []
 var _controlled_idx: int = -1
 
+# NEW: z emphasis should NOT clobber layered rig z_index values.
+# If true, only the actor root gets z_index emphasis (children untouched).
+@export var emphasize_z_on_actor_root_only: bool = true
+
+# NEW: z-index used for controlled leader root (others get 0).
+@export var controlled_root_z: int = 1
 
 # -------------------------------------------------------------------
 # Lifecycle
@@ -319,6 +325,8 @@ func _update_camera_target_deferred() -> void:
 # Visual Z helpers
 # -------------------------------------------------------------------
 func _set_visual_z_recursive(node: Node, z: int, relative: bool) -> void:
+	# Legacy behavior: sets z on EVERY CanvasItem in the subtree.
+	# Kept for compatibility, but disabled by default because it breaks layered rigs.
 	if node is CanvasItem:
 		var c: CanvasItem = node as CanvasItem
 		c.z_index = z
@@ -327,14 +335,28 @@ func _set_visual_z_recursive(node: Node, z: int, relative: bool) -> void:
 		_set_visual_z_recursive(ch, z, relative)
 
 
+func _set_visual_z_actor_root_only(node: Node, z: int, relative: bool) -> void:
+	# New behavior: only set z on the actor root CanvasItem (no recursion).
+	# This preserves per-layer z_index values in VisualRoot (HairBehindSprite, etc.).
+	if node == null:
+		return
+	if node is CanvasItem:
+		var c: CanvasItem = node as CanvasItem
+		c.z_index = z
+		c.z_as_relative = relative
+
+
 func _emphasize_controlled_z() -> void:
 	var leader: Node = get_controlled()
 	for m in _members:
 		if m != null:
 			var z: int = 0
 			if m == leader:
-				z = 1
-			_set_visual_z_recursive(m, z, true)
+				z = controlled_root_z
+			if emphasize_z_on_actor_root_only:
+				_set_visual_z_actor_root_only(m, z, true)
+			else:
+				_set_visual_z_recursive(m, z, true)
 
 
 # -------------------------------------------------------------------

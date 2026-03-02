@@ -324,7 +324,6 @@ size = Vector2(15, 31)
 [node name="EnemyBase" type="CharacterBody2D"]
 script = ExtResource("1_neoka")
 enemy_name = "Pikemen"
-anim_attack_prefix = "attack1"
 death_vfx_frames = ExtResource("2_j6pis")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
@@ -377,8 +376,6 @@ script = ExtResource("13_vfe4e")
 
 [node name="StatusVisualProxy" type="Node" parent="."]
 script = ExtResource("14_nmfw7")
-status_path = NodePath("../StatusConditions")
-animator_path = NodePath("../AnimatedSprite2D")
 tint_strength = 1.0
 tint_fade_time = 1.0
 

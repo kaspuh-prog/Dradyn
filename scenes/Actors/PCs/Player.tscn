@@ -1,7 +1,6 @@
-[gd_scene load_steps=41 format=3 uid="uid://i0pg5f7pc445"]
+[gd_scene load_steps=40 format=3 uid="uid://i0pg5f7pc445"]
 
 [ext_resource type="Script" uid="uid://dny6lg25m75y7" path="res://scripts/player.gd" id="1_v6fml"]
-[ext_resource type="Texture2D" uid="uid://cjf3c7pcs123l" path="res://assets/sprites/characters/Rosali.png" id="3_cw2d6"]
 [ext_resource type="Script" uid="uid://scndil1j0hdu" path="res://scripts/stats/StatsComponent.gd" id="5_70d11"]
 [ext_resource type="AudioStream" uid="uid://dtgs8hm2cwwxh" path="res://assets/audio/sfx/grass/grass_footstep3.wav" id="5_khinc"]
 [ext_resource type="AudioStream" uid="uid://dnxdxonett0a1" path="res://assets/audio/sfx/grass/grass_footstep4.wav" id="6_bruh7"]
@@ -17,87 +16,66 @@
 [ext_resource type="Script" uid="uid://d4anrr3pv4crd" path="res://scripts/PassiveAbilityApplier.gd" id="15_60twb"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_khinc"]
-atlas = ExtResource("3_cw2d6")
 region = Rect2(0, 0, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_bruh7"]
-atlas = ExtResource("3_cw2d6")
 region = Rect2(0, 128, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_6eyey"]
-atlas = ExtResource("3_cw2d6")
 region = Rect2(0, 64, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_d3wef"]
-atlas = ExtResource("3_cw2d6")
 region = Rect2(0, 256, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_o4126"]
-atlas = ExtResource("3_cw2d6")
 region = Rect2(64, 256, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_lkdrv"]
-atlas = ExtResource("3_cw2d6")
 region = Rect2(128, 256, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_p7iby"]
-atlas = ExtResource("3_cw2d6")
 region = Rect2(192, 256, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_0rnld"]
-atlas = ExtResource("3_cw2d6")
 region = Rect2(256, 256, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_srp4u"]
-atlas = ExtResource("3_cw2d6")
 region = Rect2(320, 256, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_jfpux"]
-atlas = ExtResource("3_cw2d6")
 region = Rect2(0, 384, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_61ith"]
-atlas = ExtResource("3_cw2d6")
 region = Rect2(64, 384, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_ebwui"]
-atlas = ExtResource("3_cw2d6")
 region = Rect2(128, 384, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_sfy4j"]
-atlas = ExtResource("3_cw2d6")
 region = Rect2(192, 384, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_gv3ic"]
-atlas = ExtResource("3_cw2d6")
 region = Rect2(256, 384, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_b8lor"]
-atlas = ExtResource("3_cw2d6")
 region = Rect2(320, 384, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_6e537"]
-atlas = ExtResource("3_cw2d6")
 region = Rect2(0, 320, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_p07f3"]
-atlas = ExtResource("3_cw2d6")
 region = Rect2(64, 320, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_viqgg"]
-atlas = ExtResource("3_cw2d6")
 region = Rect2(128, 320, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_fgkxt"]
-atlas = ExtResource("3_cw2d6")
 region = Rect2(192, 320, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_xsi7p"]
-atlas = ExtResource("3_cw2d6")
 region = Rect2(256, 320, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_1jpwa"]
-atlas = ExtResource("3_cw2d6")
 region = Rect2(320, 320, 64, 64)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_cw2d6"]
@@ -251,8 +229,6 @@ stats_path = NodePath("../StatsComponent")
 
 [node name="StatusVisualProxy" type="Node" parent="."]
 script = ExtResource("13_f350c")
-status_path = NodePath("../StatusConditions")
-animator_path = NodePath("../AnimatedSprite2D")
 
 [node name="CompanionAbilityAI" type="Node" parent="."]
 script = ExtResource("14_ibfhk")

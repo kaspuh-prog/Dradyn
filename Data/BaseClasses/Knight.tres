@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ClassDefinition" load_steps=3 format=3 uid="uid://baqiciw3urskw"]
+
+[ext_resource type="Script" uid="uid://bw2bhebcfgp1u" path="res://Data/KeyFloatPair.gd" id="1_u27m3"]
+[ext_resource type="Script" uid="uid://b7ipjii2rumgu" path="res://scripts/resources/ClassDefinition.gd" id="2_yuuka"]
+
+[resource]
+script = ExtResource("2_yuuka")
+class_title = "Knight"
+description = "Not a holy crusader. Not of a knightly order. Just someone who learned that a shield, a vow, and a clear head can keep people breathing. Knights specialize in protection and control; holding a line, absorbing pressure, and creating safe space for allies to do their work.
+Best for: players who want to tank, peel enemies off teammates, and be the party’s anchor."
+allowed_point_targets = null
+allowed_equipment_classes = null
+metadata/_custom_type_script = "uid://b7ipjii2rumgu"

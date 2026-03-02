@@ -6,8 +6,8 @@
 [resource]
 script = ExtResource("2_wgoal")
 class_title = "Magician"
-description = "Disciple of magic and the ways of the elements. Often specializing in 1 to two primary elemental focuses. 
-"
+description = "A versatile caster who turns the battlefield into a puzzle you already know the answer to. Magicians start with reliable ranged pressure and grow into elemental specialties: wind control, water slows, fire burn, and earth stagger/armor shaping fights through timing and spacing.
+Best for: players who like spell variety, smart positioning, and controlling crowds before they reach you."
 mp_weight_INT = 1.0
 mp_weight_WIS = 0.0
 gr_DEX = 0.5

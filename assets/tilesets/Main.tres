@@ -1,4 +1,4 @@
-[gd_resource type="TileSet" load_steps=157 format=3 uid="uid://ce704ljctriud"]
+[gd_resource type="TileSet" load_steps=158 format=3 uid="uid://ce704ljctriud"]
 
 [ext_resource type="Texture2D" uid="uid://dn3ladvdpi46s" path="res://assets/tilesets/Langtreebottomrocks.png" id="1_lc6yp"]
 [ext_resource type="Texture2D" uid="uid://fdc8whpdt66m" path="res://assets/tilesets/travelers camp 32x32.png" id="2_gigg0"]
@@ -62,6 +62,7 @@
 [ext_resource type="Texture2D" uid="uid://cb57dmn2utkp3" path="res://assets/tilesets/ArcaLightLamp.png" id="55_ap6im"]
 [ext_resource type="PackedScene" uid="uid://c6g10yssbefl1" path="res://assets/tilesets/PinkMinxSign.tscn" id="57_scs43"]
 [ext_resource type="PackedScene" uid="uid://ded1ic0n2cpq2" path="res://assets/tilesets/HorizontalConveyor.tscn" id="58_mxitq"]
+[ext_resource type="PackedScene" uid="uid://cglu7rxr1aok5" path="res://assets/tilesets/firetrap.tscn" id="58_ubb1c"]
 [ext_resource type="Texture2D" uid="uid://dj0qxuy5kjdq" path="res://assets/tilesets/GoldenHen.png" id="59_ey03v"]
 [ext_resource type="Texture2D" uid="uid://b37x44gbnnrij" path="res://assets/tilesets/grass and dirt.png" id="59_md26e"]
 [ext_resource type="Texture2D" uid="uid://upfulkumdc3t" path="res://assets/tilesets/picket fence 16x16 v1.png" id="59_r2an2"]
@@ -16764,6 +16765,7 @@ texture = ExtResource("49_2fdcp")
 scenes/1/scene = ExtResource("53_w1bnj")
 scenes/2/scene = ExtResource("54_ap6im")
 scenes/3/scene = ExtResource("57_scs43")
+scenes/4/scene = ExtResource("58_ubb1c")
 scenes/5/scene = ExtResource("58_mxitq")
 scenes/6/scene = ExtResource("59_ubb1c")
 scenes/7/scene = ExtResource("60_uc77h")
@@ -19046,6 +19048,39 @@ texture = ExtResource("71_isu3e")
 9:8/0 = 0
 7:9/0 = 0
 6:9/0 = 0
+9:0/0 = 0
+10:0/0 = 0
+11:0/0 = 0
+11:1/0 = 0
+11:2/0 = 0
+11:3/0 = 0
+10:3/0 = 0
+9:3/0 = 0
+9:4/0 = 0
+10:5/0 = 0
+9:1/0 = 0
+9:2/0 = 0
+10:2/0 = 0
+10:1/0 = 0
+10:4/0 = 0
+11:5/0 = 0
+11:4/0 = 0
+11:6/0 = 0
+11:7/0 = 0
+10:8/0 = 0
+10:6/0 = 0
+9:6/0 = 0
+9:5/0 = 0
+9:9/0 = 0
+10:9/0 = 0
+11:9/0 = 0
+11:8/0 = 0
+10:10/0 = 0
+10:11/0 = 0
+9:11/0 = 0
+9:10/0 = 0
+11:10/0 = 0
+11:11/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8x7mj"]
 texture = ExtResource("72_cyhox")

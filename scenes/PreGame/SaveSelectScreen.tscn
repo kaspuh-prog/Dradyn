@@ -6,6 +6,8 @@
 layout_mode = 3
 anchors_preset = 0
 script = ExtResource("1_l4vna")
+portrait_viewport_scale = 1.0
+portrait_viewport_offset_px = Vector2(0, 0)
 
 [node name="Slots" type="Control" parent="."]
 anchors_preset = 0

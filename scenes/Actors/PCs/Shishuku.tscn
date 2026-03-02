@@ -639,8 +639,6 @@ stats_path = NodePath("../StatsComponent")
 
 [node name="StatusVisualProxy" type="Node" parent="."]
 script = ExtResource("19_t0n8e")
-status_path = NodePath("../StatusConditions")
-animator_path = NodePath("../AnimatedSprite2D")
 debug_prints = false
 
 [node name="KnownAbilitiesComponent" type="Node" parent="."]

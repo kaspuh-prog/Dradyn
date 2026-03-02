@@ -6,7 +6,8 @@
 [resource]
 script = ExtResource("2_cjwqo")
 class_title = "Rogue"
-description = "Speedy combatants who favor stealth, light armor, and a little sleight of hand. "
+description = "A fast opportunist who survives by reading openings and making one mistake feel expensive. Rogues punish overcommitment with mobility, precision strikes, and a signature edge: parry-style defense that can turn a clean block into a counter.
+Best for: players who like speed, risky plays, and being rewarded for timing instead of raw toughness."
 mp_source = "none"
 gr_STR = 0.2
 gr_DEX = 0.8

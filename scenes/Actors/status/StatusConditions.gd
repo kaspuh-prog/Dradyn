@@ -29,6 +29,10 @@ signal animation_state_hint(name: StringName, data: Dictionary) # e.g. ("dead", 
 @export var status_banner_scale: float = 0.85
 @export var status_banner_offset: Vector2 = Vector2(0.0, -18.0)
 
+# NEW: fallback banner/tick color for statuses that don't have a specific mapping.
+# This prevents invisible labels when COLOR_NONE is returned.
+@export var default_status_banner_color: Color = Color(1.0, 1.0, 1.0, 1.0)
+
 # -----------------------------
 # Status keys (StringName for cheap comparisons)
 # -----------------------------
@@ -53,7 +57,8 @@ const HASTE: StringName = &"haste"
 const COLOR_POISONED: Color = Color8(0xA6, 0x4B, 0xD6, 0xFF)  # medium purple
 const COLOR_BURNING: Color  = Color8(0xFF, 0x8A, 0x00, 0xFF)  # orange
 const COLOR_FROZEN: Color   = Color8(0x66, 0xCC, 0xFF, 0xFF)  # light blue
-const COLOR_NONE: Color     = Color(0, 0, 0, 0)                # sentinel: layer chooses default
+const COLOR_CONFUSED: Color = Color8(0xFF, 0xE3, 0x2B, 0xFF)  # yellow (visible)
+const COLOR_NONE: Color     = Color(0, 0, 0, 0)                # sentinel: legacy
 
 # Internal storage:
 # _statuses[id] = { stacks:int, expires_at:float|-1, source:Node, payload:Dictionary }
@@ -536,10 +541,13 @@ func _color_for_entry(id: StringName, entry: Dictionary) -> Color:
 		var v: Variant = entry["payload"]
 		if typeof(v) == TYPE_DICTIONARY:
 			payload = v
+
+	# Explicit payload color always wins (even if transparent; caller asked for it).
 	if payload.has("color"):
 		var c: Variant = payload["color"]
 		if typeof(c) == TYPE_COLOR:
 			return c
+
 	var s: String = String(id)
 	if s == "poisoned":
 		return COLOR_POISONED
@@ -547,7 +555,13 @@ func _color_for_entry(id: StringName, entry: Dictionary) -> Color:
 		return COLOR_BURNING
 	if s == "frozen":
 		return COLOR_FROZEN
-	return COLOR_NONE
+	if s == "confused":
+		return COLOR_CONFUSED
+
+	# IMPORTANT FIX:
+	# Previously this returned COLOR_NONE (alpha 0), making banners like "Confused" invisible.
+	# Use a visible fallback instead.
+	return default_status_banner_color
 
 func _emit_status_banner(id: StringName, entry: Dictionary) -> void:
 	var col: Color = _color_for_entry(id, entry)

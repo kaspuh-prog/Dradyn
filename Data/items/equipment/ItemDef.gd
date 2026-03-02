@@ -40,6 +40,62 @@ var equip_slot: String = ""
 # Leave < 0.0 to ignore and use actor/base stats instead.
 @export var weapon_weight: float = -1.0
 
+# -----------------------------------------------------------------------------
+# NEW: In-hand weapon sprite (NOT the inventory icon)
+# -----------------------------------------------------------------------------
+# Put either:
+#  - a filename without extension, e.g. "WoodenSword"
+#  - or a filename with extension, e.g. "WoodenSword.png"
+# This will load from: res://assets/sprites/weapons/<name>
+@export var weapon_sprite_name: String = ""
+
+const WEAPON_SPRITE_BASE_DIR: String = "res://assets/sprites/weapons/"
+
+func get_weapon_sprite_path() -> String:
+	if weapon_sprite_name.strip_edges() == "":
+		return ""
+
+	var name_clean: String = weapon_sprite_name.strip_edges()
+
+	if name_clean.contains("."):
+		return WEAPON_SPRITE_BASE_DIR + name_clean
+
+	return WEAPON_SPRITE_BASE_DIR + name_clean + ".png"
+
+func load_weapon_sprite_texture() -> Texture2D:
+	var p: String = get_weapon_sprite_path()
+	if p == "":
+		return null
+
+	if not ResourceLoader.exists(p):
+		return null
+
+	var res: Resource = ResourceLoader.load(p)
+	if res == null:
+		return null
+
+	var tex: Texture2D = res as Texture2D
+	return tex
+
+# -----------------------------------------------------------------------------
+# NEW: Cloak frames key (NOT the inventory icon)
+# -----------------------------------------------------------------------------
+# This is the SpriteFrames stem used by EquipmentVisuals for CloakSprites:
+#   res://assets/sprites/characters/<Gender>/CloakSprites/<cloak_frames_name>.tres
+# You can set either:
+#  - "TravelerCloak"
+#  - "TravelerCloak.tres"
+@export var cloak_frames_name: String = ""
+
+func get_cloak_frames_key() -> String:
+	var s: String = cloak_frames_name.strip_edges()
+	if s == "":
+		return ""
+	# if author typed "Whatever.tres", strip extension for matching
+	if s.to_lower().ends_with(".tres") or s.to_lower().ends_with(".res"):
+		return s.get_basename()
+	return s
+
 func get_stat_modifiers() -> Array:
 	var out: Array = []
 

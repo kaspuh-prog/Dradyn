@@ -14,6 +14,11 @@ config/name="Dradyn Starter 4.5"
 run/main_scene="uid://6lfuqfrn3pl7"
 config/features=PackedStringArray("4.5")
 
+[aseprite]
+
+import/import_plugin/default_automatic_importer="SpriteFrames (Split By Layer)"
+animation/import_plugin/default_automatic_importer="Static Texture (Split By Layer)"
+
 [autoload]
 
 SceneMgr="*res://AutoLoads/SceneManager.gd"
@@ -53,7 +58,7 @@ movie_writer/movie_file="D:/GoDot Dradyn/dradyn_prototype/test.avi"
 
 [editor_plugins]
 
-enabled=PackedStringArray()
+enabled=PackedStringArray("res://addons/AsepriteWizard/plugin.cfg")
 
 [file_customization]
 

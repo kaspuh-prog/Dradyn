@@ -1,0 +1,567 @@
+[gd_scene load_steps=37 format=3 uid="uid://l6x7nsbqcehn"]
+
+[ext_resource type="Script" uid="uid://o2lv2ogfhk5o" path="res://scenes/PreGame/NewGameFlow.gd" id="1_fq2ov"]
+[ext_resource type="Texture2D" uid="uid://h0erkauqnspr" path="res://ui/styles/IntroBG.png" id="1_uv7i1"]
+[ext_resource type="Texture2D" uid="uid://nlkk44ghi3dm" path="res://ui/styles/CustomizationBG.png" id="2_fq2ov"]
+[ext_resource type="Texture2D" uid="uid://b6r0xmrt1867w" path="res://ui/styles/MenuBG.png" id="3_l7sra"]
+[ext_resource type="FontFile" uid="uid://cpfjwf504s6no" path="res://assets/fonts/KellsFLF.ttf" id="3_wl7r6"]
+[ext_resource type="Texture2D" uid="uid://dpsljqd6lxolb" path="res://ui/styles/rightarrow.png" id="4_c7m3v"]
+[ext_resource type="Texture2D" uid="uid://cacup6016b8mk" path="res://assets/Langtreeworking.png" id="4_hrr3j"]
+[ext_resource type="Texture2D" uid="uid://bnwawevsj1b1w" path="res://assets/SequoiaHollows.png" id="5_1c423"]
+[ext_resource type="Script" uid="uid://bc3srwbg4k4qn" path="res://scenes/PreGame/PlayerCustomizationScreen.gd" id="5_efgkw"]
+[ext_resource type="Texture2D" uid="uid://ce3tm7pne6s0o" path="res://assets/Krimbad.png" id="5_rnvah"]
+[ext_resource type="Texture2D" uid="uid://dvq7luu4ddslo" path="res://ui/styles/leftarrow.png" id="6_c7m3v"]
+[ext_resource type="Texture2D" uid="uid://ct0lx2ivssk4g" path="res://assets/Telmbrook.png" id="6_rnvah"]
+[ext_resource type="Texture2D" uid="uid://yio15uhdsdr5" path="res://assets/sprites/items/keys/02.png" id="8_5yrhp"]
+[ext_resource type="Texture2D" uid="uid://baf423g2rbe4e" path="res://assets/Thrombeldo.png" id="8_euhyd"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_euhyd"]
+atlas = ExtResource("4_hrr3j")
+region = Rect2(0, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_75nuk"]
+atlas = ExtResource("5_rnvah")
+region = Rect2(0, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8576y"]
+atlas = ExtResource("5_1c423")
+region = Rect2(0, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xfppl"]
+atlas = ExtResource("6_rnvah")
+region = Rect2(0, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_evrjl"]
+atlas = ExtResource("8_euhyd")
+region = Rect2(0, 0, 512, 512)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_75nuk"]
+animations = [{
+"frames": [{
+"duration": 7.0,
+"texture": SubResource("AtlasTexture_euhyd")
+}, {
+"duration": 4.5,
+"texture": SubResource("AtlasTexture_75nuk")
+}, {
+"duration": 4.5,
+"texture": SubResource("AtlasTexture_8576y")
+}, {
+"duration": 4.5,
+"texture": SubResource("AtlasTexture_xfppl")
+}, {
+"duration": 4.5,
+"texture": SubResource("AtlasTexture_evrjl")
+}],
+"loop": false,
+"name": &"default",
+"speed": 0.75
+}]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_wl7r6"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_c7m3v"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_efgkw"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_5yrhp"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_7eisw"]
+
+[sub_resource type="FontVariation" id="FontVariation_5yrhp"]
+base_font = ExtResource("3_wl7r6")
+variation_embolden = 0.25
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_csce5"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_vhugv"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_l7sra"]
+
+[sub_resource type="FontVariation" id="FontVariation_7eisw"]
+base_font = ExtResource("3_wl7r6")
+variation_embolden = 0.25
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_hrr3j"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_1c423"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_rnvah"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_euhyd"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_8576y"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_xfppl"]
+
+[node name="NewGameFlow" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_fq2ov")
+char_interval_sec = 0.06
+intro_text = "I’ve told this tale before.
+
+Not as a ballad.
+Not as a sermon.
+Just as it happened...
+
+Dradyn has always been a place where histories overlap.
+Families that swear their blood remembers distant lands.
+Cities that rise, fracture, and call it destiny.
+
+Most people live their whole lives without touching the deeper story.
+And why would they?
+They have work, loves, rivalries, small victories.
+Ordinary days.
+
+Until the ordinary begins to bend.
+A pattern breaks.
+A promise stops holding.
+And suddenly everyone is listening for footsteps that aren’t there.
+
+I remember the moment the tale truly starts.
+I remember the feeling.
+
+I just can’t remember who I’m meant to follow.
+
+So tell me...
+
+Tell me about the hero."
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 0
+offset_right = 480.0
+offset_bottom = 270.0
+color = Color(0, 0, 0, 1)
+
+[node name="NewGameIntroScreen" type="Control" parent="."]
+visible = false
+anchors_preset = 0
+offset_right = 480.0
+offset_bottom = 270.0
+
+[node name="BG" type="TextureRect" parent="NewGameIntroScreen"]
+layout_mode = 0
+offset_right = 480.0
+offset_bottom = 270.0
+texture = ExtResource("1_uv7i1")
+
+[node name="TextureRect" type="TextureRect" parent="NewGameIntroScreen/BG"]
+layout_mode = 0
+offset_left = 278.0
+offset_top = 45.0
+offset_right = 434.0
+offset_bottom = 201.0
+texture = ExtResource("3_l7sra")
+
+[node name="Slideshow" type="AnimatedSprite2D" parent="NewGameIntroScreen/BG"]
+position = Vector2(356, 123)
+scale = Vector2(0.25, 0.25)
+sprite_frames = SubResource("SpriteFrames_75nuk")
+autoplay = "default"
+
+[node name="TextPanel" type="Panel" parent="NewGameIntroScreen"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 31.0
+offset_right = 225.0
+offset_bottom = 240.0
+theme_override_styles/panel = SubResource("StyleBoxEmpty_wl7r6")
+
+[node name="NarrationLabel" type="RichTextLabel" parent="NewGameIntroScreen/TextPanel"]
+layout_mode = 0
+offset_right = 209.0
+offset_bottom = 209.0
+theme_override_colors/default_color = Color(0.23137255, 0.12156863, 0.09803922, 1)
+theme_override_fonts/normal_font = ExtResource("3_wl7r6")
+theme_override_font_sizes/normal_font_size = 14
+
+[node name="SFX" type="Node" parent="NewGameIntroScreen"]
+
+[node name="ContinueIcon" type="Button" parent="NewGameIntroScreen"]
+layout_mode = 0
+offset_left = 85.0
+offset_top = 240.0
+offset_right = 127.0
+offset_bottom = 264.0
+theme_override_colors/font_color = Color(0.23137255, 0.12156863, 0.09803922, 1)
+theme_override_fonts/font = ExtResource("3_wl7r6")
+theme_override_styles/normal = SubResource("StyleBoxEmpty_c7m3v")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_efgkw")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_5yrhp")
+text = "Continue"
+icon = ExtResource("4_c7m3v")
+
+[node name="PlayerCustomizationScreen" type="Control" parent="."]
+anchors_preset = 0
+offset_right = 480.0
+offset_bottom = 270.0
+script = ExtResource("5_efgkw")
+class_def_paths = PackedStringArray()
+
+[node name="BG" type="TextureRect" parent="PlayerCustomizationScreen"]
+layout_mode = 0
+offset_right = 480.0
+offset_bottom = 270.0
+texture = ExtResource("2_fq2ov")
+
+[node name="PreviewPanel" type="Panel" parent="PlayerCustomizationScreen"]
+layout_mode = 0
+offset_left = 48.0
+offset_top = 48.0
+offset_right = 112.0
+offset_bottom = 112.0
+
+[node name="PreviewViewportContainer" type="SubViewportContainer" parent="PlayerCustomizationScreen/PreviewPanel"]
+layout_mode = 0
+offset_right = 64.0
+offset_bottom = 64.0
+
+[node name="PreviewViewport" type="SubViewport" parent="PlayerCustomizationScreen/PreviewPanel/PreviewViewportContainer"]
+handle_input_locally = false
+size = Vector2i(64, 64)
+render_target_update_mode = 4
+
+[node name="PickersPanel" type="Panel" parent="PlayerCustomizationScreen"]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 120.0
+offset_right = 181.0
+offset_bottom = 256.0
+theme_override_styles/panel = SubResource("StyleBoxEmpty_7eisw")
+
+[node name="NameLabel" type="Label" parent="PlayerCustomizationScreen/PickersPanel"]
+layout_mode = 0
+offset_right = 24.0
+offset_bottom = 14.0
+theme_override_colors/font_color = Color(0.23137255, 0.12156863, 0.09803922, 1)
+theme_override_fonts/font = SubResource("FontVariation_5yrhp")
+theme_override_font_sizes/font_size = 10
+text = "Name:"
+
+[node name="NameLineEdit" type="LineEdit" parent="PlayerCustomizationScreen/PickersPanel"]
+layout_mode = 0
+offset_left = 31.0
+offset_top = -4.0
+offset_right = 99.5625
+offset_bottom = 14.0
+theme_override_colors/font_color = Color(0.23137255, 0.12156863, 0.09803922, 1)
+theme_override_colors/font_placeholder_color = Color(0.23137255, 0.12156863, 0.09803922, 1)
+theme_override_colors/caret_color = Color(0.23137255, 0.12156863, 0.09803922, 1)
+theme_override_colors/selection_color = Color(0.5019608, 0.5019608, 0.5019608, 0)
+theme_override_colors/clear_button_color = Color(0.8745098, 0.8745098, 0.8745098, 0)
+theme_override_fonts/font = ExtResource("3_wl7r6")
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxEmpty_csce5")
+theme_override_styles/read_only = SubResource("StyleBoxEmpty_vhugv")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_l7sra")
+placeholder_text = "_____"
+alignment = 3
+
+[node name="Row_Gender" type="Control" parent="PlayerCustomizationScreen/PickersPanel"]
+layout_mode = 1
+anchor_left = -0.115
+anchor_right = -0.115
+offset_left = 17.215
+offset_top = 17.0
+offset_right = 96.215
+offset_bottom = 39.0
+
+[node name="Label" type="Label" parent="PlayerCustomizationScreen/PickersPanel/Row_Gender"]
+layout_mode = 0
+offset_left = -3.0
+offset_top = 6.0
+offset_right = 49.0
+offset_bottom = 29.0
+theme_override_colors/font_color = Color(0.23137255, 0.12156863, 0.09803922, 1)
+theme_override_fonts/font = SubResource("FontVariation_7eisw")
+theme_override_font_sizes/font_size = 10
+text = "Gender:"
+
+[node name="LeftBtn" type="TextureButton" parent="PlayerCustomizationScreen/PickersPanel/Row_Gender"]
+layout_mode = 0
+offset_left = 38.0
+offset_top = 2.0
+offset_right = 54.0
+offset_bottom = 18.0
+texture_normal = ExtResource("6_c7m3v")
+
+[node name="Value" type="Label" parent="PlayerCustomizationScreen/PickersPanel/Row_Gender"]
+layout_mode = 0
+offset_left = 56.0
+offset_top = 7.0
+offset_right = 92.0
+offset_bottom = 30.0
+theme_override_colors/font_color = Color(0.23137255, 0.12156863, 0.09803922, 1)
+theme_override_fonts/font = SubResource("FontVariation_7eisw")
+theme_override_font_sizes/font_size = 10
+text = "Male"
+
+[node name="RightBtn" type="TextureButton" parent="PlayerCustomizationScreen/PickersPanel/Row_Gender"]
+layout_mode = 0
+offset_left = 94.0
+offset_top = 2.0
+offset_right = 110.0
+offset_bottom = 18.0
+texture_normal = ExtResource("4_c7m3v")
+
+[node name="Row_Class" type="Control" parent="PlayerCustomizationScreen/PickersPanel"]
+layout_mode = 1
+anchor_left = -0.115
+anchor_right = -0.115
+offset_left = 17.215
+offset_top = 38.0
+offset_right = 96.215
+offset_bottom = 60.0
+
+[node name="Label" type="Label" parent="PlayerCustomizationScreen/PickersPanel/Row_Class"]
+layout_mode = 0
+offset_left = -3.0
+offset_top = 6.0
+offset_right = 49.0
+offset_bottom = 29.0
+theme_override_colors/font_color = Color(0.23137255, 0.12156863, 0.09803922, 1)
+theme_override_fonts/font = SubResource("FontVariation_7eisw")
+theme_override_font_sizes/font_size = 10
+text = "Class:"
+
+[node name="LeftBtn" type="TextureButton" parent="PlayerCustomizationScreen/PickersPanel/Row_Class"]
+layout_mode = 0
+offset_left = 38.0
+offset_top = 2.0
+offset_right = 54.0
+offset_bottom = 18.0
+texture_normal = ExtResource("6_c7m3v")
+
+[node name="Value" type="Label" parent="PlayerCustomizationScreen/PickersPanel/Row_Class"]
+layout_mode = 0
+offset_left = 56.0
+offset_top = 7.0
+offset_right = 92.0
+offset_bottom = 30.0
+theme_override_colors/font_color = Color(0.23137255, 0.12156863, 0.09803922, 1)
+theme_override_fonts/font = SubResource("FontVariation_7eisw")
+theme_override_font_sizes/font_size = 10
+text = "Magician"
+
+[node name="RightBtn" type="TextureButton" parent="PlayerCustomizationScreen/PickersPanel/Row_Class"]
+layout_mode = 0
+offset_left = 94.0
+offset_top = 2.0
+offset_right = 110.0
+offset_bottom = 18.0
+texture_normal = ExtResource("4_c7m3v")
+
+[node name="Row_SkinTone" type="Control" parent="PlayerCustomizationScreen/PickersPanel"]
+layout_mode = 1
+anchor_left = -0.115
+anchor_right = -0.115
+offset_left = 17.215
+offset_top = 59.0
+offset_right = 96.215
+offset_bottom = 81.0
+
+[node name="Label" type="Label" parent="PlayerCustomizationScreen/PickersPanel/Row_SkinTone"]
+layout_mode = 0
+offset_left = -3.0
+offset_top = 6.0
+offset_right = 49.0
+offset_bottom = 29.0
+theme_override_colors/font_color = Color(0.23137255, 0.12156863, 0.09803922, 1)
+theme_override_fonts/font = SubResource("FontVariation_7eisw")
+theme_override_font_sizes/font_size = 10
+text = "Skin Tone:"
+
+[node name="LeftBtn" type="TextureButton" parent="PlayerCustomizationScreen/PickersPanel/Row_SkinTone"]
+layout_mode = 0
+offset_left = 38.0
+offset_top = 2.0
+offset_right = 54.0
+offset_bottom = 18.0
+texture_normal = ExtResource("6_c7m3v")
+
+[node name="Value" type="Label" parent="PlayerCustomizationScreen/PickersPanel/Row_SkinTone"]
+layout_mode = 0
+offset_left = 56.0
+offset_top = 7.0
+offset_right = 92.0
+offset_bottom = 30.0
+theme_override_colors/font_color = Color(0.23137255, 0.12156863, 0.09803922, 1)
+theme_override_fonts/font = SubResource("FontVariation_7eisw")
+theme_override_font_sizes/font_size = 10
+text = "Copper"
+
+[node name="RightBtn" type="TextureButton" parent="PlayerCustomizationScreen/PickersPanel/Row_SkinTone"]
+layout_mode = 0
+offset_left = 94.0
+offset_top = 2.0
+offset_right = 110.0
+offset_bottom = 18.0
+texture_normal = ExtResource("4_c7m3v")
+
+[node name="Row_Hair" type="Control" parent="PlayerCustomizationScreen/PickersPanel"]
+layout_mode = 1
+anchor_left = -0.115
+anchor_right = -0.115
+offset_left = 17.215
+offset_top = 80.0
+offset_right = 96.215
+offset_bottom = 102.0
+
+[node name="Label" type="Label" parent="PlayerCustomizationScreen/PickersPanel/Row_Hair"]
+layout_mode = 0
+offset_left = -3.0
+offset_top = 6.0
+offset_right = 49.0
+offset_bottom = 29.0
+theme_override_colors/font_color = Color(0.23137255, 0.12156863, 0.09803922, 1)
+theme_override_fonts/font = SubResource("FontVariation_7eisw")
+theme_override_font_sizes/font_size = 10
+text = "Hair Style:"
+
+[node name="LeftBtn" type="TextureButton" parent="PlayerCustomizationScreen/PickersPanel/Row_Hair"]
+layout_mode = 0
+offset_left = 38.0
+offset_top = 2.0
+offset_right = 54.0
+offset_bottom = 18.0
+texture_normal = ExtResource("6_c7m3v")
+
+[node name="Value" type="Label" parent="PlayerCustomizationScreen/PickersPanel/Row_Hair"]
+layout_mode = 0
+offset_left = 56.0
+offset_top = 7.0
+offset_right = 92.0
+offset_bottom = 30.0
+theme_override_colors/font_color = Color(0.23137255, 0.12156863, 0.09803922, 1)
+theme_override_fonts/font = SubResource("FontVariation_7eisw")
+theme_override_font_sizes/font_size = 10
+text = "Spiked
+"
+
+[node name="RightBtn" type="TextureButton" parent="PlayerCustomizationScreen/PickersPanel/Row_Hair"]
+layout_mode = 0
+offset_left = 94.0
+offset_top = 2.0
+offset_right = 110.0
+offset_bottom = 18.0
+texture_normal = ExtResource("4_c7m3v")
+
+[node name="Row_HairColor" type="Control" parent="PlayerCustomizationScreen/PickersPanel"]
+layout_mode = 1
+anchor_left = -0.115
+anchor_right = -0.115
+offset_left = 17.215
+offset_top = 101.0
+offset_right = 96.215
+offset_bottom = 123.0
+
+[node name="Label" type="Label" parent="PlayerCustomizationScreen/PickersPanel/Row_HairColor"]
+layout_mode = 0
+offset_left = -4.0
+offset_top = 6.0
+offset_right = 48.0
+offset_bottom = 29.0
+theme_override_colors/font_color = Color(0.23137255, 0.12156863, 0.09803922, 1)
+theme_override_fonts/font = SubResource("FontVariation_7eisw")
+theme_override_font_sizes/font_size = 10
+text = "Hair Color:"
+
+[node name="LeftBtn" type="TextureButton" parent="PlayerCustomizationScreen/PickersPanel/Row_HairColor"]
+layout_mode = 0
+offset_left = 38.0
+offset_top = 2.0
+offset_right = 54.0
+offset_bottom = 18.0
+texture_normal = ExtResource("6_c7m3v")
+
+[node name="Value" type="Label" parent="PlayerCustomizationScreen/PickersPanel/Row_HairColor"]
+layout_mode = 0
+offset_left = 56.0
+offset_top = 7.0
+offset_right = 92.0
+offset_bottom = 30.0
+theme_override_colors/font_color = Color(0.23137255, 0.12156863, 0.09803922, 1)
+theme_override_fonts/font = SubResource("FontVariation_7eisw")
+theme_override_font_sizes/font_size = 10
+text = "Black
+
+"
+
+[node name="RightBtn" type="TextureButton" parent="PlayerCustomizationScreen/PickersPanel/Row_HairColor"]
+layout_mode = 0
+offset_left = 94.0
+offset_top = 2.0
+offset_right = 110.0
+offset_bottom = 18.0
+texture_normal = ExtResource("4_c7m3v")
+
+[node name="ClassInfoPanel" type="Panel" parent="PlayerCustomizationScreen"]
+layout_mode = 0
+offset_left = 276.0
+offset_top = 18.0
+offset_right = 428.0
+offset_bottom = 218.0
+theme_override_styles/panel = SubResource("StyleBoxEmpty_hrr3j")
+
+[node name="ClassTitle" type="Label" parent="PlayerCustomizationScreen/ClassInfoPanel"]
+layout_mode = 0
+offset_left = 5.0
+offset_top = 7.0
+offset_right = 149.0
+offset_bottom = 30.0
+theme_override_colors/font_color = Color(0.23137255, 0.12156863, 0.09803922, 1)
+theme_override_fonts/font = ExtResource("3_wl7r6")
+theme_override_font_sizes/font_size = 18
+text = "Class"
+horizontal_alignment = 1
+
+[node name="ClassDescription" type="RichTextLabel" parent="PlayerCustomizationScreen/ClassInfoPanel"]
+layout_mode = 0
+offset_left = 7.0
+offset_top = 41.0
+offset_right = 145.0
+offset_bottom = 194.0
+theme_override_colors/default_color = Color(0.23137255, 0.12156863, 0.09803922, 1)
+theme_override_fonts/normal_font = ExtResource("3_wl7r6")
+theme_override_font_sizes/normal_font_size = 10
+
+[node name="StartButton" type="Button" parent="PlayerCustomizationScreen/ClassInfoPanel"]
+layout_mode = 0
+offset_left = 61.0
+offset_top = 211.0
+offset_right = 115.0
+offset_bottom = 227.0
+theme_override_colors/font_color = Color(0.23137255, 0.12156863, 0.09803922, 1)
+theme_override_fonts/font = ExtResource("3_wl7r6")
+theme_override_font_sizes/font_size = 12
+theme_override_icons/icon = ExtResource("8_5yrhp")
+theme_override_styles/normal = SubResource("StyleBoxEmpty_1c423")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_rnvah")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_euhyd")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_8576y")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_xfppl")
+text = "Finished"
+
+[node name="SFX" type="Node" parent="PlayerCustomizationScreen"]
+
+[node name="ValidationLabel" type="Label" parent="PlayerCustomizationScreen"]
+layout_mode = 0
+offset_left = 406.0
+offset_top = 232.0
+offset_right = 446.0
+offset_bottom = 255.0
+
+[node name="FadeOverlay" type="ColorRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 440.0
+offset_bottom = 230.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)

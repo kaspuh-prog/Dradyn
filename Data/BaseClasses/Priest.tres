@@ -6,7 +6,8 @@
 [resource]
 script = ExtResource("2_ku4pb")
 class_title = "Priest"
-description = "Healer Base Class"
+description = "A steady hand in a world that doesn’t stay kind for long. Priests keep the party alive through efficient heals, protective support, and recovery tools. They are the difference between a close call and a wipe when fights get messy.
+Best for: players who like support leadership, stabilizing chaos, and making everyone else feel unstoppable."
 mp_source = "wis"
 mp_weight_INT = 0.0
 mp_weight_WIS = 1.5

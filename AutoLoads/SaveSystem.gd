@@ -128,6 +128,9 @@ func build_runtime_payload(seed_payload: Dictionary) -> Dictionary:
 
 	_ensure_required_world_fields(out)
 
+	# NEW: carry forward New Game customization so runtime saves don't lose gender/identity.
+	_attach_player_customization(out)
+
 	if include_story_state:
 		_attach_story_state(out)
 
@@ -269,6 +272,18 @@ func _ensure_required_world_fields(payload: Dictionary) -> void:
 		player_name = _derive_player_name()
 	if player_name != "":
 		payload["player_name"] = player_name
+
+
+func _attach_player_customization(payload: Dictionary) -> void:
+	# Runtime saves must preserve New Game customization so EquipmentVisuals doesn't fall back to default gender.
+	if payload.has("player_customization"):
+		return
+
+	if _last_loaded_payload.has("player_customization"):
+		var pc_any: Variant = _last_loaded_payload.get("player_customization")
+		if typeof(pc_any) == TYPE_DICTIONARY:
+			var pc: Dictionary = pc_any
+			payload["player_customization"] = pc.duplicate(true)
 
 
 func _derive_current_area_path() -> String:

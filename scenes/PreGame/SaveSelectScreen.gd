@@ -50,6 +50,17 @@ enum SaveSelectIntent {
 @export var portrait_center_y_px: int = 32
 @export var portrait_vertical_offset_px: int = 0
 
+# NEW: Rig-based portraits (VisualRoot) with saved equipment applied
+@export_group("Party Preview — VisualRoot")
+@export var use_visualroot_subviewport: bool = true
+@export var visualroot_node_name: String = "VisualRoot"
+@export var equipment_visuals_node_name: String = "EquipmentVisuals"
+@export var prefer_idle_side_name: String = "idle_side" # case-insensitive
+@export var portrait_viewport_scale: float = 2.0
+@export var portrait_viewport_offset_px: Vector2 = Vector2(0.0, 10.0)
+@export var hide_weapon_nodes_in_portrait: bool = true
+@export var weapon_node_names_to_hide: PackedStringArray = PackedStringArray(["WeaponRoot", "Mainhand", "Offhand", "WeaponTrail"])
+
 @export_group("Selection Border")
 @export var selection_border_enabled: bool = true
 @export var selection_border_width_px: int = 1
@@ -495,23 +506,24 @@ func _build_party_preview_strip(payload: Dictionary) -> Control:
 	var h: int = max(row_height_px, portrait_box_height_px)
 	strip.custom_minimum_size = Vector2(float(reserved_w), float(h))
 
-	var ordered_scene_paths: Array[String] = _extract_party_scene_paths_ordered(payload)
+	# NEW: pull member dicts from save payload so we can apply their saved equipment before rendering.
+	var ordered_members: Array[Dictionary] = _extract_party_members_ordered(payload)
 
-	var render_paths: Array[String] = []
-	var i_rev: int = ordered_scene_paths.size() - 1
+	# Render RIGHT->LEFT
+	var render_members: Array[Dictionary] = []
+	var i_rev: int = ordered_members.size() - 1
 	while i_rev >= 0:
-		render_paths.append(ordered_scene_paths[i_rev])
+		render_members.append(ordered_members[i_rev])
 		i_rev -= 1
 
 	var shown: int = 0
 	var i: int = 0
-	while i < render_paths.size():
+	while i < render_members.size():
 		if shown >= portrait_max_members:
 			break
-		var sp: String = render_paths[i].strip_edges()
-		if sp != "":
-			strip.add_child(_build_member_box_for_scene(sp))
-			shown += 1
+		var md: Dictionary = render_members[i]
+		strip.add_child(_build_member_box_for_member_dict(md))
+		shown += 1
 		i += 1
 
 	while shown < portrait_max_members:
@@ -526,7 +538,8 @@ func _reserved_strip_width_px() -> int:
 		gaps = 0
 	return (portrait_box_width_px * portrait_max_members) + (portrait_member_gap_px * gaps)
 
-func _build_member_box_for_scene(scene_path: String) -> Control:
+# NEW: Build using the member dict (scene_path + equipment)
+func _build_member_box_for_member_dict(member_dict: Dictionary) -> Control:
 	var box: Control = Control.new()
 	box.custom_minimum_size = Vector2(float(portrait_box_width_px), float(portrait_box_height_px))
 	box.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -534,6 +547,16 @@ func _build_member_box_for_scene(scene_path: String) -> Control:
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.clip_contents = true
 
+	var scene_path: String = ""
+	if member_dict.has("scene_path"):
+		scene_path = str(member_dict["scene_path"]).strip_edges()
+
+	if use_visualroot_subviewport and scene_path != "":
+		var ok: bool = _try_build_member_visualroot_viewport(box, scene_path, member_dict)
+		if ok:
+			return box
+
+	# Legacy fallback path (kept): single frame from AnimatedSprite2D
 	var tex: Texture2D = _get_idle_frame_for_scene(scene_path)
 	if tex == null:
 		if portrait_show_placeholder_when_missing:
@@ -567,6 +590,214 @@ func _build_member_box_for_scene(scene_path: String) -> Control:
 	box.add_child(tr)
 	return box
 
+func _try_build_member_visualroot_viewport(parent_box: Control, scene_path: String, member_dict: Dictionary) -> bool:
+	if parent_box == null:
+		return false
+	if scene_path.strip_edges() == "":
+		return false
+	if not ResourceLoader.exists(scene_path):
+		return false
+
+	var ps_any: Resource = ResourceLoader.load(scene_path)
+	var ps: PackedScene = ps_any as PackedScene
+	if ps == null:
+		return false
+
+	var inst: Node = ps.instantiate()
+	if inst == null:
+		return false
+
+	# Apply saved equipment (chest/back) onto EquipmentVisuals before cloning VisualRoot
+	_apply_saved_equipment_to_actor_instance(inst, member_dict)
+
+	var vr: Node = _find_visual_root(inst)
+	if vr == null:
+		inst.queue_free()
+		return false
+
+	var clone: Node = vr.duplicate(Node.DUPLICATE_USE_INSTANTIATION)
+	inst.queue_free()
+
+	if clone == null:
+		return false
+
+	var sv: SubViewport = SubViewport.new()
+	sv.name = "PortraitViewport"
+	sv.transparent_bg = true
+	sv.disable_3d = true
+	sv.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	sv.size = Vector2i(portrait_box_width_px, portrait_box_height_px)
+	parent_box.add_child(sv)
+
+	var root2d: Node2D = Node2D.new()
+	root2d.name = "PortraitRoot2D"
+	sv.add_child(root2d)
+
+	root2d.add_child(clone)
+
+	_disable_processing_recursive(clone)
+
+	if hide_weapon_nodes_in_portrait:
+		_hide_named_nodes_recursive(clone, weapon_node_names_to_hide)
+
+	# Force idle_side, case-insensitive, on all AnimatedSprite2D layers.
+	_force_animation_on_all_animated_sprites(clone, prefer_idle_side_name)
+
+	# Position/scale inside viewport.
+	var center: Vector2 = Vector2(float(sv.size.x) * 0.5, float(sv.size.y) * 0.5)
+	var n2d: Node2D = clone as Node2D
+	if n2d != null:
+		n2d.position = center + portrait_viewport_offset_px
+		n2d.scale = Vector2(portrait_viewport_scale, portrait_viewport_scale)
+
+	# Display viewport texture with nearest filtering.
+	var tr: TextureRect = TextureRect.new()
+	tr.texture = sv.get_texture()
+	tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	tr.stretch_mode = TextureRect.STRETCH_SCALE
+	tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tr.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent_box.add_child(tr)
+
+	return true
+
+func _apply_saved_equipment_to_actor_instance(actor_inst: Node, member_dict: Dictionary) -> void:
+	if actor_inst == null:
+		return
+	if member_dict.is_empty():
+		return
+	if not member_dict.has("equipment"):
+		return
+
+	var equip_any: Variant = member_dict["equipment"]
+	if typeof(equip_any) != TYPE_DICTIONARY:
+		return
+	var equip: Dictionary = equip_any
+
+	var ev: Node = actor_inst.find_child(equipment_visuals_node_name, true, false)
+	if ev == null:
+		return
+
+	# Chest
+	var chest_path: String = _get_equipment_path_case_insensitive(equip, "chest")
+	var chest_item: Resource = null
+	if chest_path != "" and ResourceLoader.exists(chest_path):
+		chest_item = ResourceLoader.load(chest_path)
+	if ev.has_method("_apply_chest_item"):
+		ev.call("_apply_chest_item", chest_item)
+
+	# Back (cloak)
+	var back_path: String = _get_equipment_path_case_insensitive(equip, "back")
+	var back_item: Resource = null
+	if back_path != "" and ResourceLoader.exists(back_path):
+		back_item = ResourceLoader.load(back_path)
+	if ev.has_method("_apply_back_item"):
+		ev.call("_apply_back_item", back_item)
+
+func _get_equipment_path_case_insensitive(equip: Dictionary, slot_name: String) -> String:
+	if equip.is_empty():
+		return ""
+	var want: String = slot_name.strip_edges().to_lower()
+	if want == "":
+		return ""
+
+	if equip.has(slot_name):
+		return str(equip[slot_name]).strip_edges()
+
+	for k_any in equip.keys():
+		var k: String = str(k_any).strip_edges()
+		if k.to_lower() == want:
+			return str(equip[k_any]).strip_edges()
+
+	return ""
+
+func _find_visual_root(root: Node) -> Node:
+	if root == null:
+		return null
+
+	var direct: Node = root.get_node_or_null(NodePath(visualroot_node_name))
+	if direct != null:
+		return direct
+
+	return root.find_child(visualroot_node_name, true, false)
+
+func _disable_processing_recursive(root: Node) -> void:
+	if root == null:
+		return
+	root.process_mode = Node.PROCESS_MODE_DISABLED
+	var i: int = 0
+	while i < root.get_child_count():
+		var c: Node = root.get_child(i)
+		if c != null:
+			_disable_processing_recursive(c)
+		i += 1
+
+func _hide_named_nodes_recursive(root: Node, names_to_hide: PackedStringArray) -> void:
+	if root == null:
+		return
+
+	var nm: String = root.name
+	var i: int = 0
+	while i < names_to_hide.size():
+		var target: String = String(names_to_hide[i])
+		if target != "" and nm == target:
+			var canvas: CanvasItem = root as CanvasItem
+			if canvas != null:
+				canvas.visible = false
+			break
+		i += 1
+
+	var j: int = 0
+	while j < root.get_child_count():
+		var c: Node = root.get_child(j)
+		if c != null:
+			_hide_named_nodes_recursive(c, names_to_hide)
+		j += 1
+
+func _force_animation_on_all_animated_sprites(root: Node, desired_anim_name: String) -> void:
+	if root == null:
+		return
+
+	var desired_norm: String = desired_anim_name.strip_edges().to_lower()
+	if desired_norm == "":
+		return
+
+	var q: Array[Node] = []
+	q.append(root)
+
+	while q.size() > 0:
+		var n: Node = q.pop_front()
+		var aspr: AnimatedSprite2D = n as AnimatedSprite2D
+		if aspr != null:
+			var frames: SpriteFrames = aspr.sprite_frames
+			if frames != null:
+				var chosen: String = _find_anim_name_case_insensitive(frames, desired_norm)
+				if chosen != "":
+					aspr.animation = chosen
+					aspr.frame = 0
+					aspr.play()
+
+		var i: int = 0
+		while i < n.get_child_count():
+			q.append(n.get_child(i))
+			i += 1
+
+func _find_anim_name_case_insensitive(sf: SpriteFrames, desired_name_or_norm: String) -> String:
+	if sf == null:
+		return ""
+	var want: String = desired_name_or_norm.strip_edges().to_lower()
+	if want == "":
+		return ""
+	var names: PackedStringArray = sf.get_animation_names()
+	var i: int = 0
+	while i < names.size():
+		var nm: String = String(names[i]).strip_edges()
+		if nm.to_lower() == want:
+			return nm
+		i += 1
+	return ""
+
 func _build_empty_member_box() -> Control:
 	var box: Control = Control.new()
 	box.custom_minimum_size = Vector2(float(portrait_box_width_px), float(portrait_box_height_px))
@@ -575,6 +806,7 @@ func _build_empty_member_box() -> Control:
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return box
 
+# Legacy helper kept (do not remove): some callers might still use it later.
 func _extract_party_scene_paths_ordered(payload: Dictionary) -> Array[String]:
 	var out: Array[String] = []
 	if not payload.has("party"):
@@ -615,6 +847,50 @@ func _extract_party_scene_paths_ordered(payload: Dictionary) -> Array[String]:
 				var sp: String = str(md["scene_path"]).strip_edges()
 				if sp != "":
 					out.append(sp)
+		step += 1
+
+	return out
+
+func _extract_party_members_ordered(payload: Dictionary) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if not payload.has("party"):
+		return out
+
+	var party_any: Variant = payload["party"]
+	if typeof(party_any) != TYPE_DICTIONARY:
+		return out
+	var party: Dictionary = party_any
+
+	if not party.has("members"):
+		return out
+
+	var members_any: Variant = party["members"]
+	if typeof(members_any) != TYPE_ARRAY:
+		return out
+	var members: Array = members_any
+
+	var controlled_idx: int = 0
+	if party.has("controlled_index"):
+		controlled_idx = int(party["controlled_index"])
+	if controlled_idx < 0:
+		controlled_idx = 0
+	if controlled_idx >= members.size():
+		controlled_idx = 0
+
+	var count: int = members.size()
+	var step: int = 0
+	while step < count and out.size() < portrait_max_members:
+		var idx: int = controlled_idx + step
+		if idx >= count:
+			idx -= count
+
+		var m_any: Variant = members[idx]
+		if typeof(m_any) == TYPE_DICTIONARY:
+			var md: Dictionary = m_any
+			if md.has("scene_path"):
+				var sp: String = str(md["scene_path"]).strip_edges()
+				if sp != "":
+					out.append(md)
 		step += 1
 
 	return out
@@ -707,29 +983,36 @@ func _pick_idle_anim_name(sf: SpriteFrames) -> String:
 	if sf == null:
 		return ""
 
-	if portrait_prefer_idle_right:
-		if sf.has_animation("idle_right"):
-			return "idle_right"
-		if sf.has_animation("idle_side"):
-			return "idle_side"
-	else:
-		if sf.has_animation("idle_side"):
-			return "idle_side"
-		if sf.has_animation("idle_right"):
-			return "idle_right"
+	# Prefer idle_side case-insensitive.
+	var idle_side_ci: String = _find_anim_name_case_insensitive(sf, prefer_idle_side_name)
+	if idle_side_ci != "":
+		return idle_side_ci
 
-	if sf.has_animation("idle_left"):
-		return "idle_left"
-	if sf.has_animation("idle_down"):
-		return "idle_down"
-	if sf.has_animation("idle_up"):
-		return "idle_up"
+	# Keep old preference logic as fallback if idle_side doesn't exist.
+	if portrait_prefer_idle_right:
+		var idle_right_ci: String = _find_anim_name_case_insensitive(sf, "idle_right")
+		if idle_right_ci != "":
+			return idle_right_ci
+	else:
+		var idle_right_ci2: String = _find_anim_name_case_insensitive(sf, "idle_right")
+		if idle_right_ci2 != "":
+			return idle_right_ci2
+
+	var idle_left_ci: String = _find_anim_name_case_insensitive(sf, "idle_left")
+	if idle_left_ci != "":
+		return idle_left_ci
+	var idle_down_ci: String = _find_anim_name_case_insensitive(sf, "idle_down")
+	if idle_down_ci != "":
+		return idle_down_ci
+	var idle_up_ci: String = _find_anim_name_case_insensitive(sf, "idle_up")
+	if idle_up_ci != "":
+		return idle_up_ci
 
 	var anims: PackedStringArray = sf.get_animation_names()
 	var i: int = 0
 	while i < anims.size():
 		var a: String = String(anims[i])
-		if a.begins_with("idle"):
+		if a.to_lower().begins_with("idle"):
 			return a
 		i += 1
 

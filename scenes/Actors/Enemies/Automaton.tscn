@@ -401,7 +401,7 @@ base_stats = {
 }
 metadata/_custom_type_script = "uid://bu1fg0bjwbliq"
 
-[node name="Automaton" type="CharacterBody2D"]
+[node name="Automaton" type="CharacterBody2D" groups=["Enemies"]]
 script = ExtResource("1_cfbav")
 enemy_name = "ArcaSlime"
 death_vfx_frames = ExtResource("2_xiocq")
@@ -410,11 +410,9 @@ death_vfx_frames = ExtResource("2_xiocq")
 light_mask = 2
 position = Vector2(1, 6)
 sprite_frames = SubResource("SpriteFrames_0outh")
-animation = &"walk_up"
-frame_progress = 0.570872
+animation = &"idle_side"
 offset = Vector2(0, -8)
 script = ExtResource("5_s1u4l")
-use_self_modulate_for_tint = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("1")
@@ -456,10 +454,8 @@ inventory_autoload_names = PackedStringArray("InventorySys")
 [node name="AnimationBridge" type="Node" parent="."]
 script = ExtResource("14_4862d")
 
-[node name="StatusVisualProxy" type="Node" parent="."]
+[node name="StatusVisualProxy" type="Node" parent="." groups=["Enemies"]]
 script = ExtResource("15_67cju")
-status_path = NodePath("../StatusConditions")
-animator_path = NodePath("../AnimatedSprite2D")
 tint_strength = 1.0
 tint_fade_time = 1.0
 

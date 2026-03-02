@@ -1,9 +1,11 @@
-[gd_resource type="Resource" script_class="AbilityDef" load_steps=5 format=3 uid="uid://bq8aw81f6jc27"]
+[gd_resource type="Resource" script_class="AbilityDef" load_steps=7 format=3 uid="uid://bq8aw81f6jc27"]
 
 [ext_resource type="Script" uid="uid://u63t4oseank1" path="res://scenes/Actors/status/StatusApplySpec.gd" id="1_las8t"]
+[ext_resource type="Resource" uid="uid://jao8kfwbg43p" path="res://Data/Abilities/StatusApplySpecs/Confused.tres" id="2_eedak"]
 [ext_resource type="Script" uid="uid://byobol8rhb4cs" path="res://scripts/stats/StatModifier.gd" id="2_ss018"]
 [ext_resource type="Script" uid="uid://dsj3lq6kwixdp" path="res://Data/Abilities/AbilityDef.gd" id="3_eedak"]
 [ext_resource type="Script" uid="uid://c87lf672qvjv1" path="res://Data/Abilities/AbilitySfxCue.gd" id="4_fndpl"]
+[ext_resource type="Resource" uid="uid://cdsapweglidot" path="res://Data/Abilities/Defs/Enemies/SpinPunchsound.tres" id="5_ss018"]
 
 [resource]
 script = ExtResource("3_eedak")
@@ -11,8 +13,9 @@ ability_id = "SpinPunch"
 ability_type = "MELEE"
 target_rule = "ENEMY_SINGLE"
 cooldown_sec = 0.5
-power = 9.0
+power = 5.0
 cast_anim = "attack1"
+sfx_cues = Array[ExtResource("4_fndpl")]([ExtResource("5_ss018")])
 melee_range_px = 40.0
 melee_hit_frames = null
 passive_gate_equipment_classes = null
@@ -23,5 +26,5 @@ passive_proc_ability_ids = null
 cure_status_ids = null
 cure_modifier_sources = null
 cure_stacking_keys = null
-applies_status = Array[ExtResource("1_las8t")]([null])
+applies_status = Array[ExtResource("1_las8t")]([ExtResource("2_eedak")])
 metadata/_custom_type_script = "uid://dsj3lq6kwixdp"

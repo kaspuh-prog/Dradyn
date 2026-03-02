@@ -342,7 +342,7 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(15, 14.5)
 
-[node name="ArcaSlime" type="CharacterBody2D"]
+[node name="ArcaSlime" type="CharacterBody2D" groups=["Enemies"]]
 script = ExtResource("1_v2yl4")
 enemy_name = "ArcaSlime"
 death_vfx_frames = ExtResource("2_cr6nj")
@@ -353,7 +353,6 @@ sprite_frames = SubResource("SpriteFrames_dfqme")
 animation = &"attack1_down"
 offset = Vector2(0, -8)
 script = ExtResource("5_3kgov")
-use_self_modulate_for_tint = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("1")
@@ -397,8 +396,6 @@ script = ExtResource("14_5bht7")
 
 [node name="StatusVisualProxy" type="Node" parent="."]
 script = ExtResource("15_dmkud")
-status_path = NodePath("../StatusConditions")
-animator_path = NodePath("../AnimatedSprite2D")
 tint_strength = 1.0
 tint_fade_time = 1.0
 

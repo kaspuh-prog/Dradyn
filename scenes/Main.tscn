@@ -1,10 +1,9 @@
-[gd_scene load_steps=50 format=3 uid="uid://c8ty6h5dtvshr"]
+[gd_scene load_steps=49 format=3 uid="uid://c8ty6h5dtvshr"]
 
 [ext_resource type="Script" uid="uid://dk7asc2lrlrvg" path="res://scripts/Main.gd" id="2"]
 [ext_resource type="Script" uid="uid://bf5uecgu47cgm" path="res://scripts/LeaderCamera.gd" id="2_mwfav"]
 [ext_resource type="Script" uid="uid://gs1i2fkis1j4" path="res://ui/DamageNumberLayer.gd" id="2_qmy6f"]
 [ext_resource type="PackedScene" uid="uid://obsw4c8r8ffc" path="res://scenes/PartyHUD.tscn" id="4_3p2gp"]
-[ext_resource type="PackedScene" uid="uid://3ptpmafp5tcx" path="res://scenes/Actors/PCs/NecroP1.tscn" id="7_oa6sj"]
 [ext_resource type="Script" uid="uid://cgydf6clfmbug" path="res://scenes/NightDarkenOverlay2D.gd" id="8_nfivy"]
 [ext_resource type="Script" uid="uid://ctmqf1kt5vt2m" path="res://scripts/PartyRoot_Bootstrap.gd" id="11_mwfav"]
 [ext_resource type="PackedScene" uid="uid://c3peqdshs5m18" path="res://scenes/Actors/PCs/Rosali.tscn" id="12_mwfav"]
@@ -86,8 +85,6 @@ script = ExtResource("11_mwfav")
 leader_scene = ExtResource("12_mwfav")
 companion_scenes = Array[PackedScene]([ExtResource("13_3p2gp"), ExtResource("13_3p2gp")])
 
-[node name="NecroP1" parent="PartyRoot" instance=ExtResource("7_oa6sj")]
-
 [node name="WorldRoot" type="Node2D" parent="."]
 
 [node name="Timer" type="Timer" parent="WorldRoot"]
@@ -132,6 +129,7 @@ item_obtained_popup_scene = ExtResource("13_cobve")
 [node name="TabbedMenu" parent="HUDLayer" instance=ExtResource("16_bb450")]
 debug_log = true
 alpha_when_visible = 0.9
+tab_label_font_color = Color(0.23076928, 0.12078493, 0.09879225, 1)
 content_node_names = PackedStringArray()
 currency_value_label_path = NodePath("Content/InventorySheet/BagTabsRow/CurrencyBox/Gold Label")
 inventory_autoload_names = PackedStringArray("InventorySys")
