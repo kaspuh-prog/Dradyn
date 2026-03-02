@@ -48,6 +48,7 @@ class_name AnimationBridge
 
 # Auto-flip for single-side sets
 @export var auto_flip_for_side_single: bool = true
+@export_enum("Right", "Left") var side_anim_authored_facing: String = "Right"
 
 # Dead-walk helpers
 @export var allow_dead_walk_visuals: bool = true
@@ -384,10 +385,15 @@ func _apply_horizontal_flip(dir: Vector2, chosen_anim: String) -> void:
 				should_flip = true
 
 	if should_flip:
-		var want_left: bool = (dir.x < 0.0)
-		_set_flip_h(want_left)
+		_set_flip_h(_flip_for_side_facing(dir))
 	else:
 		_set_flip_h(false)
+
+func _flip_for_side_facing(dir: Vector2) -> bool:
+	var facing_left: bool = dir.x < 0.0
+	if side_anim_authored_facing == "Left":
+		return not facing_left
+	return facing_left
 
 func _set_flip_h(left: bool) -> void:
 	if _sprite == null:
